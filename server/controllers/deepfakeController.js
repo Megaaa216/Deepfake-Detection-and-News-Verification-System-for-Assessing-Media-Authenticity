@@ -18,6 +18,10 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } }).single('image');
 
+/**
+ * Handle image upload and run deepfake analysis (placeholder service).
+ * Expects multipart/form-data with field `image`.
+ */
 exports.uploadAndAnalyze = (req, res, next) => {
   upload(req, res, async (err) => {
     if (err) return next(err);

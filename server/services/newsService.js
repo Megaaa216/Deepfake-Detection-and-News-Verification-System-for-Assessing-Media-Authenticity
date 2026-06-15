@@ -4,12 +4,17 @@ const { URL } = require('url');
 const gemini = require('./geminiService');
 const trusted = require('../config/trusted_sources.json');
 
+/**
+ * Fetch article HTML and extract basic metadata and content.
+ * This is intentionally simple; replace with more robust extraction
+ * (readability, newspaper3k, or a server-side content extractor) later.
+ */
 async function fetchArticle(url) {
   const res = await axios.get(url, { timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0' } });
   const html = res.data;
   const $ = cheerio.load(html);
   const title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
-  // naive content extraction: collect <p> text
+  // Naive content extraction: collect long <p> text nodes
   let content = '';
   $('article p, p').each((i, el) => {
     const txt = $(el).text().trim();
@@ -20,8 +25,9 @@ async function fetchArticle(url) {
   return { url, title: title.trim(), domain, content: content.trim() };
 }
 
+// Check the source against a small trusted sources list. Replace with
+// a reputation API for production.
 function checkSourceCredibility(domain) {
-  // simple list check
   if (trusted.high.includes(domain)) return { score: 90, reason: 'Trusted source' };
   if (trusted.medium.includes(domain)) return { score: 65, reason: 'Known source' };
   if (trusted.low.includes(domain)) return { score: 30, reason: 'Low trust source' };
@@ -48,9 +54,9 @@ function suspiciousLanguageAnalysis(content) {
   return { score, count, exclamations, reason: 'Suspicious language heuristics' };
 }
 
+// Placeholder for external news search. Integrate a news API (Bing/Google News/NewsAPI)
+// to implement similarity and cross-source confirmation.
 async function findSimilarNews(article) {
-  // Placeholder: real implementation would query news/search APIs.
-  // We'll check trusted sources list for the domain and return none for now.
   return { matches: [], reason: 'Not implemented: external news search' };
 }
 
@@ -67,9 +73,9 @@ async function analyzeArticle(article) {
   return { source, domain, language, similar, gemini: geminiAnalysis };
 }
 
+// Compute a single score combining multiple heuristic signals.
 function computeScore(analysis) {
-  // Weighted aggregation
-  // source: 35, domain: 20, language: 25, similar: 20
+  // Weighted aggregation: source 35%, domain 20%, language 25%, similar bonus up to 15
   const s = analysis.source.score;
   const d = analysis.domain.score;
   const l = analysis.language.score;

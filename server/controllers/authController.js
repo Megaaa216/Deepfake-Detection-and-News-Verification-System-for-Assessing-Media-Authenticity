@@ -3,6 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+/**
+ * Register a new user.
+ * Validates request using express-validator in the route.
+ * Returns a JWT token on success.
+ */
 exports.register = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -22,6 +27,9 @@ exports.register = async (req, res, next) => {
   }
 };
 
+/**
+ * Login user and return JWT.
+ */
 exports.login = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -39,6 +47,9 @@ exports.login = async (req, res, next) => {
   }
 };
 
+/**
+ * Return authenticated user's profile (password excluded by middleware).
+ */
 exports.profile = async (req, res, next) => {
   try {
     res.json({ user: req.user });

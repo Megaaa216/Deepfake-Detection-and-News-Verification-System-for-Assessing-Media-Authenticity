@@ -9,6 +9,10 @@ const DeepfakeResult = require('../models/DeepfakeResult');
 const outDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
+/**
+ * Generate a PDF and Excel report for the authenticated user's verification history.
+ * Saves the generated files in the `uploads` folder and records a Report entry.
+ */
 exports.generateReport = async (req, res, next) => {
   try {
     // basic report: gather all user's verifications
@@ -53,6 +57,9 @@ exports.generateReport = async (req, res, next) => {
   }
 };
 
+/**
+ * List generated reports for the authenticated user.
+ */
 exports.listReports = async (req, res, next) => {
   try {
     const items = await Report.find({ user: req.user._id }).sort({ createdAt: -1 });
@@ -60,6 +67,9 @@ exports.listReports = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+/**
+ * Return a saved report metadata by id.
+ */
 exports.getById = async (req, res, next) => {
   try {
     const item = await Report.findById(req.params.id);

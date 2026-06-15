@@ -1,6 +1,9 @@
 const VerificationHistory = require('../models/VerificationHistory');
 const DeepfakeResult = require('../models/DeepfakeResult');
 
+/**
+ * Return unified verification history (news + deepfake) for authenticated user.
+ */
 exports.getAll = async (req, res, next) => {
   try {
     const news = await VerificationHistory.find({ user: req.user._id }).lean();
@@ -30,6 +33,9 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+/**
+ * Return a single verification record (news or deepfake) by id.
+ */
 exports.getById = async (req, res, next) => {
   try {
     const id = req.params.id;

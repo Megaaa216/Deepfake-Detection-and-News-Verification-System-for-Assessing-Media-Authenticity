@@ -83,6 +83,119 @@ Environment variables required
 - `MONGO_URI` (MongoDB connection string)
 - `JWT_SECRET` (JWT signing secret)
 
+Deployment Notes (Ubuntu + Nginx + HTTPS)
+
+1. Prepare server
+
+- Install Node.js (LTS), npm, and MongoDB or use a managed MongoDB service.
+- Create a system user for the app (e.g. `deepfake`), and clone the repo into `/var/www/deepfake-backend`.
+
+2. Install and build
+
+```bash
+cd /var/www/deepfake-backend/server
+npm install --production
+```
+
+3. Process manager (PM2)
+
+Install PM2 and start the app as a service:
+
+```bash
+npm install -g pm2
+pm2 start index.js --name deepfake-backend
+pm2 save
+pm2 startup
+```
+
+4. Nginx reverse proxy with HTTPS (Let's Encrypt)
+
+- Install Nginx and Certbot.
+- Create an Nginx site config (example):
+
+```
+server {
+	listen 80;
+	server_name your.domain.example;
+
+	location / {
+		proxy_pass http://127.0.0.1:5000;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_cache_bypass $http_upgrade;
+	}
+	location /uploads/ {
+		alias /var/www/deepfake-backend/server/uploads/;
+	}
+}
+```
+
+Then obtain a TLS certificate with Certbot and enable HTTPS:
+
+```bash
+certbot --nginx -d your.domain.example
+```
+
+5. Environment & security
+
+- Store `MONGO_URI` and `JWT_SECRET` in a systemd unit, PM2 environment, or a `.env` file owned by the app user with restrictive permissions.
+- Ensure `uploads/` and `logs/` directories are writable by the app user and not world-writable.
+
+6. Additional production notes
+
+- Use a managed MongoDB or run a replica set for reliability.
+- Monitor logs (PM2 + Nginx) and set up log rotation.
+- Consider rate-limiting and authentication hardening before public deployment.
+
+Final README additions
+----------------------
+Below are consolidated installation, run, test, and deployment steps.
+
+Installation steps
+
+1. Clone repo and install dependencies
+
+```bash
+git clone <repo-url>
+cd <repo>/server
+npm install
+```
+
+Run steps
+
+```bash
+cp .env.example .env   # edit .env
+npm run dev            # development with nodemon
+npm start              # production (node index.js) or use PM2
+```
+
+Test steps
+
+1. Start server and check health:
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+2. Register + login (use Postman or curl):
+
+```bash
+curl -X POST http://localhost:5000/api/auth/register -H "Content-Type: application/json" -d '{"name":"Demo","email":"demo@example.com","password":"password123"}'
+```
+
+3. Use returned token to call protected endpoints (news verify, deepfake analyze, history).
+
+Deployment steps (Ubuntu + Nginx + HTTPS)
+
+1. Install Node.js, npm, and MongoDB or use a managed DB.
+2. Clone repo to server and `npm install --production`.
+3. Start app with PM2 and save the process list.
+4. Configure Nginx as reverse proxy and obtain TLS with Certbot.
+5. Ensure environment variables are set securely and directories have correct permissions.
+
+
 
 3. Testing with Postman
 

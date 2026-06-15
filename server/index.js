@@ -5,13 +5,15 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables from .env into process.env
 dotenv.config();
 
+// Create Express app
 const app = express();
 
-// morgan to console
+// Request logging: console
 app.use(morgan('dev'));
-// morgan to file
+// Request logging: file (combined format)
 const logDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
 const accessLogStream = fs.createWriteStream(path.join(logDir, 'access.log'), { flags: 'a' });
@@ -19,9 +21,11 @@ app.use(morgan('combined', { stream: accessLogStream }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Allow requests from the frontend origin (set CLIENT_URL in .env)
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 app.use(cors({ origin: CLIENT_URL, credentials: true, optionsSuccessStatus: 200 }));
 
+// Serve uploaded files statically from /uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
@@ -32,10 +36,10 @@ app.use('/api/deepfake', require('./routes/deepfake'));
 app.use('/api/history', require('./routes/history'));
 app.use('/api/reports', require('./routes/reports'));
 
-// 404
+// 404 handler (must be after routes)
 app.use(require('./middleware/notFound'));
 
-// Error handler
+// Centralized error handler (must be last middleware)
 app.use(require('./middleware/errorHandler'));
 
 const start = async () => {

@@ -1,6 +1,9 @@
 const newsService = require('../services/newsService');
 const VerificationHistory = require('../models/VerificationHistory');
 
+/**
+ * Verify a news article URL: fetch, analyze, compute score, save, and return result.
+ */
 exports.verifyNews = async (req, res, next) => {
   try {
     const { url } = req.body;
@@ -24,6 +27,9 @@ exports.verifyNews = async (req, res, next) => {
   }
 };
 
+/**
+ * Return all news verification records for the authenticated user.
+ */
 exports.getHistory = async (req, res, next) => {
   try {
     const items = await VerificationHistory.find({ user: req.user._id }).sort({ createdAt: -1 });
@@ -33,6 +39,9 @@ exports.getHistory = async (req, res, next) => {
   }
 };
 
+/**
+ * Return a single verification record by id.
+ */
 exports.getById = async (req, res, next) => {
   try {
     const item = await VerificationHistory.findById(req.params.id);
