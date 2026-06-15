@@ -1,0 +1,15 @@
+{
+  "high": [
+    "bbc.com",
+    "nytimes.com",
+    "theguardian.com",
+    "reuters.com"
+  ],
+  "medium": [
+    "cnn.com",
+    "washingtonpost.com"
+  ],
+  "low": [
+    "example-satire.com"
+  ]
+}
