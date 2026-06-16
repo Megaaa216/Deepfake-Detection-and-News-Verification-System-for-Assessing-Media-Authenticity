@@ -29,3 +29,123 @@
   animation: fadeIn 0.4s ease-out forwards;
 }
 
+/* Global Transition for dark mode */
+html, body, #app-viewport, main, header, footer {
+  transition: background-color 200ms ease, border-color 200ms ease, text-color 200ms ease;
+}
+
+/* Professional Cybersecurity Dark Mode Theme Tweaks (Dims all white parts) */
+.dark,
+.dark body,
+.dark #app-viewport {
+  background-color: #070d19 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .bg-white {
+  background-color: #111930 !important; /* Dim modern cyber-card navy */
+}
+
+.dark .bg-slate-100,
+.dark .bg-slate-100\/50,
+.dark .bg-slate-50,
+.dark .bg-slate-50\/30,
+.dark .bg-slate-50\/20,
+.dark .bg-slate-50\/10 {
+  background-color: #0a1120 !important; /* Base layout dimming */
+}
+
+.dark .border-slate-100,
+.dark .border-slate-150,
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-slate-300\/40,
+.dark .border-slate-700,
+.dark .border-slate-800 {
+  border-color: #1e293b !important; /* Soft border outlines */
+}
+
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-850,
+.dark .text-slate-805,
+.dark .text-slate-800 {
+  color: #f1f5f9 !important; /* Safe, contrast-adapted content text */
+}
+
+.dark .text-slate-700,
+.dark .text-slate-650,
+.dark .text-slate-600 {
+  color: #cbd5e1 !important; /* Neutral high-visibility text */
+}
+
+.dark .text-slate-500,
+.dark .text-slate-450,
+.dark .text-slate-400 {
+  color: #94a3b8 !important; /* Low density notes */
+}
+
+/* Keep interactive controls responsive and dimmed */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0a1120 !important;
+  color: #f1f5f9 !important;
+  border-color: #1e293b !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-slate-250:hover {
+  background-color: #1e293b !important;
+}
+
+/* Ensure report items, lists, and tables render clearly */
+.dark table,
+.dark tr,
+.dark td,
+.dark th {
+  border-color: #1e293b !important;
+}
+
+.dark tr:hover {
+  background-color: #1e293b/30 !important;
+}
+
+.dark select option {
+  background-color: #111930 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Micro-transition for animations and glows */
+.reduce-animations,
+.reduce-animations *,
+.reduce-animations *::before,
+.reduce-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Custom cyber theme utilities */
+.cyber-glow-blue {
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.cyber-card-glow {
+  box-shadow: 0 0 25px rgba(14, 161, 233, 0.06);
+}
+
+.dark .cyber-card-glow {
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.08);
+}
+

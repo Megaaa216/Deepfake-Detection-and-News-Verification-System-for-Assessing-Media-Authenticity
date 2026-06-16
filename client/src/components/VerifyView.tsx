@@ -212,7 +212,7 @@ export default function VerifyView({ activeSubTab, setActiveSubTab, onAddHistory
           <span>Authenticity Verification Console</span>
         </h2>
         <p className="text-sm text-slate-500">
-          Upload images, videos, or specify an online article URL to execute real-time forensic scanning.
+          Enter an online article URL or supply media files to execute real-time credibility audits, source validations, and forensic digital integrity checks.
         </p>
       </div>
 
@@ -223,6 +223,19 @@ export default function VerifyView({ activeSubTab, setActiveSubTab, onAddHistory
           <div className="bg-white border border-slate-150 rounded-2xl shadow-sm overflow-hidden">
             {/* Tab Swappers */}
             <div className="bg-slate-50 border-b border-slate-100 p-1.5 flex space-x-1">
+              <button
+                type="button"
+                onClick={() => { setActiveSubTab('news_link'); }}
+                className={`flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+                  activeSubTab === 'news_link'
+                    ? 'bg-white text-blue-700 shadow-sm border border-slate-150/60'
+                    : 'text-slate-500 hover:text-slate-950 hover:bg-slate-150/30'
+                }`}
+              >
+                <Globe className="h-4 w-4" />
+                <span>News Link</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => { setActiveSubTab('image'); }}
@@ -247,19 +260,6 @@ export default function VerifyView({ activeSubTab, setActiveSubTab, onAddHistory
               >
                 <FileVideo className="h-4 w-4" />
                 <span>Video Scan</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setActiveSubTab('news_link'); }}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-                  activeSubTab === 'news_link'
-                    ? 'bg-white text-blue-700 shadow-sm border border-slate-150/60'
-                    : 'text-slate-500 hover:text-slate-950 hover:bg-slate-150/30'
-                }`}
-              >
-                <Globe className="h-4 w-4" />
-                <span>News Link</span>
               </button>
             </div>
 

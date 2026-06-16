@@ -21,7 +21,23 @@ exports.verifyNews = async (req, res, next) => {
     });
     await record.save();
 
-    res.json({ id: record._id, result: label, score, analysis });
+    // Map to frontend-friendly shape
+    const mapped = {
+      id: record._id.toString(),
+      type: 'news_link',
+      targetName: url,
+      date: record.createdAt ? new Date(record.createdAt).toISOString().replace('T', ' ').substring(0, 16) : undefined,
+      riskScore: score,
+      status: label,
+      verdict: (analysis && analysis.summary) ? analysis.summary : undefined,
+      recommendation: (label === 'likely_authentic') ? 'Low concern. Read safely.' : 'Verify before sharing.',
+      reasons: analysis && analysis.reasons ? analysis.reasons : [],
+      size: 'URL',
+      duration: undefined,
+      sourceCategory: analysis && analysis.sourceCategory ? analysis.sourceCategory : undefined,
+    };
+
+    res.json(mapped);
   } catch (err) {
     next(err);
   }

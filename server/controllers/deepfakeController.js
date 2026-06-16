@@ -41,7 +41,23 @@ exports.uploadAndAnalyze = (req, res, next) => {
         details: result,
       });
       await record.save();
-      res.json({ id: record._id, ...result });
+
+      // Map to frontend-friendly VerificationResult shape
+      const mapped = {
+        id: record._id.toString(),
+        type: 'image',
+        targetName: record.originalName || record.filename,
+        date: record.createdAt ? new Date(record.createdAt).toISOString().replace('T', ' ').substring(0, 16) : undefined,
+        riskScore: typeof record.deepfakeProbability === 'number' ? Math.round(record.deepfakeProbability * 100) : 0,
+        status: (typeof record.deepfakeProbability === 'number') ? (record.deepfakeProbability * 100 < 20 ? 'likely_authentic' : record.deepfakeProbability * 100 < 70 ? 'suspicious' : 'likely_deepfake') : (record.label || 'suspicious'),
+        verdict: record.explanation || record.label || 'Deepfake analysis completed.',
+        recommendation: (record.deepfakeProbability && record.deepfakeProbability >= 0.7) ? 'Critical Concern. Do not distribute.' : 'Review findings and verify further.',
+        reasons: record.details && record.details.reasons ? record.details.reasons : [],
+        size: (req.file.size && (req.file.size / (1024*1024)).toFixed(1) + ' MB') || undefined,
+        duration: undefined,
+      };
+
+      res.json(mapped);
     } catch (e) {
       next(e);
     }

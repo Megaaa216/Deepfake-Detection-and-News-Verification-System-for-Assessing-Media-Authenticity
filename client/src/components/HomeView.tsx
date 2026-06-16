@@ -33,18 +33,18 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
             <button
-              onClick={() => onNavigateToVerify('image')}
+              onClick={() => onNavigateToVerify('news_link')}
               className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-3 rounded-lg shadow-lg hover:shadow-blue-500/20 transition-all flex items-center justify-center space-x-2 group cursor-pointer"
             >
-              <span>Upload & Verify Media</span>
+              <Globe className="h-4 w-4 text-blue-300" />
+              <span>Validate News Link</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
             <button
-              onClick={() => onNavigateToVerify('news_link')}
+              onClick={() => onNavigateToVerify('image')}
               className="bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-200 font-medium px-6 py-3 rounded-lg border border-slate-700 transition-all flex items-center justify-center space-x-2 cursor-pointer"
             >
-              <Globe className="h-4 w-4 text-blue-400" />
-              <span>Validate News Link</span>
+              <span>Upload & Verify Media</span>
             </button>
           </div>
         </div>
@@ -85,30 +85,10 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Card 1: Deepfake Detection */}
+          {/* Card 1: News Verification */}
           <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-blue-50 text-blue-600 p-3 rounded-xl w-fit">
-                <Cpu className="h-6 w-6 stroke-[1.5]" />
-              </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900">Deepfake Detection</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Processes physical image pixels and audio-video streams. Scrapes files for microscopic visual warp lines, geometric alignment mismatches, irregular blinking frequency, and AI voices.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigateToVerify('image')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
-            >
-              <span>Scan photo/video files</span>
-              <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </div>
-
-          {/* Card 2: News Verification */}
-          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="bg-brand-50 text-brand-700 p-3 rounded-xl w-fit">
                 <Globe className="h-6 w-6 stroke-[1.5]" />
               </div>
               <h3 className="text-lg font-display font-semibold text-slate-900">News Verification</h3>
@@ -121,6 +101,26 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
             >
               <span>Verify URLs</span>
+              <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+
+          {/* Card 2: Deepfake Detection */}
+          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="bg-slate-50 text-slate-700 p-3 rounded-xl w-fit">
+                <Cpu className="h-6 w-6 stroke-[1.5]" />
+              </div>
+              <h3 className="text-lg font-display font-semibold text-slate-900">Deepfake Detection</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Processes physical image pixels and audio-video streams. Scrapes files for microscopic visual warp lines, geometric alignment mismatches, irregular blinking frequency, and AI voices.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateToVerify('image')}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
+            >
+              <span>Scan photo/video files</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
