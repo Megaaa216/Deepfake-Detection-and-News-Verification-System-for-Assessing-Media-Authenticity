@@ -22,3 +22,31 @@
 [2026-06-15T19:29:28.515Z] [INFO] MongoDB connected
 [2026-06-15T19:30:23.810Z] [INFO] MongoDB connected
 [2026-06-15T19:36:50.514Z] [INFO] MongoDB connected
+[2026-06-16T00:50:39.675Z] [INFO] MongoDB connected
+[2026-06-16T00:51:21.132Z] [INFO] MongoDB connected
+[2026-06-16T00:54:12.061Z] [INFO] MongoDB connected
+[2026-06-16T00:54:30.744Z] [ERROR] SyntaxError: Bad escaped character in JSON at position 8 (line 1 column 9)
+    at JSON.parse (<anonymous>)
+    at parse (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\body-parser\lib\types\json.js:92:19)
+    at C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\body-parser\lib\read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+    at invokeCallback (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\raw-body\index.js:238:16)
+    at done (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\raw-body\index.js:227:7)
+    at IncomingMessage.onEnd (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\raw-body\index.js:287:7)
+    at IncomingMessage.emit (node:events:509:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2026-06-16T00:54:34.436Z] [ERROR] SyntaxError: Expected property name or '}' in JSON at position 3 (line 1 column 4)
+    at JSON.parse (<anonymous>)
+    at parse (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\body-parser\lib\types\json.js:92:19)
+    at C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\body-parser\lib\read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+    at invokeCallback (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\raw-body\index.js:238:16)
+    at done (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\raw-body\index.js:227:7)
+    at IncomingMessage.onEnd (C:\Users\Admin\OneDrive\Desktop\School\Computer Research Project (Pearson Set)\Deepfake Detection and News Verification System for Assessing Media Authenticity\server\node_modules\raw-body\index.js:287:7)
+    at IncomingMessage.emit (node:events:509:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2026-06-16T00:55:37.745Z] [INFO] MongoDB connected
+[2026-06-16T01:00:03.701Z] [INFO] MongoDB connected
+[2026-06-16T01:04:47.170Z] [INFO] MongoDB connected
