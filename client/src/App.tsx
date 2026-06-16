@@ -162,6 +162,8 @@ export default function App() {
       email: null,
     });
     localStorage.removeItem('veramedia_user');
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
   };
 
   const handleUpdateProfile = (updatedUser: { fullName: string; username: string; email: string, avatarUrl?: string }) => {

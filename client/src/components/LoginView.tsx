@@ -65,26 +65,45 @@ export default function LoginView({
       return;
     }
 
-    // Handle normal mock login flow
+    // Attempt real backend login
     setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Check for custom credentials simulation
-      const isAdmin = input.toLowerCase() === 'a.brent@cyber-forensics.verify' || input.toLowerCase() === 'abrent_forensics';
-      
-      setSuccessMsg('Access Authorized! Initializing secure console token.');
-
-      setTimeout(() => {
-        onLogin({
-          fullName: isAdmin ? 'Dr. Alan Brent' : 'Research Analyst',
-          username: input.includes('@') ? input.split('@')[0] : input,
-          email: input.includes('@') ? input : `${input}@trustlens.verify`,
-        });
-      }, 1500);
-
-    }, 1800);
+    const email = input.includes('@') ? input : `${input}@trustlens.verify`;
+    fetch('http://localhost:5000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || 'Login failed');
+        return json;
+      })
+      .then(async (data) => {
+        const token = data.token;
+        if (!token) throw new Error('No token received');
+        // persist token if requested
+        if (rememberMe) {
+          localStorage.setItem('token', token);
+        } else {
+          sessionStorage.setItem('token', token);
+        }
+        setSuccessMsg('Access Authorized! Initializing secure console token.');
+        // fetch profile
+        const profileRes = await fetch('http://localhost:5000/api/auth/profile', { headers: { Authorization: `Bearer ${token}` } });
+        const profileJson = await profileRes.json().catch(() => null);
+        const profileUser = profileJson && profileJson.user ? profileJson.user : null;
+        const customUser = profileUser
+          ? { fullName: profileUser.name || profileUser.email, username: (profileUser.email || '').split('@')[0], email: profileUser.email }
+          : { fullName: email, username: email.split('@')[0], email };
+        // save minimal user for UI
+        localStorage.setItem('veramedia_user', JSON.stringify({ loggedIn: true, email: customUser.email, fullName: customUser.fullName, username: customUser.username }));
+        setIsLoading(false);
+        onLogin(customUser);
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setErrorMsg(err.message || 'Login failed');
+      });
   };
 
   return (
