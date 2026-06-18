@@ -224,7 +224,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
             <div className="space-y-4">
               <div className="p-4 bg-blue-50/40 border border-blue-105 rounded-xl space-y-2">
                 <span className="text-[9px] font-mono font-bold text-blue-700 uppercase tracking-wider block">
-                  VeraNeural Core Summary Explanatory Report
+                  TrustLens AI Deep Engine Explanatory Report
                 </span>
                 <p className="text-xs text-slate-700 leading-relaxed">
                   {targetReport.recommendation}

@@ -21,7 +21,7 @@ export default function AboutView() {
       {/* Title block */}
       <div className="space-y-2 text-center max-w-2xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-display font-bold text-slate-900">
-          The VeraMedia Mission
+          The TrustLens Mission
         </h2>
         <p className="text-sm text-slate-550 leading-relaxed">
           Supporting journalists, fact-checking networks, and public digital education with industrial-grade tools for assessing digital media authenticity.
@@ -45,7 +45,7 @@ export default function AboutView() {
             As Generative AI visual pipelines can fabricate flawless landscapes and deep voice-cloning programs simulate entire political speeches, verifying digital media has evolved past visual intuition. 
           </p>
           <p className="text-slate-300 text-sm leading-relaxed max-w-3xl">
-            VeraMedia helps users assess whether digital assets are manipulated or misleading. It serves as an analytical safeguard designed to support global media verification, fact awareness, and safer sharing online, keeping communities resilient against malicious intent.
+            TrustLens helps users assess whether digital assets are manipulated or misleading. It serves as an analytical safeguard designed to support global media verification, fact awareness, and safer sharing online, keeping communities resilient against malicious intent.
           </p>
         </div>
       </div>

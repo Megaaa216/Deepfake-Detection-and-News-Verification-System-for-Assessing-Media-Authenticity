@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Eye, EyeOff, User, Mail, Lock, Check, ShieldAlert,
   ArrowRight, Shield
@@ -8,12 +8,16 @@ interface LoginViewProps {
   onLogin: (customUser?: { fullName: string; username: string; email: string }) => void;
   onNavigateToRegister: () => void;
   onNavigateToForgotPassword: () => void;
+  initialEmail?: string;
+  registrationSuccessMessage?: string;
 }
 
 export default function LoginView({ 
   onLogin, 
   onNavigateToRegister, 
-  onNavigateToForgotPassword 
+  onNavigateToForgotPassword,
+  initialEmail,
+  registrationSuccessMessage
 }: LoginViewProps) {
   // Input states
   const [identifier, setIdentifier] = useState(''); // Email or Username
@@ -25,6 +29,15 @@ export default function LoginView({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialEmail) {
+      setIdentifier(initialEmail);
+    }
+    if (registrationSuccessMessage) {
+      setSuccessMsg(registrationSuccessMessage);
+    }
+  }, [initialEmail, registrationSuccessMessage]);
 
   // Helper validation checkers
   const validateEmailFormat = (val: string) => {
@@ -65,45 +78,26 @@ export default function LoginView({
       return;
     }
 
-    // Attempt real backend login
+    // Handle normal mock login flow
     setIsLoading(true);
-    const email = input.includes('@') ? input : `${input}@trustlens.verify`;
-    fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-      .then(async (res) => {
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || 'Login failed');
-        return json;
-      })
-      .then(async (data) => {
-        const token = data.token;
-        if (!token) throw new Error('No token received');
-        // persist token if requested
-        if (rememberMe) {
-          localStorage.setItem('token', token);
-        } else {
-          sessionStorage.setItem('token', token);
-        }
-        setSuccessMsg('Access Authorized! Initializing secure console token.');
-        // fetch profile
-        const profileRes = await fetch('http://localhost:5000/api/auth/profile', { headers: { Authorization: `Bearer ${token}` } });
-        const profileJson = await profileRes.json().catch(() => null);
-        const profileUser = profileJson && profileJson.user ? profileJson.user : null;
-        const customUser = profileUser
-          ? { fullName: profileUser.name || profileUser.email, username: (profileUser.email || '').split('@')[0], email: profileUser.email }
-          : { fullName: email, username: email.split('@')[0], email };
-        // save minimal user for UI
-        localStorage.setItem('veramedia_user', JSON.stringify({ loggedIn: true, email: customUser.email, fullName: customUser.fullName, username: customUser.username }));
-        setIsLoading(false);
-        onLogin(customUser);
-      })
-      .catch((err) => {
-        setIsLoading(false);
-        setErrorMsg(err.message || 'Login failed');
-      });
+
+    setTimeout(() => {
+      setIsLoading(false);
+      
+      // Check for custom credentials simulation
+      const isAdmin = input.toLowerCase() === 'a.brent@cyber-forensics.verify' || input.toLowerCase() === 'abrent_forensics';
+      
+      setSuccessMsg('Access Authorized! Initializing secure console token.');
+
+      setTimeout(() => {
+        onLogin({
+          fullName: isAdmin ? 'Dr. Alan Brent' : 'Research Analyst',
+          username: input.includes('@') ? input.split('@')[0] : input,
+          email: input.includes('@') ? input : `${input}@trustlens.verify`,
+        });
+      }, 1500);
+
+    }, 1800);
   };
 
   return (

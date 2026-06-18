@@ -4,33 +4,35 @@ export const INITIAL_HISTORY: VerificationResult[] = [
   {
     id: 'check-101',
     type: 'image',
-    targetName: 'defense_minister_meeting_press.jpg',
+    targetName: 'https://www.instagram.com/p/C6xD_u0ys8Q/defense_minister.jpg',
     date: '2026-06-12 14:32',
     riskScore: 8,
     status: 'likely_authentic',
-    verdict: 'The media segment shows high authenticity characteristics consistent with professional photojournalism.',
-    recommendation: 'Low concern. The file shows standard camera artifacts, intact digital signature signatures, and realistic structural patterns.',
+    verdict: 'The media segment extracted from Instagram shows high authenticity characteristics consistent with genuine imagery.',
+    recommendation: 'Low concern. The file shows standard camera compression artifacts, consistent light source vectors, and realistic structural patterns.',
     size: '3.4 MB',
+    platform: 'Instagram',
     reasons: [
       { id: 'img-p1', name: 'Facial Synthesis Integrity', status: 'passed', details: 'No generative adversarial network (GAN) artifacts detected in critical facial regions or around transition edges.' },
       { id: 'img-p2', name: 'Bi-level Noise Consistency', status: 'passed', details: 'Sensor noise levels are uniform across all image segments, indicating no localized copy-paste or paint actions.' },
       { id: 'img-p3', name: 'Specular Lighting & Reflections', status: 'passed', details: 'Reflections in active corneal segments and smooth surfaces align precisely with light sources in the scene geometry.' },
-      { id: 'img-p4', name: 'EXIF Metadata Analysis', status: 'passed', details: 'Embedded metadata contains standard camera tags, lens profiles, and high-fidelity GPS markers matching original press briefs.' }
+      { id: 'img-p4', name: 'EXIF Metadata Analysis', status: 'passed', details: 'Embedded metadata contains standard camera tags, lens profiles, and high-fidelity markers matching the original press brief.' }
     ]
   },
   {
     id: 'check-102',
     type: 'news_link',
-    targetName: 'https://www.reuters.com/tech/pioneering-supermarket-drones-complete-delivery-tests.html',
+    targetName: 'https://x.com/Reuters/status/180239105183',
     date: '2026-06-12 11:15',
     riskScore: 3,
     status: 'likely_authentic',
-    verdict: 'Highly credible journalistic report confirmed by independent, high-reputation channels.',
-    recommendation: 'Reliable. You can read, reference, and share this article with extreme high confidence.',
+    verdict: 'Highly credible journalistic text shared on X (formerly Twitter), validated by independent, high-reputation channels.',
+    recommendation: 'Reliable. The news claim corresponds to official press statements. You can read and reference this post with high confidence.',
     sourceCategory: 'Mainstream news',
+    platform: 'X',
     reasons: [
       { id: 'news-p1', name: 'Cross-Source Mutual Validation', status: 'passed', details: 'Topic and core quotes are verified across 8 other highly respected independent international agencies including AP and Bloomberg.' },
-      { id: 'news-p2', name: 'Domain Integrity & Age', status: 'passed', details: 'Domain reuters.com stands as a primary authenticated global press entity, registered with secure SSL registries for over 25 years.' },
+      { id: 'news-p2', name: 'Domain Integrity & Age', status: 'passed', details: 'X verified account corresponds to Reuters, which stands as a primary authenticated global press entity.' },
       { id: 'news-p3', name: 'Semantic Neutrality', status: 'passed', details: 'The vocabulary and syntactic phrasing utilize standard informative journalism with zero inflammatory modifiers or sensationalist structures.' },
       { id: 'news-p4', name: 'Fact-Check Registry Correspondence', status: 'passed', details: 'Database searches in IFCN network verify that the main event claims contain active confirmation and zero disputes.' }
     ]
@@ -38,14 +40,15 @@ export const INITIAL_HISTORY: VerificationResult[] = [
   {
     id: 'check-103',
     type: 'video',
-    targetName: 'finance_guru_emergency_announcement.mp4',
+    targetName: 'https://www.tiktok.com/@finance_trends/video/732890184',
     date: '2026-06-11 18:22',
     riskScore: 89,
     status: 'likely_deepfake',
-    verdict: 'Significant visual and audio-visual temporal inconsistencies identify this clip as a synthesized deepfake.',
-    recommendation: 'Critical Concern. Do not distribute. The target video displays severe digital face transplant and phoneme-viseme lip sync modification.',
+    verdict: 'Significant visual and audio-visual temporal inconsistencies identify this TikTok clip as a synthesized deepfake.',
+    recommendation: 'Critical Concern. Do not distribute. The target video displays severe digital face transplant and cloned voice lip sync modification.',
     size: '14.8 MB',
     duration: '0:32',
+    platform: 'TikTok',
     reasons: [
       { id: 'vid-f1', name: 'Phoneme-Viseme Discrepancy', status: 'failed', details: 'Wavelength spectrum analysis of speech sounds registers a 140ms latency delay relative to facial lip muscle transitions.' },
       { id: 'vid-f2', name: 'Temporal Edge Blending', status: 'failed', details: 'Sub-pixel tracking reveals standard neural mask blending borders around the eyebrows and nasolabial folds, flashing on alternate keyframes.' },
@@ -56,54 +59,85 @@ export const INITIAL_HISTORY: VerificationResult[] = [
   {
     id: 'check-104',
     type: 'news_link',
-    targetName: 'https://www.chronicle-patriot-daily.net/breaking-free-electricity-discovered-by-amateur-inventor.html',
+    targetName: 'https://www.facebook.com/patriotnewsreport/posts/2918839218',
     date: '2026-06-10 09:24',
     riskScore: 76,
     status: 'suspicious',
-    verdict: 'This report originated from an unverified, sensationalist outlet utilizing dramatic headlines without direct scientific basis.',
+    verdict: 'This Facebook post originated from an unverified, sensationalist network utilizing clickbait text to spread unconfirmed claims.',
     recommendation: 'Verify prior to sharing. Treat claims with healthy skepticism. Search for corroborating peer-reviewed reports on trusted channels.',
     sourceCategory: 'Unverified blog',
+    platform: 'Facebook',
     reasons: [
-      { id: 'news-w1', name: 'Source Network Status', status: 'failed', details: 'The hosting domain is classified as a clickbait-monetized network. The WHOIS profile reveals registration occurred only 3 weeks prior.' },
-      { id: 'news-w2', name: 'Hyperbolic/Sensational Syntax', status: 'warning', details: 'Article utilizes loaded adjectives like "MIRACLE", "BANNED BY ELITES" and excessive punctuation patterns to provoke strong emotional engagement.' },
+      { id: 'news-w1', name: 'Source Network Status', status: 'failed', details: 'The hosting domain is classified as a clickbait-monetized network. The Facebook page publisher profile has high reports history.' },
+      { id: 'news-w2', name: 'Hyperbolic/Sensational Syntax', status: 'warning', details: 'Post utilizes loaded adjectives like "MIRACLE CLAIMS" and "SHOCKING COVERUP" to provoke strong emotional engagement.' },
       { id: 'news-w3', name: 'Absence of Reliable Corroboration', status: 'failed', details: 'Zero reputable global science indices or trusted local news channels have verified or mentioned this alleged breakthrough.' },
-      { id: 'news-w4', name: 'Aggressive Ad-to-Content Ratio', status: 'warning', details: 'Page structure contains deep trackers and a disproportionately high density of redirect ads, standard in monetization farms.' }
+      { id: 'news-w4', name: 'Aggressive Ad-to-Content Ratio', status: 'warning', details: 'Page structure linked in post contains intensive pop-up ads and tracking scripts, typical of low-quality monetary arbitrage farms.' }
     ]
   },
   {
     id: 'check-105',
     type: 'image',
-    targetName: 'senator_handshake_with_tycoon.png',
+    targetName: 'https://www.reddit.com/r/pics/comments/senator_briefing/senator_handshake.png',
     date: '2026-06-09 15:44',
     riskScore: 61,
     status: 'suspicious',
-    verdict: 'Local structural anomalies suggest potential image modification around joint borders and handshake contact segments.',
-    recommendation: 'Suspicious. Check other live images from this event. Localized blurring, missing shadows, and edge artifacts suggest digital manipulation.',
+    verdict: 'Local structural anomalies in this Reddit image suggest potential image modification around joint borders and handshake contact segments.',
+    recommendation: 'Suspicious. Check other live images from this event. Localized blurring, missing shadows, and edge artifacts suggest manual image compositing.',
     size: '1.9 MB',
+    platform: 'Reddit',
     reasons: [
       { id: 'img-w1', name: 'Boundary Occlusion Profiles', status: 'warning', details: 'Localized edge sharpness varies abnormally. The handshake boundary exhibits localized gaussian blurring, indicative of manual blending.' },
-      { id: 'img-w2', name: 'Geometric Shadow Vectors', status: 'failed', details: 'The light casting from the figures contradicts the ambient background source vectors. Cast shadows of fingers are physical impossibilities.' },
+      { id: 'img-w2', name: 'Geometric Shadow Vectors', status: 'failed', details: 'The light casting from the figures contradicts the ambient background source vectors. Cast shadows of fingers are physically inconsistent.' },
       { id: 'img-w3', name: 'Color Channel Consistency', status: 'passed', details: 'Chrominance channels correspond correctly throughout the skin-tone registers, showing no drastic patch-wise disparities.' },
-      { id: 'img-w4', name: 'Metadata Discrepancy', status: 'warning', details: 'EXIF segments indicate the image file was processed and saved via desktop image editing environments (Adobe Photoshop CC).' }
+      { id: 'img-w4', name: 'Metadata Discrepancy', status: 'warning', details: 'EXIF segments indicate the image file was processed and saved via desktop image editing environments (Adobe Photoshop) prior to posting.' }
     ]
   },
   {
     id: 'check-106',
     type: 'video',
-    targetName: 'mars_rover_live_alien_footage_leaked.mp4',
+    targetName: 'https://www.youtube.com/watch?v=mars_rover_alien_leak_footage',
     date: '2026-06-08 22:11',
     riskScore: 95,
     status: 'likely_deepfake',
-    verdict: 'This media leverages computer-generated graphic (CGI) overlays and synthetically simulated terrain tracks.',
-    recommendation: 'Extreme danger of misinformation. Do not share. This viral sequence is fabricated utilizing virtual simulation software.',
+    verdict: 'This viral YouTube video leverages computer-generated graphic (CGI) overlays and synthetically simulated terrain tracks to depict fabricated events.',
+    recommendation: 'Extreme danger of misinformation. Do not share. This viral sequence is structurally fabricated utilizing virtual simulation software.',
     size: '28.1 MB',
     duration: '1:10',
+    platform: 'YouTube',
     reasons: [
       { id: 'vid-ff1', name: '3D Mesh Projection Drift', status: 'failed', details: 'The tracking coordinates of the moving asset drift off the ground plane mesh constraint, indicating a post-process overlay.' },
       { id: 'vid-ff2', name: 'Physical Lighting Falloff', status: 'failed', details: 'The simulated light intensity across the dynamic asset surface fails to register secondary inverse-square law falloff characteristics.' },
       { id: 'vid-ff3', name: 'Compression Block Anomalies', status: 'warning', details: 'Heavy variable block-size compression was applied specifically around the unknown dynamic structure to conceal sharp rendering lines.' },
-      { id: 'vid-ff4', name: 'Official Archive Cross-Check', status: 'failed', details: 'The frame hash does not register on NASA JPL public catalog indexes matching any telemetry timestamps for active rovers.' }
+      { id: 'vid-ff4', name: 'Official Archive Cross-Check', status: 'failed', details: 'The frame hash does not register on space agency public catalog indexes matching any telemetry timestamps for active rovers.' }
     ]
+  },
+  {
+    id: 'check-107',
+    type: 'video',
+    targetName: 'https://www.instagram.com/p/private_restricted_story/',
+    date: '2026-06-07 10:14',
+    riskScore: 0,
+    status: 'likely_authentic',
+    verdict: 'This content cannot be verified because it is restricted or private.',
+    recommendation: 'Access Restricted. The URL corresponds to a private or locked account on Instagram. To verify this asset, please download and upload the file manually.',
+    platform: 'Instagram',
+    unavailable: true,
+    unavailabilityReason: 'Private content',
+    reasons: []
+  },
+  {
+    id: 'check-108',
+    type: 'news_link',
+    targetName: 'https://some-obscure-illegal-forum.tor/threads/conspiracy',
+    date: '2026-06-06 19:45',
+    riskScore: 0,
+    status: 'likely_authentic',
+    verdict: 'The system cannot retrieve content from this untrusted or unsupported platform.',
+    recommendation: 'Unsupported Platform. Standard scraper systems cannot securely hook into this specialized protocol or network.',
+    platform: 'Other',
+    unavailable: true,
+    unavailabilityReason: 'Unsupported platform',
+    reasons: []
   }
 ];
 

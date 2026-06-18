@@ -26,6 +26,9 @@ export interface VerificationResult {
   size?: string; // Optional metadata (e.g., 4.2 MB)
   duration?: string; // Optional (e.g., 0:24 for video)
   sourceCategory?: string; // e.g., "Independent blog", "Unverified claims network", "Mainstream news"
+  platform?: string; // e.g., "Facebook", "YouTube", "TikTok", "Instagram", "X", "Reddit", "Other"
+  unavailable?: boolean; // If content cannot be accessed technically or legally
+  unavailabilityReason?: string; // e.g., "Private content", "Restricted content", "Unsupported platform"
 }
 
 export interface Stats {

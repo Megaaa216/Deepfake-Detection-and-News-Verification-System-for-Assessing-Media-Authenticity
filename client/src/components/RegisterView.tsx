@@ -69,7 +69,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
 
     // 6. Check Terms & Privacy checkbox
     if (!termsAccepted) {
-      setErrorMsg('You must agree to the VeraMedia Terms of Service & Privacy Policy.');
+      setErrorMsg('You must agree to the TrustLens Terms of Service & Privacy Policy.');
       return;
     }
 
@@ -104,7 +104,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
           </div>
 
           <p className="text-sm text-slate-300">
-            Welcome to VeraMedia. Registering creates a secure local credential block used to encrypt and watermark forensic files.
+            Welcome to TrustLens. Registering creates a secure local credential block used to encrypt and watermark forensic files.
           </p>
 
           {/* Error and Success Notifications */}
