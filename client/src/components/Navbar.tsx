@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   ShieldCheck, Menu, X, KeyRound, User, LogOut, CheckCircle2, 
   ChevronDown, Settings, Clock, FileText, UserPlus, ShieldAlert,
-  ArrowRight, Sparkles, HelpCircle, HardDrive
+  ArrowRight, Sparkles, HelpCircle, HardDrive, Home
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -43,6 +43,7 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
     navItems.push({ id: 'logout', name: 'Logout' });
   } else {
     navItems.push({ id: 'home', name: 'Home' });
+    navItems.push({ id: 'verify', name: 'Verify Media' });
     navItems.push({ id: 'methods', name: 'Verification Methods' });
     navItems.push({ id: 'about', name: 'About' });
     navItems.push({ id: 'login', name: 'Login' });
@@ -132,6 +133,22 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
                       <span className="text-xs text-white truncate font-semibold block">{user.email}</span>
                       <span className="text-[10px] text-blue-400 block font-mono capitalize">({user.role} clearance)</span>
                     </div>
+
+                    <button
+                      onClick={() => handleLinkClick('home')}
+                      className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left select-none"
+                    >
+                      <Home className="h-3.5 w-3.5 text-blue-400" />
+                      <span>Home</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleLinkClick('verify')}
+                      className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left select-none"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />
+                      <span>Verify Screen</span>
+                    </button>
 
                     <button
                       onClick={() => handleLinkClick('profile')}

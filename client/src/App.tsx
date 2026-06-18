@@ -45,6 +45,9 @@ export default function App() {
   const [historyList, setHistoryList] = useState<VerificationResult[]>([]);
   const [stats, setStats] = useState<Stats>(INITIAL_STATS);
 
+  // Registration success notification state
+  const [registrationSuccessInfo, setRegistrationSuccessInfo] = useState<{ email?: string; message?: string } | null>(null);
+
   // Cross-view selections (e.g. clicking "view details" on history routes to report preset)
   const [reportFocusItem, setReportFocusItem] = useState<VerificationResult | null>(null);
 
@@ -162,8 +165,6 @@ export default function App() {
       email: null,
     });
     localStorage.removeItem('veramedia_user');
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
   };
 
   const handleUpdateProfile = (updatedUser: { fullName: string; username: string; email: string, avatarUrl?: string }) => {
@@ -289,6 +290,8 @@ export default function App() {
 
         {activeTab === 'verify' && (
           <VerifyView 
+            user={user}
+            onNavigateToTab={handleTabChange}
             activeSubTab={activeSubTab} 
             setActiveSubTab={setActiveSubTab} 
             onAddHistoryItem={(newItem) => {
@@ -329,11 +332,20 @@ export default function App() {
           <LoginView 
             onLogin={(customUser) => {
               handleLogin(customUser);
+              setRegistrationSuccessInfo(null);
               const isAdmin = customUser?.email === 'a.brent@cyber-forensics.verify' || customUser?.username === 'abrent_forensics';
               handleTabChange(isAdmin ? 'admin' : 'profile');
             }}
-            onNavigateToRegister={() => handleTabChange('register')}
-            onNavigateToForgotPassword={() => handleTabChange('forgot-password')}
+            onNavigateToRegister={() => {
+              setRegistrationSuccessInfo(null);
+              handleTabChange('register');
+            }}
+            onNavigateToForgotPassword={() => {
+              setRegistrationSuccessInfo(null);
+              handleTabChange('forgot-password');
+            }}
+            initialEmail={registrationSuccessInfo?.email}
+            registrationSuccessMessage={registrationSuccessInfo?.message}
           />
         )}
 
@@ -341,10 +353,16 @@ export default function App() {
         {activeTab === 'register' && (
           <RegisterView 
             onRegisterSuccess={(newUser) => {
-              handleLogin({ email: newUser.email, fullName: newUser.fullName, username: newUser.username });
-              handleTabChange('profile');
+              setRegistrationSuccessInfo({
+                email: newUser.email,
+                message: "Security credentials created successfully! Please enter your password to sign in now."
+              });
+              handleTabChange('login');
             }}
-            onNavigateToLogin={() => handleTabChange('login')}
+            onNavigateToLogin={() => {
+              setRegistrationSuccessInfo(null);
+              handleTabChange('login');
+            }}
           />
         )}
 

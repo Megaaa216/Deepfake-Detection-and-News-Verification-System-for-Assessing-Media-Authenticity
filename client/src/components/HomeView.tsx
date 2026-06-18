@@ -17,34 +17,38 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         <div className="max-w-3xl relative z-10 space-y-6">
           <div className="inline-flex items-center space-x-2 bg-blue-900/40 text-blue-300 font-mono text-[11px] uppercase tracking-wider px-3 py-1 rounded-full border border-blue-800/60">
             <Sparkles className="h-3 w-3 animate-pulse" />
-            <span>AI-Driven Cryptographic & Neural Analysis</span>
+            <span>AI-Based Social Media Content Verification System</span>
           </div>
           
           <h1 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-none text-white">
-            Deepfake Detection & <br/>
+            Verify Public Social <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-sky-350">
-              News Verification System
+              Media Content & Links
             </span>
           </h1>
 
           <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
-            Assess media authenticity in real-time. Protect your editorial output or research from artificial visual manipulation, synthesized voice injection, and coordinated bad-faith misinformation campaigns.
+            TrustLens analyzes public social media links to detect fake news, edited images, and deepfake videos. Verify public contents from <strong>Facebook, YouTube, TikTok, Instagram, X, Reddit</strong>, and similar public platforms with smart risk-based credibility reports and automatic history tracking.
+          </p>
+
+          <p className="text-xs text-slate-400 font-mono">
+            ⚠️ PUBLIC CONTENT ONLY • ENCRYPTED ANALYSIS SECURITY • DEEPFAKE FOCUS
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
             <button
-              onClick={() => onNavigateToVerify('news_link')}
+              onClick={() => onNavigateToTab('verify')}
               className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-3 rounded-lg shadow-lg hover:shadow-blue-500/20 transition-all flex items-center justify-center space-x-2 group cursor-pointer"
             >
               <Globe className="h-4 w-4 text-blue-300" />
-              <span>Validate News Link</span>
+              <span>Verify Social Media Link</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
             <button
-              onClick={() => onNavigateToVerify('image')}
+              onClick={() => onNavigateToTab('methods')}
               className="bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-200 font-medium px-6 py-3 rounded-lg border border-slate-700 transition-all flex items-center justify-center space-x-2 cursor-pointer"
             >
-              <span>Upload & Verify Media</span>
+              <span>View Verification Methods</span>
             </button>
           </div>
         </div>
@@ -53,15 +57,15 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         <div className="mt-12 pt-6 border-t border-slate-800/80 grid grid-cols-2 lg:grid-cols-4 gap-4 text-slate-400 text-xs font-mono">
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Analysis Core</span>
-            <span className="text-slate-200 block">VeraNeural v4.2 Stable</span>
+            <span className="text-slate-200 block">TrustLens Deep Engine v4.2 Stable</span>
           </div>
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Verification Speed</span>
-            <span className="text-slate-200 block">⚡ ~1.8 Seconds per block</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Scraper Module</span>
+            <span className="text-slate-200 block">⚡ Public Extractor Multi-SDK</span>
           </div>
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Fact Registry</span>
-            <span className="text-slate-200 block">IFCN Hub Synchronized</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Main Focus Area</span>
+            <span className="text-blue-400 block">Video & Deepfake Synthesis</span>
           </div>
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Active Auditing</span>
@@ -80,67 +84,70 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
             Tri-Tier Verification Protocol
           </h2>
           <p className="text-sm text-slate-500">
-            Every analysis queries multi-spectral deep fake neural layers, checks source domains, and references accredited journalistic indexes.
+            Every analysis queries multi-spectral deepfake neural layers, parses public social media text for fake news indicators, and references accredited journalistic indexes.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Card 1: News Verification */}
-          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
+          {/* Card 1: Main Deepfake Detection focus */}
+          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between ring-1 ring-blue-550/20">
             <div className="space-y-4">
-              <div className="bg-blue-50 text-blue-600 p-3 rounded-xl w-fit">
-                <Globe className="h-6 w-6 stroke-[1.5]" />
+              <div className="bg-blue-50 text-blue-600 p-3 rounded-xl w-fit relative">
+                <Cpu className="h-6 w-6 stroke-[1.5]" />
+                <span className="absolute -top-1 -right-1 bg-blue-650 text-white text-[8px] font-mono font-bold px-1 rounded-full uppercase">Main</span>
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900">News Verification</h3>
+              <h3 className="text-lg font-display font-semibold text-slate-900 flex items-center space-x-2">
+                <span>Video & Deepfake</span>
+              </h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Validates article links against white-listed editorial repositories. Inspects author signatures, domain registration intervals, linguistic neutrality scores, and factual source chains.
+                Processes physical image pixels and audio-video streams from TikTok, YouTube, and more. Scrapes files for microscopic visual warp lines, geometric alignment, and AI vocal clones.
               </p>
             </div>
             <button
-              onClick={() => onNavigateToVerify('news_link')}
+              onClick={() => onNavigateToTab('verify')}
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
             >
-              <span>Verify URLs</span>
+              <span>Scan video assets</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
 
-          {/* Card 2: Deepfake Detection */}
+          {/* Card 2: News & Text Verification */}
           <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-slate-50 text-slate-700 p-3 rounded-xl w-fit">
-                <Cpu className="h-6 w-6 stroke-[1.5]" />
+                <Globe className="h-6 w-6 stroke-[1.5]" />
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900">Deepfake Detection</h3>
+              <h3 className="text-lg font-display font-semibold text-slate-900">Text & Claims credibility</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Processes physical image pixels and audio-video streams. Scrapes files for microscopic visual warp lines, geometric alignment mismatches, irregular blinking frequency, and AI voices.
+                Extracts captions or linked articles from X, Reddit, and Facebook. Analyzes text against whitelisted editorial indexes, assessing clickbait risk and linguistic neutrality scores.
               </p>
             </div>
             <button
-              onClick={() => onNavigateToVerify('image')}
+              onClick={() => onNavigateToTab('verify')}
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
             >
-              <span>Scan photo/video files</span>
+              <span>Validate textual claims</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
 
-          {/* Card 3: Risk Assessment */}
+          {/* Card 3: Graphic / Image analysis */}
           <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-slate-50 text-slate-700 p-3 rounded-xl w-fit">
                 <ShieldAlert className="h-6 w-6 stroke-[1.5]" />
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900">Risk Assessment</h3>
+              <h3 className="text-lg font-display font-semibold text-slate-900">Image manipulation</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Applies standard mathematical weights to raw detection counts. Generates clean risk scores, technical warnings, plain-language reports, and sharing advice before content goes viral.
+                Evaluates shared image posts on Instagram and Facebook. Scans for structural boundaries anomalies, sensor noise variance, shadow light inconsistencies and metadata edits.
               </p>
             </div>
             <button
-              onClick={() => onNavigateToTab('methods')}
+              onClick={() => onNavigateToTab('verify')}
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
             >
-              <span>Explore Methods API</span>
+              <span>Deconstruct images</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
@@ -150,9 +157,9 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
       {/* Trust Quote / Banner */}
       <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="space-y-1 max-w-xl text-center lg:text-left">
-          <h4 className="text-sm font-semibold text-slate-900">Designed to meet international auditing specifications</h4>
+          <h4 className="text-sm font-semibold text-slate-900">Designed to meet international media auditing specifications</h4>
           <p className="text-xs text-slate-500">
-            Complies with CAI (Content Authenticity Initiative) standards, utilizing deep cryptographic checks to match authentic camera metadata signatures.
+            Works exclusively on public social platform URLs. Complies with CAI (Content Authenticity Initiative) standards to safeguard public narrative integrity.
           </p>
         </div>
         <div className="flex items-center space-x-6 shrink-0 text-slate-400 font-mono text-xs">
