@@ -1,0 +1,6 @@
+{
+  "name": "TrustLens",
+  "description": "A modern web platform for media authenticity analysis, deepfake detection, article credibility scoring, and source verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
