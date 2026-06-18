@@ -16,7 +16,7 @@ export default function AboutView() {
     }
   ];
 
-n  return (
+  return (
     <div className="space-y-10 py-6 max-w-4xl mx-auto">
       {/* Title block */}
       <div className="space-y-2 text-center max-w-2xl mx-auto">

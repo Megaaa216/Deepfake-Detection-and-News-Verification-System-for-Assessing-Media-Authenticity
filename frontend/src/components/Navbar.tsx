@@ -35,19 +35,14 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
     navItems.push({ id: 'verify', name: 'Verify Media' });
     navItems.push({ id: 'history', name: 'History' });
     navItems.push({ id: 'reports', name: 'Reports' });
-    navItems.push({ id: 'profile', name: 'Profile' });
-    navItems.push({ id: 'settings', name: 'Settings' });
     if (user.role === 'admin') {
       navItems.push({ id: 'admin', name: 'Admin Dashboard' });
     }
-    navItems.push({ id: 'logout', name: 'Logout' });
   } else {
     navItems.push({ id: 'home', name: 'Home' });
     navItems.push({ id: 'verify', name: 'Verify Media' });
     navItems.push({ id: 'methods', name: 'Verification Methods' });
     navItems.push({ id: 'about', name: 'About' });
-    navItems.push({ id: 'login', name: 'Login' });
-    navItems.push({ id: 'register', name: 'Register' });
   }
 
   const handleLinkClick = (id: string) => {
@@ -135,43 +130,11 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
                     </div>
 
                     <button
-                      onClick={() => handleLinkClick('home')}
-                      className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left select-none"
-                    >
-                      <Home className="h-3.5 w-3.5 text-blue-400" />
-                      <span>Home</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleLinkClick('verify')}
-                      className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left select-none"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />
-                      <span>Verify Screen</span>
-                    </button>
-
-                    <button
                       onClick={() => handleLinkClick('profile')}
                       className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left"
                     >
                       <User className="h-3.5 w-3.5 text-blue-400" />
                       <span>Profile</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleLinkClick('history')}
-                      className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left"
-                    >
-                      <Clock className="h-3.5 w-3.5 text-blue-400" />
-                      <span>History</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleLinkClick('reports')}
-                      className="w-full px-4 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-850 flex items-center space-x-2 block text-left"
-                    >
-                      <FileText className="h-3.5 w-3.5 text-blue-400" />
-                      <span>Reports</span>
                     </button>
 
                     <button
