@@ -21,18 +21,18 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           </div>
           
           <h1 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-none text-white">
-            Detect Deepfakes. <br/>
+            Detect Deepfakes, AI Images, <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-sky-350">
-              Verify Media Authenticity.
+              and Suspicious News.
             </span>
           </h1>
 
           <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
-            TrustLens analyzes public social media content from <strong>Facebook, YouTube, TikTok, Instagram, X, Reddit</strong>, and more. Detect deepfake videos, AI-generated images, and suspicious news using advanced AI credibility assessment.
+            TrustLens analyzes public content from social media platforms, checks for manipulation signals, and returns a risk-based credibility assessment. The system evaluates video deepfake consistency, image manipulation and AI generation traces, and news text credibility.
           </p>
 
           <p className="text-xs text-blue-400 font-mono tracking-wider">
-            DEEPFAKE FOCUS • MULTI-PLATFORM SUPPORT • AI RISK ANALYSIS
+            PUBLIC CONTENT VERIFICATION • VIDEO, IMAGE, AND NEWS ANALYSIS • RISK-BASED CREDIBILITY SCORING
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
@@ -56,22 +56,22 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         {/* Technical HUD status bar */}
         <div className="mt-12 pt-6 border-t border-slate-800/80 grid grid-cols-2 lg:grid-cols-4 gap-4 text-slate-400 text-xs font-mono">
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Analysis Core</span>
-            <span className="text-slate-200 block">TrustLens Deep Engine v4.2 Stable</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Analysis Protocol</span>
+            <span className="text-slate-200 block">TrustLens Verification Core v4.2</span>
           </div>
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Scraper Module</span>
-            <span className="text-slate-200 block">⚡ Public Extractor Multi-SDK</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Data Source</span>
+            <span className="text-slate-200 block">⚡ Public Social Platforms</span>
           </div>
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Main Focus Area</span>
-            <span className="text-blue-400 block">Video & Deepfake Synthesis</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Scope of Capability</span>
+            <span className="text-blue-400 block">Videos, Images, & News Text</span>
           </div>
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Active Auditing</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Assessment Confidence</span>
             <span className="text-emerald-400 flex items-center space-x-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block"></span>
-              <span>100% Cryptographically Bound</span>
+              <span>Evidence-Based Probability</span>
             </span>
           </div>
         </div>
@@ -80,32 +80,35 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
       {/* Feature Cards Section */}
       <div className="space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <h2 className="text-2xl font-display font-bold text-slate-900">
+          <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
             Tri-Tier Verification Protocol
           </h2>
-          <p className="text-sm text-slate-500">
-            Every analysis queries multi-spectral deepfake neural layers, parses public social media text for fake news indicators, and references accredited journalistic indexes.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Every analysis queries multi-spectral neural classifiers, parses public social media text for suspicious language indicators, and references accredited journalistic indexes.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Card 1: Main Deepfake Detection focus */}
-          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between ring-1 ring-blue-550/20">
+          {/* Card 1: Video Analysis focus */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between ring-1 ring-blue-500/5 dark:ring-blue-400/5">
             <div className="space-y-4">
-              <div className="bg-blue-50 text-blue-600 p-3 rounded-xl w-fit relative">
+              <div className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 p-3 rounded-xl w-fit relative">
                 <Cpu className="h-6 w-6 stroke-[1.5]" />
-                <span className="absolute -top-1 -right-1 bg-blue-650 text-white text-[8px] font-mono font-bold px-1 rounded-full uppercase">Main</span>
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-mono font-bold px-1 rounded-full uppercase">Main</span>
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900 flex items-center space-x-2">
-                <span>Video & Deepfake</span>
+              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Video Analysis</span>
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Processes physical image pixels and audio-video streams from TikTok, YouTube, and more. Scrapes files for microscopic visual warp lines, geometric alignment, and AI vocal clones.
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                Checks for face and audio inconsistencies. Analyzes lip-sync alignment frequencies, facial mesh landmark boundaries, and vocal acoustic clones across TikTok, YouTube, and other public video formats.
               </p>
             </div>
             <button
-              onClick={() => onNavigateToTab('verify')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
+              onClick={() => {
+                onNavigateToVerify('video');
+                onNavigateToTab('verify');
+              }}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
             >
               <span>Scan video assets</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
@@ -113,19 +116,22 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           </div>
 
           {/* Card 2: News & Text Verification */}
-          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="bg-slate-50 text-slate-700 p-3 rounded-xl w-fit">
+              <div className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-3 rounded-xl w-fit">
                 <Globe className="h-6 w-6 stroke-[1.5]" />
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900">Text & Claims credibility</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Extracts captions or linked articles from X, Reddit, and Facebook. Analyzes text against whitelisted editorial indexes, assessing clickbait risk and linguistic neutrality scores.
+              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white">News & Text Analysis</h3>
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                Evaluates source reliability, news credibility, and suspicious language signals. Scans social media headlines, captions, and links for sensationalism, emotional bias, and factual alignment.
               </p>
             </div>
             <button
-              onClick={() => onNavigateToTab('verify')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
+              onClick={() => {
+                onNavigateToVerify('news_link');
+                onNavigateToTab('verify');
+              }}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
             >
               <span>Validate textual claims</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
@@ -133,19 +139,22 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           </div>
 
           {/* Card 3: Graphic / Image analysis */}
-          <div className="bg-white border border-slate-100 hover:border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="bg-slate-50 text-slate-700 p-3 rounded-xl w-fit">
+              <div className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-3 rounded-xl w-fit">
                 <ShieldAlert className="h-6 w-6 stroke-[1.5]" />
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900">Image manipulation</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Evaluates shared image posts on Instagram and Facebook. Scans for structural boundaries anomalies, sensor noise variance, shadow light inconsistencies and metadata edits.
+              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white">Image Analysis</h3>
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                Detects manual editing traces, composite pixel anomalies, and AI generation signals. Scans specular light vectors, JPEG quantization discrepancies, and sensor noise variations.
               </p>
             </div>
             <button
-              onClick={() => onNavigateToTab('verify')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer"
+              onClick={() => {
+                onNavigateToVerify('image');
+                onNavigateToTab('verify');
+              }}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
             >
               <span>Deconstruct images</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
@@ -154,20 +163,84 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         </div>
       </div>
 
+      {/* Workflow & Purpose Grid Section */}
+      <div className="grid lg:grid-cols-2 gap-8 pt-8 border-t border-slate-100 dark:border-slate-850">
+        {/* Verification Workflow */}
+        <div className="space-y-6">
+          <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+            <span className="text-blue-600 dark:text-blue-400">01 /</span>
+            <span>Verification Workflow</span>
+          </h3>
+          <div className="space-y-4 font-mono">
+            {[
+              { step: '1', title: 'Submit Evidence', desc: 'Paste a public social media link or mount local image/video files into the workspace.' },
+              { step: '2', title: 'Extract Target Layers', desc: 'The system parses public endpoints to extract available text metadata, image keyframes, or audio waves.' },
+              { step: '3', title: 'Multi-Spectral Analysis', desc: 'Target media layers are scanned for specialized manipulation traces, AI generation indicators, or credibility flags.' },
+              { step: '4', title: 'Generate Risk Report', desc: 'Produces confidence scoring metrics and a detailed reasoning log of all mapped manipulation signals.' },
+              { step: '5', title: 'Record Case File', desc: 'The verified case is logged locally into your secure session history file for future comparison.' }
+            ].map((w, idx) => (
+              <div key={idx} className="flex items-start space-x-3 text-xs">
+                <span className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold h-6 w-6 rounded-full flex items-center justify-center shrink-0">
+                  {w.step}
+                </span>
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-slate-900 dark:text-slate-100">{w.title}</h4>
+                  <p className="text-slate-500 dark:text-slate-400 font-sans leading-relaxed">{w.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Project Purpose */}
+        <div className="space-y-6">
+          <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+            <span className="text-blue-600 dark:text-blue-400">02 /</span>
+            <span>Project Objectives & Purpose</span>
+          </h3>
+          <div className="grid gap-4">
+            {[
+              {
+                title: 'Protect Users from Manipulated Media',
+                desc: 'Safeguard users against sophisticated deepfakes and AI-generated social assets by pinpointing specific manipulation signals.'
+              },
+              {
+                title: 'Support Content Verification Research',
+                desc: 'Act as an open experimental benchmark and research terminal exploring multi-modal validation metrics on public media.'
+              },
+              {
+                title: 'Mitigate the Spread of Misinformation',
+                desc: 'Help journalists and readers screen alarming public posts, unverified headlines, and modified graphics before sharing.'
+              }
+            ].map((p, idx) => (
+              <div key={idx} className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 p-4 rounded-xl space-y-1">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center space-x-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                  <span>{p.title}</span>
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans pl-3.5">
+                  {p.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Trust Quote / Banner */}
-      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex flex-col lg:flex-row items-center justify-between gap-6">
+      <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="space-y-1 max-w-xl text-center lg:text-left">
-          <h4 className="text-sm font-semibold text-slate-900">Designed to meet international media auditing specifications</h4>
-          <p className="text-xs text-slate-500">
-            Works exclusively on public social platform URLs. Complies with CAI (Content Authenticity Initiative) standards to safeguard public narrative integrity.
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Designed for social media media risk screening</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Works exclusively on public social platform URLs. Provides evidence-based indicators to safeguard public narrative integrity without assuring perfect absolute truth.
           </p>
         </div>
         <div className="flex items-center space-x-6 shrink-0 text-slate-400 font-mono text-xs">
-          <div className="flex items-center space-x-1 text-emerald-600">
+          <div className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
             <CheckCircle className="h-4 w-4" />
             <span>Factual Integrity</span>
           </div>
-          <div className="flex items-center space-x-1 text-blue-600">
+          <div className="flex items-center space-x-1 text-blue-600 dark:text-blue-400">
             <CheckCircle className="h-4 w-4" />
             <span>Origin Confirmed</span>
           </div>

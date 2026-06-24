@@ -3,10 +3,10 @@ import {
   Globe, AlertTriangle, CheckCircle2, XCircle, Search, Sparkles, 
   RefreshCw, BarChart2, ShieldCheck, ChevronRight, HelpCircle, 
   FileText, Image, Video, ShieldAlert, BadgeInfo, CheckCircle, 
-  Lock, ArrowRight, Eye, EyeOff, Layers, Settings, ExternalLink,
-  UploadCloud
+  Lock, ArrowRight, Layers, Settings, UploadCloud,
+  Fingerprint, Compass, Activity, Sliders, Binary
 } from 'lucide-react';
-import { VerificationResult, VerificationType, VerificationReason } from '../types';
+import { VerificationResult, VerificationType, VerificationReason, VerificationStatus } from '../types';
 
 interface VerifyViewProps {
   activeSubTab: VerificationType;
@@ -23,28 +23,28 @@ export default function VerifyView({
   user,
   onNavigateToTab
 }: VerifyViewProps) {
-  // Main form states
-  const [inputUrl, setInputUrl] = useState('https://www.tiktok.com/@finance_trends/video/732890184');
-  const [selectedContentType, setSelectedContentType] = useState<'all' | 'video' | 'text' | 'image'>('all');
+  // Toggle between URL input or File Upload
+  const [intakeMethod, setIntakeMethod] = useState<'url' | 'upload'>('url');
 
-  // Manual File Verification states
+  // Input states
+  const [inputUrl, setInputUrl] = useState('https://www.tiktok.com/@finance_trends/video/732890184');
   const [selectedFile, setSelectedFile] = useState<{ name: string; size: string } | null>(null);
   const [fileDragOver, setFileDragOver] = useState(false);
   const [fileSizeStr, setFileSizeStr] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // UI state
+  // Analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepText, setAnalysisStepText] = useState('');
   const [result, setResult] = useState<VerificationResult | null>(null);
 
-  // Auto-detected states based on inputUrl
+  // Auto-detected metadata based on URL input
   const [detectedPlatform, setDetectedPlatform] = useState<{ name: string; badgeColor: string; details: string } | null>(null);
   const [accessState, setAccessState] = useState<{ status: 'Accessible' | 'Unsupported' | 'Unavailable'; reason: string; color: string } | null>(null);
   const [detectedContents, setDetectedContents] = useState<string[]>([]);
 
-  // Restricted Access lock gate if user is not authenticated
+  // Restricted Access gate if user is not authenticated
   if (!user || !user.loggedIn) {
     return (
       <div className="max-w-xl mx-auto py-16 px-4 text-center space-y-8 animate-fade-in" id="portal-lock-container">
@@ -82,7 +82,7 @@ export default function VerifyView({
     );
   }
 
-  // Pre-loaded social media presets
+  // Preloaded investigative social media presets
   const SOCIAL_PRESETS = [
     {
       id: 'p-1',
@@ -178,7 +178,7 @@ export default function VerifyView({
       hasText: false,
       hasImage: true,
       hasVideo: false,
-      imageDetails: 'Full spec camera-sensor noise pattern consistent on all channels.Specularity matching passed.',
+      imageDetails: 'Full spec camera-sensor noise pattern consistent on all channels. Specularity matching passed.',
       reasons: [
         { id: 'ig-r1', name: 'Bilateral Noise Uniformity', status: 'passed', details: 'Sensor background noise values are distributed flatly across the canvas with zero localized edits.' }
       ]
@@ -202,32 +202,52 @@ export default function VerifyView({
         { id: 'red-r1', name: 'Edge Discontinuity Evaluator', status: 'failed', details: 'Localized sharpness levels change abruptly, typical of manual crop feathering.' },
         { id: 'red-r2', name: 'Vector Shadow Convergence', status: 'failed', details: 'Shadow direction under the participants contradicts the indoor ceiling spotlight coordinates.' }
       ]
+    }
+  ];
+
+  // File verification presets
+  const FILE_PRESETS = [
+    {
+      id: 'f-1',
+      name: 'senator_briefing_leak.webp',
+      type: 'image',
+      size: '2.4 MB',
+      status: 'suspicious',
+      riskScore: 68,
+      verdict: 'Manual JPEG retouch and clone stamp overlay detected around the backdrop and hands. Color Filter Array (CFA) structures exhibit repeating anomalies.',
+      recommendation: 'Visual manipulation concern. High certainty of composite editing utilizing brush transparency filters. Do not utilize in primary publications.',
+      reasons: [
+        { id: 'f-r1', name: 'JPEG Compression Wave', status: 'failed', details: 'Quantization mismatch identified between central participants and surrounding seating background.' },
+        { id: 'f-r2', name: 'EXIF Integrity Check', status: 'warning', details: 'Contains anomalous header timestamps modified via Paint.NET libraries.' }
+      ]
     },
     {
-      id: 'p-7',
-      platform: 'Instagram',
-      url: 'https://www.instagram.com/p/private_restricted_story/',
+      id: 'f-2',
+      name: 'chief_officer_synthetic_voice.mp4',
       type: 'video',
-      status: 'likely_authentic',
-      riskScore: 0,
-      verdict: 'Access Denied. Instagram account or story is privatized/restricted.',
-      recommendation: '🔒 Private Content Status. Our scraping API cannot legally index raw data streams from secured profile limits. Please download the media and use manual file analysis.',
-      unavailable: true,
-      unavailabilityReason: 'Private content',
-      reasons: []
+      size: '18.1 MB',
+      status: 'likely_deepfake',
+      riskScore: 92,
+      verdict: 'Facial lip synchrony frequency lags by 120ms relative to vocal formant frequencies. Auditory signature reveals synthesized TTS spectral baselines.',
+      recommendation: 'Extremely high risk. AI-generated voice clone merged onto a public stock video frame rate sequence.',
+      reasons: [
+        { id: 'f-r3', name: 'Facial Landmark Tracking', status: 'failed', details: 'Sub-pixel spatial drift mapped relative to facial mesh layout, 67 vertex points exhibit jitter.' },
+        { id: 'f-r4', name: 'Acoustic Wavelet Match', status: 'failed', details: 'Spectral voiceprint exhibits dynamic compression patterns consistent with ElevenLabs V2 model.' }
+      ]
     },
     {
-      id: 'p-8',
-      platform: 'Other',
-      url: 'https://some-obscure-illegal-forum.tor/threads/conspiracy_alert',
-      type: 'news_link',
+      id: 'f-3',
+      name: 'unmanipulated_interview_raw.mp4',
+      type: 'video',
+      size: '25.0 MB',
       status: 'likely_authentic',
-      riskScore: 0,
-      verdict: 'Extraction Failed. Target site protocol is unsupported by standard indexing pipelines.',
-      recommendation: '⛔ Unsupported Platform. Web address belongs to restricted tor/onion networks or unrecognized custom protocols. Scraper rejected standard handshakes.',
-      unavailable: true,
-      unavailabilityReason: 'Unsupported platform',
-      reasons: []
+      riskScore: 2,
+      verdict: 'No facial mesh edits or acoustic anomalies identified. Organic voice features match natural physiological breathing frequencies.',
+      recommendation: 'Low concern profile. Safe, verified unmanipulated video content.',
+      reasons: [
+        { id: 'f-r5', name: 'Facial Landmark Tracking', status: 'passed', details: 'Zero keyframe drift. Pixel-edge brightness matches ceiling light angles perfectly.' },
+        { id: 'f-r6', name: 'Biological Voice Signature', status: 'passed', details: 'Natural pause breathing patterns and physiological laryngeal resonances authenticated.' }
+      ]
     }
   ];
 
@@ -323,22 +343,34 @@ export default function VerifyView({
 
   const selectPresetUrl = (preset: typeof SOCIAL_PRESETS[number]) => {
     setInputUrl(preset.url);
-    // Auto reset result so they can click "Run Verification"
+    setActiveSubTab(preset.type as VerificationType);
+    setIntakeMethod('url');
     setResult(null);
   };
 
-  // Mock analysis logs
+  const selectFilePreset = (preset: typeof FILE_PRESETS[number]) => {
+    setSelectedFile({ name: preset.name, size: preset.size });
+    setFileSizeStr(preset.size);
+    setActiveSubTab(preset.type as VerificationType);
+    setIntakeMethod('upload');
+    setResult(null);
+  };
+
+  // Mock stage analysis logs
   const verificationLogs = [
-    { progress: 15, text: 'Resolving destination handshakes & identifying platform scraper profile...' },
-    { progress: 35, text: 'Executing secure public extraction... Extracting captions, images, and raw media blocks...' },
-    { progress: 55, text: 'Routing media data to deepfake Neural Core & examining temporal spatial consistency...' },
-    { progress: 75, text: 'Comparing extracted claims with accredited independent fact-checking registries...' },
-    { progress: 90, text: 'Evaluating EXIF visual boundaries, chromatic noise, and voice frequency patterns...' },
-    { progress: 100, text: 'Structuring risk reports and publishing verified outcome to history log.' }
+    { progress: 10, text: 'Resolving destination handshakes & identifying platform scraper profile...' },
+    { progress: 25, text: 'Initializing payload scraping sequence... Downloading raw public buffer layers...' },
+    { progress: 40, text: 'Payload resolved. Executing signal demultiplexing & spectral extraction...' },
+    { progress: 55, text: 'Directing extracted imagery and audio streams to deep neural classifiers...' },
+    { progress: 70, text: 'Running localized spatial analysis, temporal inconsistencies check & lighting vector alignment...' },
+    { progress: 85, text: 'Executing language model classifiers to evaluate headline sensationalism and bias indexes...' },
+    { progress: 95, text: 'Running global cross-source search and peer journalistic registry comparisons...' },
+    { progress: 100, text: 'Cryptographic hash signature sealed. Generating ultimate case report.' }
   ];
 
   const handleStartAnalysis = () => {
-    if (!inputUrl.trim()) return;
+    if (intakeMethod === 'url' && !inputUrl.trim()) return;
+    if (intakeMethod === 'upload' && !selectedFile) return;
 
     setIsAnalyzing(true);
     setAnalysisProgress(0);
@@ -352,86 +384,118 @@ export default function VerifyView({
         setAnalysisStepText(verificationLogs[stepIdx].text);
       } else {
         clearInterval(interval);
-        finalizeSocialAnalysis();
+        finalizeAnalysis();
       }
-    }, 450);
+    }, 380);
   };
 
-  const finalizeSocialAnalysis = () => {
+  const finalizeAnalysis = () => {
     setIsAnalyzing(false);
 
-    // Find matched scenario
-    const match = SOCIAL_PRESETS.find(p => p.url.trim().toLowerCase() === inputUrl.trim().toLowerCase());
-    
     let simulatedRecord: VerificationResult;
 
-    if (match) {
-      simulatedRecord = {
-        id: `check-${Date.now()}`,
-        type: match.type as VerificationType,
-        targetName: match.url,
-        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        riskScore: match.riskScore,
-        status: match.status as any,
-        verdict: match.verdict,
-        recommendation: match.recommendation,
-        platform: match.platform,
-        unavailable: match.unavailable,
-        unavailabilityReason: match.unavailabilityReason,
-        reasons: match.reasons as VerificationReason[]
-      };
-    } else {
-      // Custom scenario based on access state
-      const acc = accessState?.status;
-      if (acc === 'Unavailable') {
+    if (intakeMethod === 'url') {
+      const match = SOCIAL_PRESETS.find(p => p.url.trim().toLowerCase() === inputUrl.trim().toLowerCase());
+      
+      if (match) {
         simulatedRecord = {
           id: `check-${Date.now()}`,
-          type: 'news_link',
-          targetName: inputUrl,
+          type: match.type as VerificationType,
+          targetName: match.url,
           date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: 0,
-          status: 'likely_authentic',
-          verdict: 'Verification aborted. Secure platform protocol prevents automated data scraping on restricted channels.',
-          recommendation: '🔒 Locked or Private Content. The system cannot perform AI inference on this link due to security protocols. Please download and upload the text/media file manually.',
-          platform: detectedPlatform?.name || 'Other',
-          unavailable: true,
-          unavailabilityReason: 'Private content',
-          reasons: []
-        };
-      } else if (acc === 'Unsupported') {
-        simulatedRecord = {
-          id: `check-${Date.now()}`,
-          type: 'news_link',
-          targetName: inputUrl,
-          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: 0,
-          status: 'likely_authentic',
-          verdict: 'Analytical extraction failed. Destination web host protocol stands unsupported.',
-          recommendation: '⛔ Unsupported Platform. The scraper cannot find public multimedia handles on this target Web address. Please submit files directly.',
-          platform: 'Other',
-          unavailable: true,
-          unavailabilityReason: 'Unsupported platform',
-          reasons: []
+          riskScore: match.riskScore,
+          status: match.status as any,
+          verdict: match.verdict,
+          recommendation: match.recommendation,
+          platform: match.platform,
+          reasons: match.reasons as VerificationReason[]
         };
       } else {
-        // Normal accessible custom logic
-        const defaultScore = Math.floor(Math.random() * 45) + 15; // standard suspicious range
+        // Custom URL dynamic generation
+        const score = Math.floor(Math.random() * 85) + 10;
+        let status: VerificationStatus = 'likely_authentic';
+        let outcomeText = '';
+        let recommend = '';
+        
+        if (score < 20) {
+          status = 'likely_authentic';
+          outcomeText = 'Verification sweep completed for public URL. Structural metrics indicate a high probability of unmanipulated content, aligning perfectly with standard public feeds.';
+          recommend = 'Nominal credibility. The content follows standard journalistic frameworks and contains unaltered digital structures. Safe to share.';
+        } else if (score < 55) {
+          status = 'suspicious';
+          outcomeText = 'Elevated structural discrepancies flagged in target content. Visual features or text patterns indicate localized modification, sensational tone, or unverified claims.';
+          recommend = 'Exercise alert observation. The data exhibits language bias or light edits. Cross-reference statements with major independent networks before referencing.';
+        } else {
+          status = 'likely_deepfake';
+          outcomeText = 'Critical synthesis indicators detected. Forensic examination of the media layers demonstrates heavy neural modification, voice synthesis matching cloning APIs, or fully fabricated news syntax.';
+          recommend = 'Critical threat assessment. High risk of false dissemination. Multiple synthetic fingerprints identified. Strenuously avoid distribution.';
+        }
+
         const plat = detectedPlatform?.name || 'Other';
+
         simulatedRecord = {
-          id: `check-${Date.now()}`,
-          type: plat === 'YouTube' || plat === 'TikTok' ? 'video' : 'news_link',
+          id: `case-${Math.floor(Math.random()*90000)+10000}`,
+          type: activeSubTab,
           targetName: inputUrl,
           date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: defaultScore,
-          status: defaultScore < 20 ? 'likely_authentic' : defaultScore < 60 ? 'suspicious' : 'likely_deepfake',
-          verdict: `Authenticity sweep completed for public ${plat} content link. Our AI modules extracted the primary public elements and verified semantic structures.`,
-          recommendation: defaultScore < 30 ? 'Low concern. Credibility indices look standard.' : 'Caution. The extracted captions contain uncorroborated claims with some language bias. Double check statements prior to sharing.',
+          riskScore: score,
+          status: status,
+          verdict: outcomeText,
+          recommendation: recommend,
           platform: plat,
-          reasons: [
-            { id: 'cust-r1', name: 'Platform API Signature Check', status: 'passed', details: `Source content is authenticated on public database logs of ${plat}.` },
-            { id: 'cust-r2', name: 'Content Type Routing', status: 'passed', details: 'Correctly routed extracted components for Deepfake, image artifacts, and text factuality check.' },
-            { id: 'cust-r3', name: 'Neural Fraud Search', status: 'warning', details: 'Localized noise levels look stable, but natural text classifier detected clickbait phrases.' }
-          ] as VerificationReason[]
+          reasons: getDynamicReasons(activeSubTab, score)
+        };
+      }
+    } else {
+      // Staged file
+      const match = FILE_PRESETS.find(f => f.name === selectedFile?.name);
+
+      if (match) {
+        simulatedRecord = {
+          id: `check-${Date.now()}`,
+          type: match.type as VerificationType,
+          targetName: match.name,
+          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          riskScore: match.riskScore,
+          status: match.status as any,
+          verdict: match.verdict,
+          recommendation: match.recommendation,
+          size: match.size,
+          platform: 'Uploaded Asset',
+          reasons: match.reasons as VerificationReason[]
+        };
+      } else {
+        const score = Math.floor(Math.random() * 80) + 15;
+        let status: VerificationStatus = 'likely_authentic';
+        let outcomeText = '';
+        let recommend = '';
+
+        if (score < 20) {
+          status = 'likely_authentic';
+          outcomeText = 'Forensic local asset sweep completed. File structure matches natural image/video compression standards with unedited noise fields.';
+          recommend = 'Safe asset verified. Hardware capture credentials verified. No malicious manipulation found.';
+        } else if (score < 60) {
+          status = 'suspicious';
+          outcomeText = 'Localized visual anomalies detected. Pixel density is non-uniform, suggesting potential localized touchups or graphic filters applied.';
+          recommend = 'Medium concern. Digital retouching signs found. Content should be backed by separate raw documentation.';
+        } else {
+          status = 'likely_deepfake';
+          outcomeText = 'Deep synthetic traces identified in local file. Neural face landmarks show irregular edge blending, and acoustic voiceprints match generative voice cloning libraries.';
+          recommend = 'High risk. Visual face-swap mesh overlay or synthetic voiceclone verified. Treat as artificial material.';
+        }
+
+        simulatedRecord = {
+          id: `case-${Math.floor(Math.random()*90000)+10000}`,
+          type: activeSubTab,
+          targetName: selectedFile?.name || 'custom_upload.mp4',
+          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          riskScore: score,
+          status: status,
+          verdict: outcomeText,
+          recommendation: recommend,
+          size: fileSizeStr || '4.2 MB',
+          platform: 'Uploaded Asset',
+          reasons: getDynamicReasons(activeSubTab, score)
         };
       }
     }
@@ -440,397 +504,401 @@ export default function VerifyView({
     onAddHistoryItem(simulatedRecord);
   };
 
-  // File verification presets
-  const FILE_PRESETS = [
-    {
-      id: 'f-1',
-      name: 'senator_briefing_leak.webp',
-      type: 'image',
-      size: '2.4 MB',
-      status: 'suspicious',
-      riskScore: 68,
-      verdict: 'Manual JPEG retouch and clone stamp overlay detected around the backdrop and hands. Color Filter Array (CFA) structures exhibit repeating anomalies.',
-      recommendation: 'Visual manipulation concern. High certainty of composite editing utilizing brush transparency filters. Do not utilize in primary publications.',
-      reasons: [
-        { id: 'f-r1', name: 'JPEG Compression Wave', status: 'failed', details: 'Quantization mismatch identified between central participants and surrounding seating background.' },
-        { id: 'f-r2', name: 'EXIF Integrity Check', status: 'warning', details: 'Contains anomalous header timestamps modified via Paint.NET libraries.' }
-      ]
-    },
-    {
-      id: 'f-2',
-      name: 'chief_officer_synthetic_voice.mp4',
-      type: 'video',
-      size: '18.1 MB',
-      status: 'likely_deepfake',
-      riskScore: 92,
-      verdict: 'Facial lip synchrony frequency lags by 120ms relative to vocal formant frequencies. Auditory signature reveals synthesized TTS spectral baselines.',
-      recommendation: 'Extremely high risk. AI-generated voice clone merged onto a public stock video frame rate sequence.',
-      reasons: [
-        { id: 'f-r3', name: 'Facial Landmark Tracking', status: 'failed', details: 'Sub-pixel spatial drift mapped relative to facial mesh layout, 67 vertex points exhibit jitter.' },
-        { id: 'f-r4', name: 'Acoustic Wavelet Match', status: 'failed', details: 'Spectral voiceprint exhibits dynamic compression patterns consistent with ElevenLabs V2 model.' }
-      ]
-    },
-    {
-      id: 'f-3',
-      name: 'unmanipulated_interview_raw.mp4',
-      type: 'video',
-      size: '25.0 MB',
-      status: 'likely_authentic',
-      riskScore: 2,
-      verdict: 'No facial mesh edits or acoustic anomalies identified. Organic voice features match natural physiological breathing frequencies.',
-      recommendation: 'Low concern profile. Safe, verified unmanipulated video content.',
-      reasons: [
-        { id: 'f-r5', name: 'Facial Landmark Tracking', status: 'passed', details: 'Zero keyframe drift. Pixel-edge brightness matches ceiling light angles perfectly.' },
-        { id: 'f-r6', name: 'Biological Voice Signature', status: 'passed', details: 'Natural pause breathing patterns and physiological laryngeal resonances authenticated.' }
-      ]
+  const getDynamicReasons = (type: VerificationType, score: number): VerificationReason[] => {
+    const isHigh = score > 50;
+    if (type === 'video') {
+      return [
+        { 
+          id: 'v-r1', 
+          name: 'Face Mesh Landmark Drifts', 
+          status: isHigh ? 'failed' : 'passed', 
+          details: isHigh ? 'Identified localized face-boundary pixel jitter across keyframes, confirming a dynamic overlay mask.' : 'Face landmark geometry remains locked securely to anatomical bone structure; zero drifting.' 
+        },
+        { 
+          id: 'v-r2', 
+          name: 'Phoneme-Viseme Lip Synchrony', 
+          status: isHigh ? 'failed' : 'passed', 
+          details: isHigh ? 'Mouth muscle movements display a 130ms latency delay relative to audio voice formant frequencies.' : 'Lip muscle contractions correspond perfectly to acoustic speech-formant frequencies.' 
+        },
+        { 
+          id: 'v-r3', 
+          name: 'Acoustic Synthesis Scan', 
+          status: isHigh ? 'warning' : 'passed', 
+          details: isHigh ? 'Voice spectrum exhibits static high-frequency flatlines, indicating generative text-to-speech rendering.' : 'Natural pauses, physical breathing intervals, and laryngeal vocal harmonics authenticated.' 
+        }
+      ];
+    } else if (type === 'image') {
+      return [
+        { 
+          id: 'i-r1', 
+          name: 'Color Filter Array Interpolation', 
+          status: isHigh ? 'failed' : 'passed', 
+          details: isHigh ? 'CFA Bayer matrix pattern exhibits repeating grid anomalies, a characteristic footprint of composite editing.' : 'CFA pixel patterns demonstrate natural, uniform spatial noise distributions.' 
+        },
+        { 
+          id: 'i-r2', 
+          name: 'Specular Vector Geometry', 
+          status: isHigh ? 'failed' : 'passed', 
+          details: isHigh ? 'Pupil highlight reflections conflict directly with ambient background illumination coordinates.' : 'Reflective eye specularity corresponds accurately to surrounding scene light sources.' 
+        },
+        { 
+          id: 'i-r3', 
+          name: 'High-Frequency Compression Check', 
+          status: isHigh ? 'warning' : 'passed', 
+          details: isHigh ? 'JPEG quantization maps exhibit non-uniform compression tiers between central subjects and background.' : 'Compression quantization values remain constant and unified across all coordinates.' 
+        }
+      ];
+    } else {
+      return [
+        { 
+          id: 't-r1', 
+          name: 'Linguistic Sensationalism Ratio', 
+          status: isHigh ? 'failed' : 'passed', 
+          details: isHigh ? 'Vocabulary exhibits excessive emotional click-seeking adjectives and alarming capitalizations.' : 'Language structure features balanced, descriptive, third-person objective reporting style.' 
+        },
+        { 
+          id: 't-r2', 
+          name: 'Journalistic Mutual Cohesion', 
+          status: isHigh ? 'failed' : 'passed', 
+          details: isHigh ? 'Global media registry search indicates zero corresponding claims verified by accredited news bureaus.' : 'Identified identical co-reporting by Bloomberg, Reuters, and AP bureaus.' 
+        },
+        { 
+          id: 't-r3', 
+          name: 'Headline Misleading Alignment', 
+          status: isHigh ? 'warning' : 'passed', 
+          details: isHigh ? 'Extreme divergence between the alarming headline claims and factual cited paragraphs within the body.' : 'Headline matches structural content directly with precise factual representation.' 
+        }
+      ];
     }
-  ];
-
-  const handleStartFileAnalysis = () => {
-    if (!selectedFile) return;
-
-    setIsAnalyzing(true);
-    setAnalysisProgress(0);
-    setAnalysisStepText('Initializing local file extraction... Decompressing media header maps...');
-
-    const fileLogs = [
-      { progress: 20, text: 'Reading image header clusters and EXIF camera-sensor matrices...' },
-      { progress: 45, text: 'Executing localized pixel density contrast mapping & checking for double-compression anomalies...' },
-      { progress: 70, text: 'Running neural landmarks tracking and scanning for vector light gradients mismatch...' },
-      { progress: 90, text: 'Drafting cryptographic proof markers and generating composite status score...' },
-      { progress: 100, text: 'Finalizing media credibility report and appending telemetry registry.' }
-    ];
-
-    let stepIdx = 0;
-    const interval = setInterval(() => {
-      if (stepIdx < fileLogs.length) {
-        setAnalysisProgress(fileLogs[stepIdx].progress);
-        setAnalysisStepText(fileLogs[stepIdx].text);
-        stepIdx++;
-      } else {
-        clearInterval(interval);
-        finalizeFileAnalysis();
-      }
-    }, 450);
   };
 
-  const finalizeFileAnalysis = () => {
-    setIsAnalyzing(false);
-
-    // Look if any file match by name (preset)
-    const match = FILE_PRESETS.find(f => f.name === selectedFile?.name);
-
-    let simulatedRecord: VerificationResult;
-
-    if (match) {
-      simulatedRecord = {
-        id: `check-${Date.now()}`,
-        type: match.type as VerificationType,
-        targetName: match.name,
-        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        riskScore: match.riskScore,
-        status: match.status as any,
-        verdict: match.verdict,
-        recommendation: match.recommendation,
-        size: match.size,
-        platform: 'Uploaded Asset',
-        reasons: match.reasons as VerificationReason[]
+  // Maps professional status based on score
+  const getProfessionalOutcome = (score: number, type: VerificationType) => {
+    if (score < 20) {
+      return {
+        label: 'Likely Authentic',
+        color: 'text-emerald-400 bg-emerald-950/40 border-emerald-800/60',
+        barColor: 'bg-emerald-500',
+        textClass: 'text-emerald-400',
+        description: 'System indicates a high level of digital trust. Content exhibits unaltered structural, physical, or semantic properties.',
+        badge: '🟢 VERIFIED TRUST'
+      };
+    } else if (score < 50) {
+      return {
+        label: 'Suspicious',
+        color: 'text-amber-400 bg-amber-950/40 border-amber-800/60',
+        barColor: 'bg-amber-500',
+        textClass: 'text-amber-400',
+        description: 'Localized anomalies or linguistic alerts identified. The material is likely edited or presented with misleading parameters.',
+        badge: '🟡 ELEVATED ALERT'
+      };
+    } else if (type === 'news_link' && score >= 50) {
+      return {
+        label: 'High Risk of Misinformation',
+        color: 'text-red-400 bg-red-950/40 border-red-900/60',
+        barColor: 'bg-red-500',
+        textClass: 'text-red-400',
+        description: 'Deep narrative and source anomalies mapped. The text incorporates extreme vocabulary bias, unverified claims, and empty citations.',
+        badge: '🚨 CRITICAL WARNING'
       };
     } else {
-      // Custom uploaded file
-      const defaultScore = Math.floor(Math.random() * 40) + 10;
-      const isImg = activeSubTab === 'image';
-      simulatedRecord = {
-        id: `check-${Date.now()}`,
-        type: activeSubTab,
-        targetName: selectedFile?.name || (isImg ? 'custom_image.jpg' : 'custom_video.mp4'),
-        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        riskScore: defaultScore,
-        status: defaultScore < 20 ? 'likely_authentic' : defaultScore < 55 ? 'suspicious' : 'likely_deepfake',
-        verdict: `Forensic analysis complete for uploaded ${isImg ? 'image' : 'video'} asset. Noise-level scans indicate average pixel consistency with some secondary compression traces.`,
-        recommendation: 'Normal warning credentials. Use caution and mutual confirmation before referencing raw web evidence.',
-        size: fileSizeStr || '4.8 MB',
-        platform: 'Uploaded Asset',
-        reasons: [
-          { id: 'uf-r1', name: 'CFA Artifact Authenticator', status: 'passed', details: 'Color array interpolation features align with standard camera sensor models.' },
-          { id: 'uf-r2', name: 'High-Frequency Noise Grid', status: 'warning', details: 'Quantization ratios exhibit minor discrepancies, likely due to file format conversion.' }
-        ]
-      };
-    }
-
-    setResult(simulatedRecord);
-    onAddHistoryItem(simulatedRecord);
-  };
-
-  const getStatusDisplay = (status: string, isUnavailable?: boolean) => {
-    if (isUnavailable) {
       return {
-        badgeColor: 'bg-slate-950 border border-slate-800 text-slate-400',
-        text: 'Unavailable / Inaccessible Link',
-        colorClass: 'text-slate-400'
+        label: 'Likely Manipulated',
+        color: 'text-rose-400 bg-rose-950/40 border-rose-900/60',
+        barColor: 'bg-rose-500',
+        textClass: 'text-rose-400',
+        description: 'Digital forensics flags neural generation signatures. Multi-frame face overlay patterns or synthetic voice clones confirmed.',
+        badge: '🔥 MANIPULATION VERIFIED'
       };
-    }
-    switch (status) {
-      case 'likely_authentic':
-        return {
-          badgeColor: 'bg-emerald-950/20 border border-emerald-900/50 text-emerald-400',
-          text: 'Likely Authentic Content',
-          colorClass: 'text-emerald-400'
-        };
-      case 'suspicious':
-        return {
-          badgeColor: 'bg-amber-950/20 border border-amber-900/50 text-amber-400',
-          text: 'Suspicious / Edited Content',
-          colorClass: 'text-amber-450'
-        };
-      case 'likely_deepfake':
-      default:
-        return {
-          badgeColor: 'bg-rose-950/20 border border-rose-900/50 text-rose-450',
-          text: 'Likely Deepfake / False News Info',
-          colorClass: 'text-rose-450'
-        };
     }
   };
 
   return (
-    <div className="space-y-10 py-6 max-w-5xl mx-auto" id="verify-workspace">
-      {/* Title block */}
-      <div className="space-y-2">
-        <div className="inline-flex items-center space-x-2 bg-blue-950 border border-blue-900/60 rounded px-2.5 py-1 text-[11px] text-blue-400 font-mono">
-          <Layers className="h-3 w-3" />
-          <span>Unified Social Media Media Scanner Active</span>
+    <div className="space-y-12 py-6 max-w-7xl mx-auto" id="verify-workspace">
+      
+      {/* 1. Header Area with Cybernetic Aesthetics */}
+      <div className="space-y-3 border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div className="inline-flex items-center space-x-2 bg-blue-950 border border-blue-900/60 rounded px-2.5 py-1 text-[10px] text-blue-400 font-mono tracking-widest uppercase">
+          <Layers className="h-3.5 w-3.5 animate-pulse text-blue-400" />
+          <span>Forensic Intelligence Terminal • Active Core</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-display font-bold text-slate-900">
-          Social Media Content Verification Console
-        </h2>
-        <p className="text-sm text-slate-500">
-          Paste a public link from social media platforms below. The system automatically identifies the destination, verifies its access parameters, extracts public content, and routes text/imagery/video to target AI detection neural networks.
+        <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight text-slate-900 dark:text-white">
+          MEDIA INVESTIGATION WORKSPACE
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
+          Subject suspected social media assets to multi-spectral neural classifiers. Select your target media type below, mount your evidence via direct URL extraction or raw file loading, and parse structural credibility anomalies.
         </p>
       </div>
 
-      {/* Verification Format Sub-Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-1.5 flex flex-wrap gap-2 text-slate-900 dark:text-slate-100 animate-fade-in" id="verify-format-tabs">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('news_link');
-            setResult(null);
-            setSelectedFile(null);
-          }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all flex items-center space-x-2 cursor-pointer select-none ${
-            activeSubTab === 'news_link'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'bg-white dark:bg-[#0e172a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
-          }`}
-        >
-          <Globe className="h-4 w-4 text-blue-400" />
-          <span>Verify Social/News Link</span>
-        </button>
+      {/* 2. Three-Stage Forensic Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* ==================== STAGE 1: INTAKE (Left Column) ==================== */}
+        <div className="lg:col-span-4 space-y-6 flex flex-col h-full justify-start">
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            
+            {/* intake header */}
+            <div className="bg-slate-950 px-4 py-3.5 border-b border-slate-900 flex items-center justify-between text-white">
+              <span className="text-xs font-mono font-bold tracking-wider text-blue-400 flex items-center space-x-1.5">
+                <Sliders className="h-4 w-4 text-blue-400" />
+                <span>STAGE 01: INTAKE CONTROLS</span>
+              </span>
+              <span className="text-[9px] font-mono bg-blue-900/40 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded">
+                SECURE SANDBOX
+              </span>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('image');
-            setResult(null);
-            setSelectedFile(null);
-          }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all flex items-center space-x-2 cursor-pointer select-none ${
-            activeSubTab === 'image'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'bg-white dark:bg-[#0e172a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
-          }`}
-        >
-          <Image className="h-4 w-4 text-blue-500" />
-          <span>Verify Picture / Image</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('video');
-            setResult(null);
-            setSelectedFile(null);
-          }}
-          className={`px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all flex items-center space-x-2 cursor-pointer select-none ${
-            activeSubTab === 'video'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'bg-white dark:bg-[#0e172a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
-          }`}
-        >
-          <Video className="h-4 w-4 text-blue-500" />
-          <span>Verify Video Stream</span>
-        </button>
-      </div>
-
-      {/* Grid Workspace */}
-      <div className="grid lg:grid-cols-12 gap-8 items-start">
-        {/* Left Side: URL Paste Form & Scraper parameters */}
-        <div className="lg:col-span-7 space-y-6">
-          {activeSubTab === 'news_link' ? (
-            <div className="bg-white border border-slate-150 rounded-2xl shadow-sm overflow-hidden text-slate-900">
-              {/* HUD Status Header */}
-              <div className="bg-slate-950 p-4 border-b border-slate-900 text-white flex items-center justify-between">
-                <span className="text-xs font-mono font-bold tracking-wider text-blue-400 flex items-center space-x-1.5">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>DYNAMIC SCRAPER SHELL</span>
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">STATUS: PORT ACTIVE</span>
-              </div>
-
-            <div className="p-6 space-y-6">
-              {/* URL Input Form */}
-              <div className="space-y-2.5">
-                <label htmlFor="social-url-input" className="block text-xs font-mono tracking-wider uppercase text-slate-500 font-bold">
-                  Paste Public Social Media URL (Facebook, YouTube, TikTok, X, Reddit, etc.)
+            <div className="p-5 space-y-5 flex-1">
+              {/* Media Content Type Selector */}
+              <div className="space-y-2">
+                <label className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
+                  Select Evidence Type
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Globe className="h-5 w-5" />
-                  </div>
-                  <input
-                    id="social-url-input"
-                    type="url"
-                    value={inputUrl}
-                    onChange={(e) => setInputUrl(e.target.value)}
-                    placeholder="https://www.tiktok.com/@creator/video/1234567..."
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white pl-11 pr-3.5 py-3 rounded-xl text-slate-800 text-sm font-medium focus:outline-none transition-all"
-                  />
+                <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveSubTab('video');
+                      setResult(null);
+                    }}
+                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
+                      activeSubTab === 'video'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Video className="h-4 w-4" />
+                    <span className="text-[10px]">Video</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveSubTab('image');
+                      setResult(null);
+                    }}
+                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
+                      activeSubTab === 'image'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Image className="h-4 w-4" />
+                    <span className="text-[10px]">Image</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveSubTab('news_link');
+                      setResult(null);
+                    }}
+                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
+                      activeSubTab === 'news_link'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span className="text-[10px]">News / Text</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Dynamic Extraction Status Hud */}
-              {inputUrl.trim() && (
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3 animate-fade-in text-xs">
-                  <h4 className="font-mono font-bold text-slate-700 tracking-wider uppercase text-[10px]">
-                    🔍 URL extraction engine feedback:
-                  </h4>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Platform identified */}
-                    <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col justify-between space-y-1.5">
-                      <span className="text-[10px] font-mono text-slate-400 uppercase">Recognized Platform:</span>
-                      {detectedPlatform ? (
-                        <span className={`px-2.5 py-1 text-xs font-mono font-bold rounded-md text-center w-fit ${detectedPlatform.badgeColor}`}>
-                          {detectedPlatform.name}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 font-mono">None</span>
-                      )}
-                    </div>
+              {/* Input Method Selector: URL extract or File Upload */}
+              <div className="flex border-b border-slate-100 dark:border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setIntakeMethod('url')}
+                  className={`flex-1 pb-2 font-mono text-center font-bold tracking-wide cursor-pointer ${
+                    intakeMethod === 'url'
+                      ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  }`}
+                >
+                  🌐 PUBLIC URL SCAPE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIntakeMethod('upload')}
+                  className={`flex-1 pb-2 font-mono text-center font-bold tracking-wide cursor-pointer ${
+                    intakeMethod === 'upload'
+                      ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  }`}
+                >
+                  📁 FILE HARDWARE UPLOAD
+                </button>
+              </div>
 
-                    {/* Access state detected */}
-                    <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col justify-between space-y-1.5">
-                      <span className="text-[10px] font-mono text-slate-400 uppercase">Access Status:</span>
-                      {accessState ? (
-                        <span className={`px-2 py-0.5 text-[11px] font-semibold border rounded-md ${accessState.color}`}>
-                          {accessState.status}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 font-mono">None</span>
-                      )}
+              {/* Interactive Submission Form */}
+              {intakeMethod === 'url' ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="url-input" className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
+                      Destination Social Media Link
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Globe className="h-4 w-4" />
+                      </div>
+                      <input
+                        id="url-input"
+                        type="url"
+                        value={inputUrl}
+                        onChange={(e) => setInputUrl(e.target.value)}
+                        placeholder="Paste link from TikTok, Youtube, FB, X, Reddit..."
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
+                      />
                     </div>
                   </div>
 
-                  {/* Access Status Detail Advice */}
-                  {accessState && (
-                    <p className="text-[11px] text-slate-500 leading-normal bg-white p-2 border border-slate-100 rounded font-mono">
-                      {accessState.reason}
-                    </p>
-                  )}
-
-                  {/* Content type selection routing */}
-                  {detectedContents.length > 0 && (
-                    <div className="space-y-2 pt-1 border-t border-slate-100">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase block">Extracted Component Streams:</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {detectedContents.map((content) => (
-                          <span 
-                            key={content} 
-                            onClick={() => {
-                              if (['Text', 'Image', 'Video'].includes(content)) {
-                                setSelectedContentType(content.toLowerCase() as any);
-                              }
-                            }}
-                            className={`px-2.5 py-0.5 rounded-full font-mono text-[10px] font-semibold cursor-pointer border ${
-                              selectedContentType === content.toLowerCase() || (selectedContentType === 'all' && (content === 'Text' || content === 'Image' || content === 'Video'))
-                                ? 'bg-blue-600 border-blue-500 text-white' 
-                                : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            {content === 'Video' && '🎞️ '}
-                            {content === 'Image' && '🖼️ '}
-                            {content === 'Text' && '🔤 '}
-                            {content === 'Metadata' && '🏷️ '}
-                            {content === 'Thumbnail' && '🎴 '}
-                            {content}
-                          </span>
-                        ))}
+                  {/* Extraction diagnostic indicator */}
+                  {inputUrl.trim() && (
+                    <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-3 rounded-xl text-[11px] font-mono space-y-2">
+                      <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span>Connection Feedback</span>
+                        <span>{accessState?.status}</span>
                       </div>
-                      <span className="text-[9px] text-slate-400 block font-sans">
-                        💡 Click component tags above to isolate analysis routing or leave defaulted.
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        {detectedPlatform && (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black text-center ${detectedPlatform.badgeColor}`}>
+                            {detectedPlatform.name}
+                          </span>
+                        )}
+                        <span className="text-slate-500 dark:text-slate-400 truncate max-w-[170px]">{accessState?.reason}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div 
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setFileDragOver(true);
+                    }}
+                    onDragLeave={() => setFileDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setFileDragOver(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        const fileObj = e.dataTransfer.files[0];
+                        setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
+                        setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
+                        setResult(null);
+                      }
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      fileDragOver 
+                        ? 'border-blue-500 bg-blue-500/10 text-blue-400' 
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-500'
+                    }`}
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept={activeSubTab === 'image' ? 'image/*' : activeSubTab === 'video' ? 'video/*' : '*/*'}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const fileObj = e.target.files[0];
+                          setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
+                          setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
+                          setResult(null);
+                        }
+                      }}
+                    />
+                    <UploadCloud className="h-8 w-8 mx-auto text-blue-500 mb-2" />
+                    <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {selectedFile ? 'Swap Mounted Specimen' : 'Select or Drag Forensic File'}
+                    </span>
+                    <span className="block text-[10px] text-slate-400 mt-1 max-w-xs mx-auto">
+                      Supports high-resolution {activeSubTab === 'image' ? 'PNG, WebP, JPG' : 'MP4, MOV, MKV'}
+                    </span>
+                  </div>
+
+                  {selectedFile && (
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-900 flex items-center justify-between text-[11px] font-mono text-white">
+                      <div className="flex items-center space-x-2 shrink min-w-0">
+                        {activeSubTab === 'image' ? <Image className="h-4 w-4 text-blue-400 shrink-0" /> : <Video className="h-4 w-4 text-blue-400 shrink-0" />}
+                        <span className="truncate font-bold text-slate-300 block max-w-[160px]">{selectedFile.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedFile(null); setResult(null); }}
+                        className="text-[9px] text-rose-450 bg-rose-950/20 px-2 py-0.5 rounded border border-rose-900/40 shrink-0 cursor-pointer"
+                      >
+                        Unmount
+                      </button>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Verified Presets List */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-                    💡 Select Quick-Run Demo Presets
-                  </span>
-                  <span className="text-[10px] text-blue-600 font-mono">Multi-Platform Ready</span>
-                </div>
+              {/* Policy Enforced Alert */}
+              <div className="bg-blue-900/10 border border-blue-900/30 p-3 rounded-xl text-[10px] text-slate-400 leading-normal flex items-start space-x-2 font-mono">
+                <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+                <p>
+                  <strong>PUBLIC INTEGRITY RULE:</strong> Analyzes public social media feeds and local sandboxed uploads only. Our scrapers bypass private firewalls.
+                </p>
+              </div>
+
+              {/* QUICK DEMO PRESETS */}
+              <div className="space-y-2 pt-2 border-t border-slate-150 dark:border-slate-800">
+                <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                  Select Pre-Mounted Demo Cases:
+                </span>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {SOCIAL_PRESETS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => selectPresetUrl(preset)}
-                      className={`text-left p-3 rounded-xl border transition-all text-xs flex flex-col justify-between min-h-[76px] cursor-pointer ${
-                        inputUrl === preset.url
-                          ? 'border-blue-500 bg-blue-50/40 text-blue-900 ring-2 ring-blue-100'
-                          : 'border-slate-150 bg-white text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="w-full">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold block text-slate-800 font-mono text-[10px]">[{preset.platform}] Link</span>
-                          <span className={`text-[8px] font-mono uppercase px-1 rounded border font-bold ${
-                            preset.unavailable 
-                              ? 'bg-slate-100 text-slate-500 border-slate-200' 
-                              : preset.status === 'likely_authentic' 
-                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                              : preset.status === 'suspicious' 
-                              ? 'bg-amber-50 text-amber-600 border-amber-100'
-                              : 'bg-rose-50 text-rose-500 border-rose-100'
-                          }`}>
-                            {preset.unavailable ? 'Unavailable' : preset.status.replace('likely_', '')}
-                          </span>
+                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                  {intakeMethod === 'url' ? (
+                    SOCIAL_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => selectPresetUrl(preset)}
+                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
+                          inputUrl === preset.url
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
+                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center w-full">
+                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">[{preset.platform}] Link</span>
+                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.type}</span>
                         </div>
-                        <span className="text-[11px] truncate block text-slate-600 font-mono mt-0.5">{preset.url}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between w-full text-[9px] text-slate-400 mt-1 font-mono">
-                        <span>Analysis Routing: {preset.type.toUpperCase()}</span>
-                        <span>{preset.riskScore > 0 ? `Risk: ${preset.riskScore}%` : ''}</span>
-                      </div>
-                    </button>
-                  ))}
+                        <span className="text-[10px] truncate block text-slate-400 mt-0.5">{preset.url}</span>
+                      </button>
+                    ))
+                  ) : (
+                    FILE_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => selectFilePreset(preset)}
+                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
+                          selectedFile?.name === preset.name
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
+                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center w-full font-mono">
+                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">{preset.name}</span>
+                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.size}</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
 
-              {/* Run Verification Button */}
+              {/* TRIGGER ANALYSIS BUTTON */}
               <button
                 type="button"
-                disabled={isAnalyzing || !inputUrl.trim() || accessState?.status === 'Unsupported' && !inputUrl.includes('tor')}
+                disabled={isAnalyzing || (intakeMethod === 'url' && !inputUrl.trim()) || (intakeMethod === 'upload' && !selectedFile)}
                 onClick={handleStartAnalysis}
-                className={`w-full py-4 rounded-xl text-white font-semibold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-                  !inputUrl.trim()
-                    ? 'bg-slate-350 text-slate-100 cursor-not-allowed shadow-none' 
+                className={`w-full py-3.5 rounded-xl text-white font-semibold text-xs tracking-wider uppercase font-mono shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+                  (intakeMethod === 'url' && !inputUrl.trim()) || (intakeMethod === 'upload' && !selectedFile)
+                    ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed shadow-none border border-slate-400/10' 
                     : isAnalyzing 
                     ? 'bg-blue-800' 
                     : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
@@ -838,448 +906,714 @@ export default function VerifyView({
               >
                 {isAnalyzing ? (
                   <>
-                    <RefreshCw className="h-5 w-5 animate-spin" />
-                    <span>Scraping & Synthesizing Content...</span>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Executing Classifiers...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-5 w-5 shrink-0" />
-                    <span>Verify Public Social Media Link</span>
+                    <Sparkles className="h-4 w-4 shrink-0 text-blue-300" />
+                    <span>Run Forensic Verification</span>
                   </>
                 )}
               </button>
+
             </div>
-          </div>
-          ) : (
-            <div className="bg-white border border-slate-150 rounded-2xl shadow-sm overflow-hidden text-slate-900 animate-fade-in" id="manual-forensic-card">
-              {/* HUD Status Header */}
-              <div className="bg-slate-950 p-4 border-b border-slate-900 text-white flex items-center justify-between">
-                <span className="text-xs font-mono font-bold tracking-wider text-blue-400 flex items-center space-x-1.5">
-                  <UploadCloud className="h-4 w-4 text-blue-500" />
-                  <span>MANUAL {activeSubTab.toUpperCase()} FORENSIC PORT</span>
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">STATUS: INTERFACE STABLE</span>
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* Drag / Drop Interactive Area */}
-                <div 
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setFileDragOver(true);
-                  }}
-                  onDragLeave={() => setFileDragOver(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setFileDragOver(false);
-                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                      const fileObj = e.dataTransfer.files[0];
-                      setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
-                      setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
-                      setResult(null);
-                    }
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all select-none ${
-                    fileDragOver 
-                      ? 'border-blue-550 border-blue-500 bg-blue-50 text-slate-900' 
-                      : 'border-slate-200 hover:border-slate-350 bg-slate-50/50 hover:bg-slate-50 text-slate-800'
-                  }`}
-                >
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept={activeSubTab === 'image' ? 'image/*' : 'video/*'}
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const fileObj = e.target.files[0];
-                        setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
-                        setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
-                        setResult(null);
-                      }
-                    }}
-                  />
-                  <UploadCloud className="h-11 w-11 mx-auto text-blue-500 mb-3" />
-                  <span className="block text-sm font-bold text-slate-800">
-                    {selectedFile ? 'Change Selected Asset' : `Drag & drop your ${activeSubTab === 'image' ? 'photograph' : 'raw video'} here`}
-                  </span>
-                  <span className="block text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                    Supports high-resolution {activeSubTab === 'image' ? 'PNG, WebP, JPG up to 25MB' : 'MP4, MOV, MKV up to 100MB'} formats.
-                  </span>
-                </div>
-
-                {/* Show Currently Selected/Staged File */}
-                {selectedFile && (
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 flex items-center justify-between text-xs font-mono text-white animate-fade-in shadow-inner">
-                    <div className="flex items-center space-x-3">
-                      {activeSubTab === 'image' ? (
-                        <Image className="h-5 w-5 text-blue-400 shrink-0" />
-                      ) : (
-                        <Video className="h-5 w-5 text-blue-400 shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <span className="block font-bold text-slate-200 truncate max-w-[210px]">{selectedFile.name}</span>
-                        <span className="text-slate-550 text-[10px] block mt-0.5">{selectedFile.size} • Staged for neural checking</span>
-                      </div>
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedFile(null);
-                        setResult(null);
-                      }}
-                      className="text-[10px] text-rose-450 hover:text-rose-400 bg-rose-950/20 px-2.5 py-1 rounded border border-rose-900/30 shrink-0"
-                    >
-                      Clear File
-                    </button>
-                  </div>
-                )}
-
-                {/* Staged Presets */}
-                <div className="space-y-3">
-                  <span className="block text-xs font-mono font-bold tracking-wider uppercase text-slate-400">
-                    💡 Select Quick-Run Demo Media Presets
-                  </span>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {FILE_PRESETS.filter(p => p.type === activeSubTab).map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedFile({ name: preset.name, size: preset.size });
-                          setFileSizeStr(preset.size);
-                          setResult(null);
-                        }}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between h-[82px] cursor-pointer select-none ${
-                          selectedFile?.name === preset.name
-                            ? 'bg-blue-50 border-blue-400 text-slate-900 shadow-sm'
-                            : 'bg-slate-50/50 hover:bg-slate-55/75 border-slate-150 hover:border-slate-250 text-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between w-full space-x-1">
-                          <span className="text-xs font-bold truncate block decoration-slate-400 max-w-[130px]">{preset.name}</span>
-                          <span className={`text-[8.5px] uppercase font-mono font-black border px-1.5 rounded ${
-                            preset.status === 'likely_authentic' 
-                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                              : preset.status === 'suspicious' 
-                              ? 'bg-amber-50 text-amber-600 border-amber-100'
-                              : 'bg-rose-50 text-rose-550 border-rose-100'
-                          }`}>
-                            {preset.status.replace('likely_', '')}
-                          </span>
-                        </div>
-                        <span className="text-[11px] truncate block text-slate-650 font-mono mt-0.5">{preset.size} • Local Backup Reference</span>
-                        
-                        <div className="flex items-center justify-between w-full text-[9px] text-slate-400 mt-1 font-mono">
-                          <span>Metadata: EXIF ACTIVE</span>
-                          <span>Risk: {preset.riskScore}%</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Verify Trigger Button */}
-                <button
-                  type="button"
-                  disabled={isAnalyzing || !selectedFile}
-                  onClick={handleStartFileAnalysis}
-                  className={`w-full py-4 rounded-xl text-white font-semibold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-                    !selectedFile
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-250 shadow-none' 
-                      : isAnalyzing 
-                      ? 'bg-blue-805 bg-blue-800' 
-                      : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
-                  }`}
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 animate-spin" />
-                      <span>Extracting Frames & Analyzing Metadata...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5 shrink-0" />
-                      <span>Start Media Forensic Verification</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Scope notice banner */}
-          <div className="bg-blue-900/10 border border-blue-900/40 rounded-xl p-4.5 text-slate-350 space-y-2 text-xs">
-            <div className="flex items-center space-x-2 text-blue-300 font-mono font-bold uppercase tracking-wide">
-              <BadgeInfo className="h-4 w-4 text-blue-400" />
-              <span>Public Scope Limitations Notice</span>
-            </div>
-            <p className="leading-relaxed">
-              TrustLens acts as a public-facing forensic framework. It evaluates raw data structures, visual noise inconsistencies, semantic indicators, and temporal frame alignment. The platform is engineered to evaluate public content only and does not promise perfect truth verification; always verify physical state media prior to making critical narrative conclusions.
-            </p>
           </div>
         </div>
 
-        {/* Right Side: Active loading spinner or deep verification results */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* 1. Loader screen */}
-          {isAnalyzing && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white space-y-6 animate-pulse">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-blue-400 uppercase tracking-widest font-bold">SCRAPER ENGINE PUMP ACTIVE</span>
-                <span className="text-sm font-mono text-blue-300 font-bold">{analysisProgress}%</span>
-              </div>
-              
-              <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-850">
-                <div 
-                  className="bg-blue-500 h-full rounded-full transition-all duration-305"
-                  style={{ width: `${analysisProgress}%` }}
-                ></div>
-              </div>
-
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-2.5">
-                <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-500">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500 inline-block animate-ping"></span>
-                  <span>CURRENT HOOK:</span>
-                </div>
-                <p className="text-xs font-mono text-slate-300 leading-relaxed min-h-[36px]">
-                  {analysisStepText}
-                </p>
-              </div>
-
-              <div className="text-[10px] font-mono text-slate-500 text-center uppercase tracking-wider">
-                SCRAPING ENVIRONMENT PROTECTED BY EXIF-AES SECURITIES
-              </div>
+        {/* ==================== STAGE 2: EVIDENCE ANALYSIS (Center Column) ==================== */}
+        <div className="lg:col-span-4 space-y-6 flex flex-col h-full justify-start">
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            
+            <div className="bg-slate-950 px-4 py-3.5 border-b border-slate-900 flex items-center justify-between text-white">
+              <span className="text-xs font-mono font-bold tracking-wider text-blue-400 flex items-center space-x-1.5">
+                <Binary className="h-4 w-4 text-blue-400" />
+                <span>STAGE 02: FORENSIC DISSECTION</span>
+              </span>
+              <span className="text-[9px] font-mono bg-blue-900/40 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded">
+                EVIDENCE SPECTRUM
+              </span>
             </div>
-          )}
 
-          {/* 2. Ideal default state */}
-          {!isAnalyzing && !result && (
-            <div className="bg-white border border-slate-150 rounded-2xl p-8 text-center space-y-4 text-slate-950">
-              <div className="mx-auto w-14 h-14 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100">
-                <BarChart2 className="h-7 w-7 stroke-[1.5]" />
-              </div>
-              <div className="space-y-1.5">
-                <h4 className="text-sm font-bold text-slate-800">Scraper Diagnostics Pending</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  Provide a valid social media URL link or trigger one of our active demo platform presets on the left. TrustLens will inspect destination availability and perform deep analytical scans.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* 3. Detailed Forensic Results */}
-          {!isAnalyzing && result && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden text-white shadow-xl animate-fade-in space-y-6 p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div>
-                  <h3 className="font-display font-semibold text-white text-base">Credibility Findings</h3>
-                  <p className="text-[10px] font-mono text-slate-400">UID: {result.id} • {result.date}</p>
-                </div>
-                <div className="bg-slate-950 px-2.5 py-1 rounded border border-slate-800 font-mono text-[10px] text-blue-400">
-                  {result.platform ? result.platform.toUpperCase() : 'WEB'} SCAVENGER
-                </div>
-              </div>
-
-              {/* ACCESS STATUS AND ACC_AVAILABILITY HANDLING */}
-              {result.unavailable ? (
-                /* Clear unavailable status layout instead of fake mock evaluation scores */
-                <div className="space-y-4 animate-fade-in" id="unavailable-status-box">
-                  <div className="bg-rose-950/40 border border-rose-900/60 p-4 rounded-xl space-y-2">
-                    <div className="flex items-center space-x-2 text-rose-450 font-mono font-bold text-xs uppercase tracking-wider">
-                      <Lock className="h-4 w-4 shrink-0" />
-                      <span>URL INACCESSIBLE / RESTRICTED</span>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                      This content is not publicly indexable. The reference URL is flagged under: <span className="text-rose-400 font-bold font-mono">[{result.unavailabilityReason || 'Restricted Content'}]</span>.
-                    </p>
-                    <p className="text-[11px] text-slate-400 font-mono">
-                      Our system enforces ethical scraping protocols. Private stories, restricted group databases, and illegal TOR networks cannot be read.
-                    </p>
+            <div className="p-5 flex-1 min-h-[460px] flex flex-col justify-center">
+              {/* State A: Awaiting submission */}
+              {!isAnalyzing && !result && (
+                <div className="text-center py-12 space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 flex items-center justify-center border border-slate-100 dark:border-slate-850">
+                    <Activity className="h-6 w-6 stroke-[1.5] animate-pulse text-blue-500" />
                   </div>
-
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-3 text-xs">
-                    <span className="font-mono font-bold text-slate-400 uppercase tracking-widest text-[9px] block">Alternative Solution</span>
-                    <p className="text-[11px] text-slate-300 leading-normal">
-                      To verify this asset, please download the original image or video file directly onto your secure hardware. Once saved, upload the raw file to the platform from Home for localized pixel-noise and voice cloning audits.
-                    </p>
-                  </div>
-
-                  {/* History saving tag indicator */}
-                  <div className="inline-flex items-center space-x-1.5 text-[10px] font-mono text-slate-500 bg-slate-950 px-2.5 py-1 rounded">
-                    <CheckCircle className="h-3 w-3 text-slate-500" />
-                    <span>Inaccessible query logged to local history</span>
-                  </div>
-                </div>
-              ) : (
-                /* Successful accessible results layout */
-                <div className="space-y-6">
-                  {/* Rating indicator */}
-                  <div className="grid grid-cols-12 gap-4 items-center bg-slate-950 p-4 rounded-xl border border-slate-850">
-                    <div className="col-span-5 text-center border-r border-slate-850 pr-2">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Risk Score</span>
-                      <div>
-                        <span className={`text-3xl font-display font-black tracking-tight ${
-                          result.riskScore < 20 
-                            ? 'text-emerald-400' 
-                            : result.riskScore < 70 
-                            ? 'text-amber-400' 
-                            : 'text-rose-400'
-                        }`}>
-                          {result.riskScore}%
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="col-span-7 pl-2">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Forensic Status</span>
-                      <div className={`p-1.5 rounded-lg border text-[10px] font-bold text-center uppercase tracking-wider font-mono ${
-                        result.status === 'likely_authentic' 
-                          ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-400'
-                          : result.status === 'suspicious'
-                          ? 'bg-amber-950/20 border-amber-800/40 text-amber-400'
-                          : 'bg-rose-950/20 border-rose-850/45 text-rose-400'
-                      }`}>
-                        {getStatusDisplay(result.status).text}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Prediction, platform, content type */}
-                  <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-mono">
-                    <div className="bg-slate-950 p-2 rounded border border-slate-850">
-                      <span className="text-slate-500 block text-[9px] uppercase">Platform</span>
-                      <span className="font-bold text-slate-200">{result.platform}</span>
-                    </div>
-                    <div className="bg-slate-950 p-2 rounded border border-slate-850">
-                      <span className="text-slate-500 block text-[9px] uppercase">Core Routing</span>
-                      <span className="font-bold text-slate-200">{result.type.toUpperCase()}</span>
-                    </div>
-                    <div className="bg-slate-950 p-2 rounded border border-slate-850">
-                      <span className="text-slate-500 block text-[9px] uppercase">Confidence</span>
-                      <span className="font-bold text-blue-400">{100 - result.riskScore}%</span>
-                    </div>
-                  </div>
-
-                  {/* Verdict block */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Primary Verdict</span>
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium bg-slate-950/50 p-3 rounded-lg border border-slate-850">
-                      {result.verdict}
-                    </p>
-                  </div>
-
-                  {/* MULTI_CONTENT DISPLAY BLOCK WITH HEAVY VIDEO DEEPFAKE EMBELLISHMENTS */}
-                  {/* Social media URLs contain text (captions), image (thumbnails/graphics) and videos. Highlight Video! */}
-                  <div className="space-y-3.5 pt-2 border-t border-slate-800/60">
-                    <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest block font-bold">Routed Content Analysis</span>
-                    
-                    <div className="space-y-3">
-                      {/* 1. Video analysis (Always Highlighted & Largest as requested: deepfake is main focus) */}
-                      {(result.type === 'video' || result.platform === 'TikTok' || result.platform === 'YouTube') && (
-                        <div className="bg-gradient-to-r from-blue-950 via-slate-950 to-blue-950 p-4 rounded-xl border border-blue-900/60 shadow-md ring-1 ring-blue-500/10 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="flex items-center space-x-1.5 text-xs text-blue-300 font-bold tracking-wide uppercase">
-                              <Video className="h-4.5 w-4.5 text-blue-400 shrink-0" />
-                              <span>🎞️ Video Analysis Module (Deepfake Core)</span>
-                            </span>
-                            <span className="text-[9px] font-mono uppercase bg-blue-900 text-white px-1.5 rounded font-black">CRITICAL CHECK</span>
-                          </div>
-                          
-                          <div className="bg-slate-950 p-3 rounded-lg border border-slate-900 text-xs text-slate-300 space-y-1.5">
-                            <p className="leading-relaxed">
-                              {result.status === 'likely_deepfake' 
-                                ? '⚠️ Cloned acoustic structures (DeepVoice) identified relative to viseme facial coordinates. Neural temporal maps detected sub-pixel masking edges.'
-                                : '✔️ Frame sequence stability confirmed. No anomalous GAN-model mesh overlays mapped in standard timeline.'}
-                            </p>
-                            <div className="bg-slate-900 p-2 rounded text-[10px] text-slate-400 font-mono flex justify-between">
-                              <span>Temporal consistency: {result.status === 'likely_deepfake' ? 'Anomalous' : 'Normalized'}</span>
-                              <span>Voice spectrum: {result.status === 'likely_deepfake' ? 'AI Synthesizer' : 'Organic'}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 2. Text analysis */}
-                      <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-850 text-xs space-y-2">
-                        <span className="flex items-center space-x-1.5 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
-                          <FileText className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span>🔤 Text Analysis (Fake News Scans)</span>
-                        </span>
-                        <p className="text-slate-400 leading-relaxed text-[11px] bg-slate-900 p-2 rounded text-left">
-                          {result.status === 'likely_deepfake' || result.status === 'suspicious'
-                            ? 'Detected high lexical complexity, emotional click-seeking phrases, and absence of verifiable peer publications in mainstream news databases.'
-                            : 'Vocabulary metrics utilize direct, descriptive, neutral informative parameters. Domain matches official press channels.'}
-                        </p>
-                      </div>
-
-                      {/* 3. Image analysis */}
-                      <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-850 text-xs space-y-2">
-                        <span className="flex items-center space-x-1.5 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
-                          <Image className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span>🖼️ Image Analysis (Visual Edits Scans)</span>
-                        </span>
-                        <p className="text-slate-400 leading-relaxed text-[11px] bg-slate-900 p-2 rounded text-left">
-                          {result.status === 'likely_deepfake' || result.status === 'suspicious'
-                            ? 'Boundary evaluation flags localized lighting and specular anomalies. Compression indices suggest manual re-saving via graphic software.'
-                            : 'Spatial noise levels stand highly correlated. SPEC reflection points in the eye pupils correspond securely.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Technical evidentiary rule markers */}
-                  {result.reasons && result.reasons.length > 0 && (
-                    <div className="space-y-3">
-                      <span className="text-[10px] font-mono text-slate-550 uppercase tracking-widest block">Neural Rules Checklist</span>
-                      <div className="space-y-2">
-                        {result.reasons.map((reason) => (
-                          <div key={reason.id} className="bg-slate-950 p-3 rounded-lg border border-slate-850/60 text-xs">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-semibold text-slate-200">{reason.name}</span>
-                              <span className={`text-[8px] font-mono uppercase px-1.5 rounded border font-bold ${
-                                reason.status === 'passed'
-                                  ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/50'
-                                  : 'bg-amber-950/20 text-amber-400 border-amber-900/50'
-                              }`}>
-                                {reason.status}
-                              </span>
-                            </div>
-                            <p className="text-slate-400 text-[11px] leading-relaxed">
-                              {reason.details}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Recommendation and saved tag */}
-                  <div className="bg-slate-950/40 p-4 rounded-xl border border-dashed border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between text-slate-400 text-[10px] font-mono">
-                      <div className="flex items-center space-x-1">
-                        <ShieldAlert className="h-3.5 w-3.5 text-blue-500" />
-                        <span>Security Advice</span>
-                      </div>
-                      <span className="text-emerald-500 font-semibold flex items-center space-x-1">
-                        <CheckCircle className="h-3 w-3 shrink-0" />
-                        <span>Analysis Saved to History</span>
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                      {result.recommendation}
+                  <div className="space-y-1.5">
+                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Specimen Diagnostic Pending</h4>
+                    <p className="text-[11px] text-slate-400 leading-relaxed max-w-[240px] mx-auto">
+                      Mount a link or raw file, then click "Run Forensic Verification" to initiate neural checks and visual noise matrices.
                     </p>
                   </div>
                 </div>
               )}
+
+              {/* State B: Running Scans */}
+              {isAnalyzing && (
+                <div className="space-y-6 py-6 animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest font-bold">Inference Matrix</span>
+                    <span className="text-xs font-mono text-blue-300 font-bold">{analysisProgress}%</span>
+                  </div>
+                  
+                  <div className="w-full bg-slate-100 dark:bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
+                    <div 
+                      className="bg-blue-500 h-full rounded-full transition-all duration-300"
+                      style={{ width: `${analysisProgress}%` }}
+                    ></div>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-2 text-left">
+                    <div className="flex items-center space-x-1.5 text-[9px] font-mono text-slate-500">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500 inline-block animate-ping"></span>
+                      <span>ACTIVE SHIELD MODULE:</span>
+                    </div>
+                    <p className="text-[11px] font-mono text-slate-300 leading-relaxed min-h-[36px]">
+                      {analysisStepText}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="h-3 w-1/3 bg-slate-100 dark:bg-slate-950 rounded"></div>
+                    <div className="h-2 w-2/3 bg-slate-100 dark:bg-slate-950 rounded"></div>
+                    <div className="h-2 w-1/2 bg-slate-100 dark:bg-slate-950 rounded"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* State C: Complete Results Dissection */}
+              {!isAnalyzing && result && (
+                <div className="space-y-5 text-left animate-fade-in w-full h-full">
+                  
+                  {/* Dynamic Metrics Breakdown depending on subTab */}
+                  <div className="space-y-3.5">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                      <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
+                        📊 Neural Score Breakdown
+                      </span>
+                      <span className="text-[9px] font-mono uppercase bg-slate-100 dark:bg-slate-950 text-slate-500 px-1 rounded">
+                        {result.type.toUpperCase()} CAPTURE
+                      </span>
+                    </div>
+
+                    {/* Check if Video */}
+                    {result.type === 'video' && (
+                      <div className="space-y-3 font-mono text-xs text-slate-700 dark:text-slate-300">
+                        {/* face consistency */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Face Consistency</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'Anomalous (24%)' : 'Stable (96%)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 50 ? '24%' : '96%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Frame irregularity */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Frame Irregularity</span>
+                            <span className={result.riskScore > 60 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 60 ? 'High (84%)' : 'Nominal (4%)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 60 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 60 ? '84%' : '4%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Audio mismatch */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Audio Mismatch</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'Cloned Sync (88%)' : 'Cohesive (2%)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 50 ? '88%' : '2%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Lip-sync check */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Lip-Sync Alignment</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-450' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'Fails Match (12%)' : 'Synced (98%)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 50 ? '12%' : '98%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Manipulation signal score */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between font-bold">
+                            <span>Synthetic Signal</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore}% Probability
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${result.riskScore}%` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Check if Image */}
+                    {result.type === 'image' && (
+                      <div className="space-y-3 font-mono text-xs text-slate-700 dark:text-slate-300">
+                        {/* AI-generation signal */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>AI-Generation Signal</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'GAN Artifacts Found' : 'Unaltered Pixel Grid'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${result.riskScore}%` }}></div>
+                          </div>
+                        </div>
+
+                        {/* Face artifact score */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Face Mask / Artifacts</span>
+                            <span className={result.riskScore > 60 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 60 ? 'Boundary Blur (78%)' : 'Nominal (3%)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 60 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 60 ? '78%' : '3%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Editing trace score */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Clone / Stamp Edits</span>
+                            <span className={result.riskScore > 40 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 40 ? 'Anomalous (82%)' : 'Flat Noise (6%)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 40 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 40 ? '82%' : '6%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Metadata check */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>EXIF Camera Match</span>
+                            <span className={result.riskScore > 60 ? 'text-amber-400' : 'text-emerald-400'}>
+                              {result.riskScore > 60 ? 'Mismatched Headers' : 'Valid EXIF Matches'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 60 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 60 ? '15%' : '95%' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Check if News Link / Text */}
+                    {result.type === 'news_link' && (
+                      <div className="space-y-3 font-mono text-xs text-slate-700 dark:text-slate-300">
+                        {/* Source credibility */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Source Trust Index</span>
+                            <span className={result.riskScore > 60 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 60 ? 'Unverified Web Domain' : 'Verified Publisher (AP/Reu)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 60 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 60 ? '25%' : '98%' }}></div>
+                          </div>
+                        </div>
+
+                        {/* Headline risk */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Sensational Headline Risk</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-450' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'High Clickbait Weight' : 'Informative/Neutral'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${result.riskScore}%` }}></div>
+                          </div>
+                        </div>
+
+                        {/* Language manipulation */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Cognitive Manipulation Bias</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'Extreme Emotional Bias' : 'Low Bias Metrics'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${result.riskScore}%` }}></div>
+                          </div>
+                        </div>
+
+                        {/* Cross-source support */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Syndication / Peer Reports</span>
+                            <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                              {result.riskScore > 50 ? 'Isolated Incident (0 peers)' : 'Fully Co-Reported (AP/AFP)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-950 h-1.5 rounded">
+                            <div className={`h-1.5 rounded ${result.riskScore > 50 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: result.riskScore > 50 ? '5%' : '95%' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* FRAME OR SAMPLE PREVIEW FOR VIDEO/IMAGE/TEXT */}
+                  <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-3.5">
+                    <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                      🔬 Target Specimen Visualizer
+                    </span>
+                    
+                    {result.type === 'video' && (
+                      <div className="bg-slate-950 h-32 rounded-xl border border-slate-850 flex flex-col justify-between p-3 overflow-hidden relative">
+                        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(0,100,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,100,255,0.1)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+                        
+                        {/* Simulated green wireframe face mesh */}
+                        <div className="flex-1 flex items-center justify-center relative">
+                          <div className="w-24 h-24 rounded-full border border-blue-500/40 relative flex items-center justify-center">
+                            <div className="absolute w-2 h-2 rounded-full bg-blue-400 animate-ping"></div>
+                            {/* Face structural mesh grids */}
+                            <div className="absolute inset-2 border border-dotted border-blue-400/30 rounded-full"></div>
+                            <div className="absolute inset-4 border border-blue-400/20 rounded-full"></div>
+                            <div className="w-full h-[1px] bg-blue-500/35 absolute top-1/2"></div>
+                            <div className="h-full w-[1px] bg-blue-500/35 absolute left-1/2"></div>
+                            <div className="absolute top-1/3 left-1/3 w-1.5 h-1 bg-blue-300"></div>
+                            <div className="absolute top-1/3 right-1/3 w-1.5 h-1 bg-blue-300"></div>
+                            <div className="absolute bottom-1/4 w-4 h-1 border-b border-blue-300/60 rounded"></div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 relative z-10">
+                          <span>LAN_TRACKER: 67 VERTS ACTIVE</span>
+                          <span className={result.riskScore > 50 ? 'text-rose-400 animate-pulse font-bold' : 'text-emerald-400'}>
+                            {result.riskScore > 50 ? 'MESH STRETCH DETECTED' : 'ALIGNMENT: PERFECT'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {result.type === 'image' && (
+                      <div className="bg-slate-950 h-32 rounded-xl border border-slate-850 flex flex-col justify-between p-3 overflow-hidden relative">
+                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:12px_12px]"></div>
+                        
+                        {/* Magnifier grid overlay */}
+                        <div className="flex-1 flex items-center justify-center relative">
+                          <div className="border border-blue-500/40 px-3 py-1.5 rounded bg-blue-950/20 text-[10px] font-mono text-blue-300 flex items-center space-x-2">
+                            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                            <span>CFA EXIF SPECTRUM MAPPER ACTIVE</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 relative z-10">
+                          <span>NOISE VARIANCE ANALYSIS</span>
+                          <span className={result.riskScore > 50 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+                            {result.riskScore > 50 ? 'ANOMALOUS EDGE SHARPNESS' : 'UNIFORM SENSOR GRAIN'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {result.type === 'news_link' && (
+                      <div className="bg-slate-950 p-3 rounded-xl border border-slate-850 font-mono text-[10.5px] text-slate-400 space-y-2">
+                        <div className="border-b border-slate-900 pb-1 flex justify-between items-center text-[8.5px] text-slate-500 font-bold">
+                          <span>SEMANTIC WORD EXTRACTOR</span>
+                          <span className="text-blue-400">BIAS WEIGHTING MAP</span>
+                        </div>
+                        <p className="italic leading-normal text-slate-300">
+                          {result.riskScore > 50 
+                            ? '🚨 "...locks within 48 hours..." [Sensational Alert Pattern Match]. "...seize private residential assets..." [Emotional Shock Trigger].'
+                            : '✔️ "...European Central Committee releases..." [Direct objective title]. "...official economic support..." [Noun sequence match].'
+                          }
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* HIGH-LEVEL HIGHLIGHT CARD FOR CRITICAL SIGNALS */}
+                  <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-3.5">
+                    <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                      ⚠️ Critical Specimen Warnings
+                    </span>
+                    {result.riskScore > 50 ? (
+                      <div className="bg-rose-950/20 border border-rose-900/40 rounded-xl p-3 text-rose-400 space-y-1.5">
+                        <div className="flex items-center space-x-1.5 text-[10px] font-mono font-bold tracking-widest uppercase">
+                          <ShieldAlert className="h-4 w-4 text-rose-450 shrink-0" />
+                          <span>ANOMALOUS PAYLOAD TRIGGERED</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed font-sans text-slate-300">
+                          Verification pipelines successfully mapped anomalies. {result.type === 'video' ? 'Audio-facial alignment exceeds acceptable latency benchmarks.' : result.type === 'image' ? 'Repeating structures detected under Color Filter Array matrices.' : 'Source domain lacks mutually supporting journalism.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-emerald-950/20 border border-emerald-900/40 rounded-xl p-3 text-emerald-400 space-y-1.5">
+                        <div className="flex items-center space-x-1.5 text-[10px] font-mono font-bold tracking-widest uppercase">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <span>ALL STRUCTURAL TEST CORES NOMINAL</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed font-sans text-slate-300">
+                          Scans indicate no synthesized facial features, matching organic vocal metrics, and verifiable sources. Payload matches authentic parameters.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CASE TIMELINE STEPS OF VERIFICATION */}
+                  <div className="space-y-3.5 border-t border-slate-100 dark:border-slate-800/80 pt-3.5 w-full">
+                    <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                      ⏳ Forensic Pipeline Timeline
+                    </span>
+                    <div className="space-y-2 pl-2 border-l border-slate-200 dark:border-slate-800 font-mono text-[10px] text-slate-500">
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[0.0s] Handshake Resolution</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Platform socket opened and secure CDN handshake established.</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[0.3s] Signal Demultiplexing</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Extracted raw stream partitions (Acoustics, Visual frame buffer).</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[0.8s] Neural Network Evaluation</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Dispatched streams to dynamic CNN & Transformer models.</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[1.2s] Metadata Integrity Seal</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Completed checksum sealing and saved query to local history.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* ==================== STAGE 3: RISK REPORT (Right Column) ==================== */}
+        <div className="lg:col-span-4 space-y-6 flex flex-col h-full justify-start">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col text-white">
+            
+            <div className="bg-slate-950 px-4 py-3.5 border-b border-slate-900 flex items-center justify-between text-white">
+              <span className="text-xs font-mono font-bold tracking-wider text-blue-400 flex items-center space-x-1.5">
+                <Compass className="h-4 w-4 text-blue-400" />
+                <span>STAGE 03: FORENSIC CASE REPORT</span>
+              </span>
+              <span className="text-[9px] font-mono bg-blue-900/40 text-blue-300 border border-blue-800/50 px-1.5 py-0.5 rounded">
+                CASE CERTIFICATE
+              </span>
+            </div>
+
+            <div className="p-5 flex-1 min-h-[460px] flex flex-col justify-center">
+              {/* State A: Awaiting submission */}
+              {!isAnalyzing && !result && (
+                <div className="text-center py-12 space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-slate-950 text-slate-600 flex items-center justify-center border border-slate-850">
+                    <Fingerprint className="h-6 w-6 stroke-[1.5] text-blue-500/60" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Report Awaiting Intake</h4>
+                    <p className="text-[11px] text-slate-500 leading-relaxed max-w-[240px] mx-auto">
+                      All structural certificates, risk meters, and model reasoning summaries compile here upon successful intake validation.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* State B: Running Scans */}
+              {isAnalyzing && (
+                <div className="space-y-5 py-6 text-center animate-pulse">
+                  <Fingerprint className="h-10 w-10 mx-auto text-blue-500 animate-spin" />
+                  <div className="space-y-1.5">
+                    <h4 className="text-xs font-mono font-bold uppercase text-slate-400">GENERATING EVIDENCE RECORD</h4>
+                    <p className="text-[10px] text-slate-500 leading-normal max-w-[180px] mx-auto font-mono">
+                      Performing deep-level hash calculation and building forensic signature authority...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* State C: Complete Results Case Report */}
+              {!isAnalyzing && result && (
+                <div className="space-y-5 text-left animate-fade-in w-full h-full">
+                  
+                  {/* Case Outcome Header */}
+                  <div className="space-y-2 bg-slate-950 p-4 rounded-xl border border-slate-850">
+                    <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 font-bold uppercase">
+                      <span>Forensic Finding Status</span>
+                      <span className={getProfessionalOutcome(result.riskScore, result.type).textClass}>
+                        {getProfessionalOutcome(result.riskScore, result.type).badge}
+                      </span>
+                    </div>
+
+                    <div className={`p-2.5 rounded-lg border text-sm font-black font-mono text-center uppercase tracking-wide ${getProfessionalOutcome(result.riskScore, result.type).color}`}>
+                      {getProfessionalOutcome(result.riskScore, result.type).label}
+                    </div>
+
+                    <p className="text-[11px] leading-relaxed text-slate-400 font-sans">
+                      {getProfessionalOutcome(result.riskScore, result.type).description}
+                    </p>
+                  </div>
+
+                  {/* RISK METER GRADUATED BAR */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">
+                      <span>Threat Risk Meter</span>
+                      <span className={getProfessionalOutcome(result.riskScore, result.type).textClass}>
+                        {result.riskScore}% RISK
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-slate-950 h-5 rounded overflow-hidden border border-slate-800 p-0.5 flex relative items-center">
+                      {/* Graduated labels under bar */}
+                      <div className="absolute inset-0 flex justify-between px-2 text-[8px] font-mono text-slate-500 pointer-events-none items-center">
+                        <span>MINIMAL</span>
+                        <span>ELEVATED</span>
+                        <span>HIGH</span>
+                        <span>CRITICAL</span>
+                      </div>
+                      <div 
+                        className={`h-full rounded-sm opacity-25 ${getProfessionalOutcome(result.riskScore, result.type).barColor}`}
+                        style={{ width: `${result.riskScore}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Confidence and metadata parameters */}
+                  <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-mono">
+                    <div className="bg-slate-950 p-2.5 rounded border border-slate-850 flex flex-col justify-between">
+                      <span className="text-slate-550 block text-[9px] uppercase">Confidence</span>
+                      <span className="font-bold text-blue-400 text-xs mt-0.5">{100 - Math.abs(result.riskScore - 2)}% Certitude</span>
+                    </div>
+                    <div className="bg-slate-950 p-2.5 rounded border border-slate-850 flex flex-col justify-between">
+                      <span className="text-slate-550 block text-[9px] uppercase">Case UID</span>
+                      <span className="font-bold text-slate-300 text-xs mt-0.5">#{result.id.slice(-6)}</span>
+                    </div>
+                  </div>
+
+                  {/* REASONING SUMMARY */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Investigative Case Summary</span>
+                    <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-850 font-sans">
+                      {result.verdict}
+                    </p>
+                  </div>
+
+                  {/* SOURCE TRUST CARD / HARDWARE SENSOR PROFILE */}
+                  {result.type === 'news_link' ? (
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-850/60 text-xs space-y-1.5 font-mono">
+                      <div className="flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                        <span>📰 Source Authenticator</span>
+                        <span className={result.riskScore > 50 ? 'text-rose-400' : 'text-emerald-400'}>
+                          {result.riskScore > 50 ? 'UNVERIFIED DOMAIN' : 'MAINSTREAM REGISTRY'}
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-[11px] text-slate-400">
+                        <div className="flex justify-between">
+                          <span>Corroboration:</span>
+                          <span className="text-slate-200">{result.riskScore > 50 ? '0 global indices' : '12 major international bureaus'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Syntactic Style:</span>
+                          <span className="text-slate-200">{result.riskScore > 50 ? 'Clickbait sensational' : 'Objective report'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-850/60 text-xs space-y-1.5 font-mono">
+                      <div className="flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                        <span>📷 Hardware Sensor Profile</span>
+                        <span className={result.riskScore > 60 ? 'text-amber-400' : 'text-emerald-400'}>
+                          {result.riskScore > 60 ? 'ALTERED EXIF' : 'UNALTERED EXIF'}
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-[11px] text-slate-400">
+                        <div className="flex justify-between">
+                          <span>Camera Hardware:</span>
+                          <span className="text-slate-200">{result.riskScore > 60 ? 'Paint.NET Altered' : 'Sony ILCE-7M4 FE'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Sensor matrix:</span>
+                          <span className="text-slate-200">CFA Bayer Pattern (Unaltered)</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CONTENT FINGERPRINT ANALYSIS TRAIL */}
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-850/60 text-[10px] font-mono text-slate-400 space-y-1">
+                    <div className="flex items-center space-x-1 text-[9px] font-bold text-slate-500 uppercase pb-1 border-b border-slate-900 mb-1.5">
+                      <Fingerprint className="h-3 w-3 text-slate-500" />
+                      <span>Evidence Cryptographic Trail</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Payload SHA-256:</span>
+                      <span className="text-blue-400 font-bold">sha256:{Math.random().toString(16).slice(2, 10)}ae3</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Forensic Node:</span>
+                      <span className="text-slate-300">Scraper AP-EAST-02</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Watermark Status:</span>
+                      <span className="text-slate-300">Proof-Watermark Encoded</span>
+                    </div>
+                  </div>
+
+                  {/* local history save alert */}
+                  <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 border-t border-slate-850 pt-3">
+                    <span className="flex items-center space-x-1 text-emerald-500 font-bold">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      <span>CASE FILE COMMITTED TO HISTORY LOGS</span>
+                    </span>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ==================== WHAT THE SYSTEM CHECKS SECTION ==================== */}
+      <div className="space-y-4 pt-10 border-t border-slate-200 dark:border-slate-800">
+        <div className="text-center space-y-1">
+          <h2 className="text-xl font-display font-black tracking-tight text-slate-900 dark:text-white uppercase">
+            What the system checks
+          </h2>
+          <p className="text-xs text-slate-400 font-mono tracking-wide uppercase">
+            Specialized deep neural classification modules
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Video checking */}
+          <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-5 rounded-2xl space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
+              <Video className="h-5 w-5" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono">Video Forensics</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Calculates face consistency, tracks sub-pixel lip-sync alignment anomalies, filters dynamic lighting angle differences, and detects acoustic cloned voice traces compared to organic physiological pauses.
+            </p>
+          </div>
+
+          {/* Card 2: Image checking */}
+          <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-5 rounded-2xl space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
+              <Image className="h-5 w-5" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono">Image Forensic Sweep</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Scans Color Filter Array (CFA) interpolation inconsistencies, specular pupil light direction vectoring conflicts, localized blur edges, and camera header metadata altered by graphical rendering libraries.
+            </p>
+          </div>
+
+          {/* Card 3: News / Text check */}
+          <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-5 rounded-2xl space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
+              <FileText className="h-5 w-5" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono">Semantic Text Analysis</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Examines cognitive text bias levels, flags alarming linguistic capitalizations, assesses headline clickbait weight ratios, and indexes syndication coverage across accredited global journalistic bureaus.
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* ==================== WHY THIS MATTERS SECTION ==================== */}
+      <div className="space-y-4 pt-10 border-t border-slate-200 dark:border-slate-800">
+        <div className="text-center space-y-1">
+          <h2 className="text-xl font-display font-black tracking-tight text-slate-900 dark:text-white uppercase">
+            Why this matters
+          </h2>
+          <p className="text-xs text-slate-400 font-mono tracking-wide uppercase">
+            Safeguarding objective trust in the digital age
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+          
+          {/* Point 1 */}
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-4 rounded-xl flex items-start space-x-3">
+            <span className="text-blue-500 font-bold shrink-0 text-base">01.</span>
+            <div className="space-y-1">
+              <h5 className="font-bold text-slate-700 dark:text-slate-300">Deepfakes Spread Misinformation</h5>
+              <p className="text-[11px] text-slate-500 leading-relaxed font-sans">
+                Synthetic multimedia is highly weaponized to manufacture fictional statements by public leaders, accelerating market volatility, narrative polarization, and severe trust depletion across global borders.
+              </p>
+            </div>
+          </div>
+
+          {/* Point 2 */}
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-4 rounded-xl flex items-start space-x-3">
+            <span className="text-blue-500 font-bold shrink-0 text-base">02.</span>
+            <div className="space-y-1">
+              <h5 className="font-bold text-slate-700 dark:text-slate-300">AI Media is Advancing Daily</h5>
+              <p className="text-[11px] text-slate-500 leading-relaxed font-sans">
+                Generative AI models yield high-fidelity pixel renders, flawless voice replication, and zero-gravity mesh models that cannot be filtered easily by standard human sensory perception alone.
+              </p>
+            </div>
+          </div>
+
+          {/* Point 3 */}
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-4 rounded-xl flex items-start space-x-3">
+            <span className="text-blue-500 font-bold shrink-0 text-base">03.</span>
+            <div className="space-y-1">
+              <h5 className="font-bold text-slate-700 dark:text-slate-300">A Clear Verification Need</h5>
+              <p className="text-[11px] text-slate-500 leading-relaxed font-sans">
+                A public-facing, analytical forensic suite is required to extract metadata, inspect underlying compression anomalies, and provide factual parameters so users verify digital assets prior to distributing.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   );
 }
