@@ -10,3 +10,4 @@ mediapipe>=0.10.11
 torch>=2.2.0
 torchvision>=0.17.0
 timm>=0.9.16
+yt-dlp>=2024.3.10

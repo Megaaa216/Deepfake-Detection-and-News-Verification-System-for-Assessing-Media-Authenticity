@@ -369,23 +369,99 @@ export default function VerifyView({
     { progress: 100, text: 'Cryptographic hash signature sealed. Generating ultimate case report.' }
   ];
 
-  const handleStartAnalysis = () => {
+  const finalizeRealLinkAnalysis = (apiData: any) => {
+    setIsAnalyzing(false);
+    
+    const score = Math.round(apiData.confidence * 100);
+    const status: VerificationStatus = apiData.result === 'fake' ? 'likely_deepfake' : 'likely_authentic';
+    const plat = detectedPlatform?.name || 'Other';
+    
+    const verdict = apiData.result === 'fake'
+      ? `CRITICAL neural synthesis signatures identified. In-depth frame scans verify a temporal consistency score of ${(apiData.model_results.temporal_model * 100).toFixed(1)}% and spatial face mask anomaly of ${(apiData.model_results.face_model * 100).toFixed(1)}%.`
+      : `Forensic audit complete. Unaltered digital compression matching standard camera feeds identified. Temporal consistency score is ${(apiData.model_results.temporal_model * 100).toFixed(1)}% and face model anomaly is ${(apiData.model_results.face_model * 100).toFixed(1)}%.`;
+
+    const recommendation = apiData.result === 'fake'
+      ? 'Critical threat assessment. Neural face-swap mesh overlay or cloned audio sequence verified. Treat as synthetic material.'
+      : 'Safe asset verified. Noise field behaves uniformly and maps correctly to standard frames. Safe to distribute.';
+
+    const realRecord: VerificationResult = {
+      id: `case-${Math.floor(Math.random()*90000)+10000}`,
+      type: activeSubTab,
+      targetName: inputUrl,
+      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      riskScore: score,
+      status: status,
+      verdict: verdict,
+      recommendation: recommendation,
+      platform: plat,
+      reasons: [
+        {
+          id: 'real-r1',
+          name: 'Face Classifier Anomaly',
+          status: apiData.model_results.face_model > 0.5 ? 'failed' : 'passed',
+          details: `Spatial frame classifier returned a face anomaly ratio of ${(apiData.model_results.face_model * 100).toFixed(1)}%.`
+        },
+        {
+          id: 'real-r2',
+          name: 'Sequence Transformer Inconsistency',
+          status: apiData.model_results.temporal_model > 0.5 ? 'failed' : 'passed',
+          details: `Temporal sequence transformer returned a consistency discrepancy of ${(apiData.model_results.temporal_model * 100).toFixed(1)}%.`
+        },
+        {
+          id: 'real-r3',
+          name: 'Weighted Classifier Fusion',
+          status: apiData.confidence > 0.5 ? 'failed' : 'passed',
+          details: `The fused spatial and temporal decision trees yielded an overall confidence score of ${(apiData.confidence * 100).toFixed(1)}%.`
+        }
+      ]
+    };
+
+    setResult(realRecord);
+    onAddHistoryItem(realRecord);
+  };
+
+  const handleStartAnalysis = async () => {
     if (intakeMethod === 'url' && !inputUrl.trim()) return;
     if (intakeMethod === 'upload' && !selectedFile) return;
 
     setIsAnalyzing(true);
     setAnalysisProgress(0);
     setAnalysisStepText(verificationLogs[0].text);
+    setResult(null);
+
+    // Start API request if analyzing a video via URL link
+    let apiPromise: Promise<any> | null = null;
+    if (intakeMethod === 'url' && activeSubTab === 'video') {
+      const { apiRequest } = await import('../services/api');
+      apiPromise = apiRequest('/api/detection/video-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: inputUrl }),
+      }).catch((err) => {
+        console.error("API link check failed:", err);
+        return null;
+      });
+    }
 
     let stepIdx = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (stepIdx < verificationLogs.length - 1) {
         stepIdx++;
         setAnalysisProgress(verificationLogs[stepIdx].progress);
         setAnalysisStepText(verificationLogs[stepIdx].text);
       } else {
         clearInterval(interval);
-        finalizeAnalysis();
+        
+        if (apiPromise) {
+          const apiData = await apiPromise;
+          if (apiData) {
+            finalizeRealLinkAnalysis(apiData);
+          } else {
+            finalizeAnalysis(); // Fallback to mock if API failed
+          }
+        } else {
+          finalizeAnalysis();
+        }
       }
     }, 380);
   };

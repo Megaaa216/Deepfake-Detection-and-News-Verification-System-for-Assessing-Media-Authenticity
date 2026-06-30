@@ -37,4 +37,7 @@ const upload = multer({
 // POST route for video upload
 router.post("/video", upload.single("video"), detectionController.uploadVideo);
 
+// POST route for video URL link upload
+router.post("/video-link", express.json(), detectionController.analyzeVideoLink);
+
 module.exports = router;
