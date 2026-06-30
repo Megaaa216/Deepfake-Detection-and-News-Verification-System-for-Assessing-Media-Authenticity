@@ -18,6 +18,7 @@ import SettingsView from './components/SettingsView';
 
 import { VerificationResult, Stats } from './types';
 import { INITIAL_HISTORY, INITIAL_STATS } from './sampleData';
+import { authService } from './services/api';
 
 export default function App() {
   // Navigation active state
@@ -130,14 +131,29 @@ export default function App() {
     }
 
     const cachedUser = localStorage.getItem('veramedia_user');
-    if (cachedUser) {
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('veramedia_accessToken');
+    if (cachedUser && token) {
       try {
-        setUser(JSON.parse(cachedUser));
+        const parsedUser = JSON.parse(cachedUser);
+        setUser({ ...parsedUser, loggedIn: true });
       } catch (e) {
         // Safe to ignore
       }
+    } else {
+      setUser({ loggedIn: false, email: null });
     }
   }, []);
+
+  // Redirect protected tabs to login if not authenticated
+  useEffect(() => {
+    const protectedTabs = ['history', 'verify', 'reports', 'admin', 'profile', 'settings'];
+    if (protectedTabs.includes(activeTab)) {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('veramedia_accessToken');
+      if (!token || !user.loggedIn) {
+        handleTabChange('login');
+      }
+    }
+  }, [activeTab, user.loggedIn]);
 
   // Sync state to local storage when changed
   const saveToStorage = (updatedHistory: VerificationResult[], updatedStats: Stats) => {
@@ -145,26 +161,32 @@ export default function App() {
     localStorage.setItem('veramedia_stats', JSON.stringify(updatedStats));
   };
 
-  const handleLogin = (customUser?: { fullName: string; username: string; email: string }) => {
+  const handleLogin = (customUser?: { fullName: string; username: string; email: string; role?: 'admin' | 'analyst'; avatarUrl?: string }) => {
     const defaultProfile = {
       loggedIn: true,
       email: customUser?.email || 'a.brent@cyber-forensics.verify',
       fullName: customUser?.fullName || 'Dr. Alan Brent',
       username: customUser?.username || 'abrent_forensics',
-      role: (customUser?.email === 'a.brent@cyber-forensics.verify' || !customUser?.email) ? 'admin' : 'analyst' as 'admin' | 'analyst',
+      role: customUser?.role || ((customUser?.email === 'a.brent@cyber-forensics.verify' || !customUser?.email) ? 'admin' : 'analyst'),
       createdAt: '2026-01-20',
-      avatarUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><circle cx='12' cy='12' r='12' fill='%23f1f5f9'/><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' fill='%2394a3b8'/></svg>"
+      avatarUrl: customUser?.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><circle cx='12' cy='12' r='12' fill='%23f1f5f9'/><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' fill='%2394a3b8'/></svg>"
     };
     setUser(defaultProfile);
     localStorage.setItem('veramedia_user', JSON.stringify(defaultProfile));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.warn('Backend logout warning:', e);
+    }
     setUser({
       loggedIn: false,
       email: null,
     });
     localStorage.removeItem('veramedia_user');
+    handleTabChange('login');
   };
 
   const handleUpdateProfile = (updatedUser: { fullName: string; username: string; email: string, avatarUrl?: string }) => {

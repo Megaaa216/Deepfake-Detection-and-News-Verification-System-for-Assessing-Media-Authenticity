@@ -4,6 +4,7 @@ import {
   Settings, Clock, Activity, FileText, BadgeCheck, Camera, Edit2, Check
 } from 'lucide-react';
 import { VerificationResult } from '../types';
+import { authService } from '../services/api';
 
 interface ProfileViewProps {
   user: {
@@ -49,6 +50,7 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [pwdSuccess, setPwdSuccess] = useState<string | null>(null);
   const [pwdError, setPwdError] = useState<string | null>(null);
+  const [isPwdLoading, setIsPwdLoading] = useState(false);
 
   // Compute stats based on true history list
   const totalChecks = historyList.length;
@@ -83,7 +85,7 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
     setTimeout(() => setProfileSuccess(null), 3000);
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwdError(null);
     setPwdSuccess(null);
@@ -103,12 +105,25 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
       return;
     }
 
-    setPwdSuccess('Primary password hash rebuilt and changed successfully.');
-    // reset inputs
-    setCurrPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    setTimeout(() => setPwdSuccess(null), 3500);
+    setIsPwdLoading(true);
+
+    try {
+      await authService.changePassword({
+        oldPassword: currPassword,
+        newPassword: newPassword,
+      });
+
+      setPwdSuccess('Primary password hash rebuilt and changed successfully.');
+      // reset inputs
+      setCurrPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setTimeout(() => setPwdSuccess(null), 3500);
+    } catch (err: any) {
+      setPwdError(err.message || 'Failed to change password. Please check your credentials and try again.');
+    } finally {
+      setIsPwdLoading(false);
+    }
   };
 
   return (
@@ -327,10 +342,11 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
                   </label>
                   <input
                     type="password"
+                    disabled={isPwdLoading}
                     placeholder="••••••••"
                     value={currPassword}
                     onChange={(e) => setCurrPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 p-2.5 rounded-lg text-slate-800 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 p-2.5 rounded-lg text-slate-800 text-xs focus:outline-none disabled:opacity-60"
                   />
                 </div>
                 <div>
@@ -339,10 +355,11 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
                   </label>
                   <input
                     type="password"
+                    disabled={isPwdLoading}
                     placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 p-2.5 rounded-lg text-slate-800 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 p-2.5 rounded-lg text-slate-800 text-xs focus:outline-none disabled:opacity-60"
                   />
                 </div>
                 <div>
@@ -351,10 +368,11 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
                   </label>
                   <input
                     type="password"
+                    disabled={isPwdLoading}
                     placeholder="••••••••"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 p-2.5 rounded-lg text-slate-800 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 p-2.5 rounded-lg text-slate-800 text-xs focus:outline-none disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -362,9 +380,10 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg text-xs transition-colors cursor-pointer"
+                  disabled={isPwdLoading}
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg text-xs transition-colors cursor-pointer disabled:bg-slate-750 disabled:cursor-not-allowed"
                 >
-                  Update Passphrase Hash
+                  {isPwdLoading ? 'Rebuilding Passphrase Hash...' : 'Update Passphrase Hash'}
                 </button>
               </div>
             </form>
