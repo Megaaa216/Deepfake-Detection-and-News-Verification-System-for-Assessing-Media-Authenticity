@@ -1,36 +1,18 @@
-const jwt =
-require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+const config = require("../config/config");
+const ApiError = require("../utils/ApiError");
 
-module.exports =
-(req,res,next)=>{
+module.exports = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
 
-    const token =
-    req.headers.authorization
-    ?.split(" ")[1];
+  if (!token) {
+    return next(new ApiError(401, "Unauthorized"));
+  }
 
-    if(!token)
-        return res.status(401)
-        .json({
-            message:"Unauthorized"
-        });
-
-    try{
-
-        req.user =
-        jwt.verify(
-            token,
-            process.env.ACCESS_TOKEN_SECRET
-        );
-
-        next();
-
-    }catch{
-
-        return res.status(401)
-        .json({
-            message:"Invalid Token"
-        });
-
-    }
-
+  try {
+    req.user = jwt.verify(token, config.jwt.accessSecret);
+    next();
+  } catch (error) {
+    return next(new ApiError(401, "Invalid Token"));
+  }
 };
