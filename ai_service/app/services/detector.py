@@ -1,74 +1,63 @@
-import asyncio
-import random
-from app.config import settings
+import torch
+from app.services.preprocessor import VideoPreprocessor
+from app.services.models import DeepfakeClassifier
 
-class DeepfakeDetector:
-  def __init__(self):
-    self.model_path = settings.MODEL_PATH
-    self.model_loaded = False
-    self.load_model()
-
-  def load_model(self):
-    # Placeholder for loading weights (e.g. PyTorch, ONNX, TensorFlow)
-    # E.g. self.session = onnxruntime.InferenceSession(self.model_path)
-    self.model_loaded = True
-
-  async def analyze(self, file_bytes: bytes, filename: str, content_type: str) -> dict:
-    """
-    Placeholder for running frame-by-frame deepfake media analysis.
-    Simulates ML model runtime and output formatting.
-    """
-    is_video = "video" in content_type
-    process_time = 2.0 if is_video else 0.5
+class DeepfakeDetectorManager:
+  """
+  Coordinates preprocessing and model inference:
+  1. Receives video path.
+  2. Runs VideoPreprocessor to crop and build sequence tensor.
+  3. Executes dual-stream DeepfakeClassifier forward pass.
+  4. Formats predictions and returns confidence scores.
+  """
+  def __init__(self) -> None:
+    self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    self.preprocessor = VideoPreprocessor(target_size=224)
     
-    # Simulate GPU/CPU execution latency
-    await asyncio.sleep(process_time)
+    # Instantiate the classifier with random weights (no pretrained weights download)
+    self.model = DeepfakeClassifier(sequence_length=10)
+    self.model.to(self.device)
+    self.model.eval()  # Set model to evaluation mode
 
-    # Generate mock ML prediction results
-    is_fake = random.choice([True, False])
-    confidence = round(
-      random.uniform(0.75, 0.99) if is_fake else random.uniform(0.01, 0.25), 
-      4
-    )
+  async def analyze_video(self, video_path: str) -> dict:
+    """
+    Runs media processing and PyTorch classification.
+    """
+    try:
+      # 1. Preprocess video frames into a tensor: shape (1, 10, 3, 224, 224)
+      sequence_tensor = self.preprocessor.preprocess_video(
+        video_path, 
+        sequence_length=10
+      )
+      sequence_tensor = sequence_tensor.to(self.device)
 
-    if is_video:
+      # 2. Run model forward pass under no-grad context
+      with torch.no_grad():
+        face_scores, temporal_scores = self.model(sequence_tensor)
+      
+      # Extract raw float values
+      face_score = float(face_scores[0].item())
+      temporal_score = float(temporal_scores[0].item())
+      
+      # 3. Calculate weighted confidence (40% frame spatial + 60% temporal sequence)
+      final_score = 0.4 * face_score + 0.6 * temporal_score
+      
+      # Threshold prediction outcome
+      result = "fake" if final_score >= 0.5 else "real"
+      confidence = final_score if result == "fake" else (1.0 - final_score)
+
       return {
-        "prediction": "FAKE" if is_fake else "REAL",
-        "confidence": confidence,
-        "metrics": {
-          "totalFramesProcessed": random.randint(30, 120),
-          "fakeFramesCount": random.randint(10, 30) if is_fake else 0,
-          "inferenceTimeSeconds": process_time
-        },
-        "detections": [
-          {
-            "frame": 0,
-            "label": "manipulated_face" if is_fake else "real_face",
-            "confidence": confidence,
-            "boundingBox": [100, 120, 250, 270] # [x_min, y_min, x_max, y_max]
-          },
-          {
-            "frame": 15,
-            "label": "manipulated_face" if is_fake else "real_face",
-            "confidence": confidence - 0.02,
-            "boundingBox": [102, 122, 252, 272]
-          }
-        ]
-      }
-    else:
-      return {
-        "prediction": "FAKE" if is_fake else "REAL",
-        "confidence": confidence,
-        "metrics": {
-          "inferenceTimeSeconds": process_time
-        },
-        "detections": [
-          {
-            "label": "manipulated_face" if is_fake else "real_face",
-            "confidence": confidence,
-            "boundingBox": [120, 110, 240, 230]
-          }
-        ]
+        "result": result,
+        "confidence": round(confidence, 4),
+        "model_results": {
+          "face_model": round(face_score, 4),
+          "temporal_model": round(temporal_score, 4)
+        }
       }
 
-deepfake_detector = DeepfakeDetector()
+    except Exception as e:
+      # Return fallback error mapping or raise
+      raise RuntimeError(f"Deepfake prediction execution failed: {str(e)}")
+
+# Single instance coordinator
+deepfake_detector = DeepfakeDetectorManager()

@@ -22,6 +22,26 @@ app.add_middleware(
 # Mount Routers
 app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["analysis"])
 
+from pydantic import BaseModel
+from app.services.detector import deepfake_detector
+from fastapi import HTTPException
+
+class VideoAnalysisRequest(BaseModel):
+  video_path: str
+
+@app.post("/analyze", tags=["analysis"])
+async def analyze_video(payload: VideoAnalysisRequest):
+  """
+  Accepts local file path of saved video, runs face detection, 
+  and performs sequence inference.
+  """
+  try:
+    result = await deepfake_detector.analyze_video(payload.video_path)
+    return result
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/", tags=["health"])
 async def root():
   return {
