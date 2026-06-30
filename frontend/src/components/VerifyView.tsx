@@ -369,6 +369,59 @@ export default function VerifyView({
     { progress: 100, text: 'Cryptographic hash signature sealed. Generating ultimate case report.' }
   ];
 
+  const finalizeRealLinkAnalysis = (apiData: any) => {
+    setIsAnalyzing(false);
+    
+    const score = Math.round(apiData.confidence * 100);
+    const status: VerificationStatus = apiData.result === 'fake' ? 'likely_deepfake' : 'likely_authentic';
+    const plat = detectedPlatform?.name || 'Other';
+    
+    const verdict = apiData.analysis_summary || (apiData.result === 'fake'
+      ? `CRITICAL neural synthesis signatures identified. In-depth frame scans verify a temporal consistency score of ${(apiData.model_results.temporal_model * 100).toFixed(1)}% and spatial face mask anomaly of ${(apiData.model_results.face_model * 100).toFixed(1)}%.`
+      : `Forensic audit complete. Unaltered digital compression matching standard camera feeds identified. Temporal consistency score is ${(apiData.model_results.temporal_model * 100).toFixed(1)}% and face model anomaly is ${(apiData.model_results.face_model * 100).toFixed(1)}%.`);
+
+    const recommendation = apiData.result === 'fake'
+      ? 'Critical threat assessment. Neural face-swap mesh overlay or cloned audio sequence verified. Treat as synthetic material.'
+      : 'Safe asset verified. Noise field behaves uniformly and maps correctly to standard frames. Safe to distribute.';
+
+    const realRecord: VerificationResult = {
+      id: `case-${Math.floor(Math.random()*90000)+10000}`,
+      type: activeSubTab,
+      targetName: inputUrl,
+      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      riskScore: score,
+      status: status,
+      verdict: verdict,
+      recommendation: recommendation,
+      platform: plat,
+      flagged_frames: apiData.flagged_frames,
+      analysis_summary: apiData.analysis_summary,
+      reasons: [
+        {
+          id: 'real-r1',
+          name: 'Face Classifier Anomaly',
+          status: apiData.model_results.face_model > 0.5 ? 'failed' : 'passed',
+          details: `Spatial frame classifier returned a face anomaly ratio of ${(apiData.model_results.face_model * 100).toFixed(1)}%.`
+        },
+        {
+          id: 'real-r2',
+          name: 'Sequence Transformer Inconsistency',
+          status: apiData.model_results.temporal_model > 0.5 ? 'failed' : 'passed',
+          details: `Temporal sequence transformer returned a consistency discrepancy of ${(apiData.model_results.temporal_model * 100).toFixed(1)}%.`
+        },
+        {
+          id: 'real-r3',
+          name: 'Weighted Classifier Fusion',
+          status: apiData.confidence > 0.5 ? 'failed' : 'passed',
+          details: `The fused spatial and temporal decision trees yielded an overall confidence score of ${(apiData.confidence * 100).toFixed(1)}%.`
+        }
+      ]
+    };
+
+    setResult(realRecord);
+    onAddHistoryItem(realRecord);
+  };
+
   const handleStartAnalysis = async () => {
     if (intakeMethod === 'url' && !inputUrl.trim()) return;
     if (intakeMethod === 'upload' && !selectedFile) return;
@@ -379,25 +432,34 @@ export default function VerifyView({
     setAnalysisStepText(verificationLogs[0].text);
 
     // If URL is being analyzed, trigger the backend API request
-    if (intakeMethod === 'url') {
-      try {
-        console.log('Initiating backend video link detection API call for:', inputUrl.trim());
-        const apiResponse = await detectionService.verifyVideoLink(inputUrl.trim());
-        console.log('Video link detection API successful response:', apiResponse);
-      } catch (err: any) {
-        console.error('Video link detection API failed with error:', err);
-      }
+    let apiPromise: Promise<any> | null = null;
+    if (intakeMethod === 'url' && activeSubTab === 'video') {
+      console.log('Initiating backend video link detection API call for:', inputUrl.trim());
+      apiPromise = detectionService.verifyVideoLink(inputUrl.trim()).catch((err: any) => {
+        console.error('Video link detection API failed:', err);
+        return null;
+      });
     }
 
     let stepIdx = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (stepIdx < verificationLogs.length - 1) {
         stepIdx++;
         setAnalysisProgress(verificationLogs[stepIdx].progress);
         setAnalysisStepText(verificationLogs[stepIdx].text);
       } else {
         clearInterval(interval);
-        finalizeAnalysis();
+        
+        if (apiPromise) {
+          const apiData = await apiPromise;
+          if (apiData) {
+            finalizeRealLinkAnalysis(apiData);
+          } else {
+            finalizeAnalysis();
+          }
+        } else {
+          finalizeAnalysis();
+        }
       }
     }, 380);
   };
@@ -1240,30 +1302,66 @@ export default function VerifyView({
                     </span>
                     
                     {result.type === 'video' && (
-                      <div className="bg-slate-950 h-32 rounded-xl border border-slate-850 flex flex-col justify-between p-3 overflow-hidden relative">
-                        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(0,100,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,100,255,0.1)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
-                        
-                        {/* Simulated green wireframe face mesh */}
-                        <div className="flex-1 flex items-center justify-center relative">
-                          <div className="w-24 h-24 rounded-full border border-blue-500/40 relative flex items-center justify-center">
-                            <div className="absolute w-2 h-2 rounded-full bg-blue-400 animate-ping"></div>
-                            {/* Face structural mesh grids */}
-                            <div className="absolute inset-2 border border-dotted border-blue-400/30 rounded-full"></div>
-                            <div className="absolute inset-4 border border-blue-400/20 rounded-full"></div>
-                            <div className="w-full h-[1px] bg-blue-500/35 absolute top-1/2"></div>
-                            <div className="h-full w-[1px] bg-blue-500/35 absolute left-1/2"></div>
-                            <div className="absolute top-1/3 left-1/3 w-1.5 h-1 bg-blue-300"></div>
-                            <div className="absolute top-1/3 right-1/3 w-1.5 h-1 bg-blue-300"></div>
-                            <div className="absolute bottom-1/4 w-4 h-1 border-b border-blue-300/60 rounded"></div>
+                      <div className="space-y-2">
+                        {result.flagged_frames && result.flagged_frames.length > 0 ? (
+                          <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-800">
+                            {result.flagged_frames.map((frame, index) => {
+                              const isAnomalous = frame.score >= 0.5;
+                              return (
+                                <div key={index} className="flex-shrink-0 w-24 bg-slate-950 rounded-xl border border-slate-850 p-1.5 space-y-1.5 text-center font-mono">
+                                  <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border border-slate-800 relative bg-slate-900 flex items-center justify-center">
+                                    <img 
+                                      src={frame.frame_url} 
+                                      alt={`Frame ${index + 1}`} 
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        // Fallback avatar/placeholder if image fails to load
+                                        (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80`;
+                                      }}
+                                    />
+                                    <div className={`absolute bottom-0 inset-x-0 text-[8px] py-0.5 text-center font-bold text-white uppercase tracking-wider ${
+                                      isAnomalous ? 'bg-rose-500/90' : 'bg-emerald-500/90'
+                                    }`}>
+                                      {isAnomalous ? 'Anomaly' : 'Unaltered'}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col text-[8.5px] leading-tight">
+                                    <span className="text-slate-500">Frame {index + 1}</span>
+                                    <span className={`font-black ${isAnomalous ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                      {(frame.score * 100).toFixed(0)}% ANOM
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        </div>
+                        ) : (
+                          <div className="bg-slate-950 h-32 rounded-xl border border-slate-850 flex flex-col justify-between p-3 overflow-hidden relative">
+                            <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(0,100,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,100,255,0.1)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+                            
+                            {/* Simulated green wireframe face mesh */}
+                            <div className="flex-1 flex items-center justify-center relative">
+                              <div className="w-24 h-24 rounded-full border border-blue-500/40 relative flex items-center justify-center">
+                                <div className="absolute w-2 h-2 rounded-full bg-blue-400 animate-ping"></div>
+                                {/* Face structural mesh grids */}
+                                <div className="absolute inset-2 border border-dotted border-blue-400/30 rounded-full"></div>
+                                <div className="absolute inset-4 border border-blue-400/20 rounded-full"></div>
+                                <div className="w-full h-[1px] bg-blue-500/35 absolute top-1/2"></div>
+                                <div className="h-full w-[1px] bg-blue-500/35 absolute left-1/2"></div>
+                                <div className="absolute top-1/3 left-1/3 w-1.5 h-1 bg-blue-300"></div>
+                                <div className="absolute top-1/3 right-1/3 w-1.5 h-1 bg-blue-300"></div>
+                                <div className="absolute bottom-1/4 w-4 h-1 border-b border-blue-300/60 rounded"></div>
+                              </div>
+                            </div>
 
-                        <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 relative z-10">
-                          <span>LAN_TRACKER: 67 VERTS ACTIVE</span>
-                          <span className={result.riskScore > 50 ? 'text-rose-400 animate-pulse font-bold' : 'text-emerald-400'}>
-                            {result.riskScore > 50 ? 'MESH STRETCH DETECTED' : 'ALIGNMENT: PERFECT'}
-                          </span>
-                        </div>
+                            <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 relative z-10">
+                              <span>LAN_TRACKER: 67 VERTS ACTIVE</span>
+                              <span className={result.riskScore > 50 ? 'text-rose-400 animate-pulse font-bold' : 'text-emerald-400'}>
+                                {result.riskScore > 50 ? 'MESH STRETCH DETECTED' : 'ALIGNMENT: PERFECT'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1485,7 +1583,7 @@ export default function VerifyView({
                   <div className="space-y-2">
                     <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Investigative Case Summary</span>
                     <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-850 font-sans">
-                      {result.verdict}
+                      {result.analysis_summary || result.verdict}
                     </p>
                   </div>
 

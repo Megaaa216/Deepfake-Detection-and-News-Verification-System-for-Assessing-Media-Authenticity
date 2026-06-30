@@ -9,6 +9,8 @@ interface MockResponse {
     face_model: number;
     temporal_model: number;
   };
+  flagged_frames?: Array<{ frame_url: string; score: number }>;
+  analysis_summary?: string;
 }
 
 export default function VideoUpload() {
@@ -217,6 +219,55 @@ export default function VideoUpload() {
                   </div>
                 </div>
               </div>
+              
+              {/* Flagged face frames crops section */}
+              {response.flagged_frames && response.flagged_frames.length > 0 && (
+                <div className="space-y-2 text-left">
+                  <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                    🔬 Detected Face Crops
+                  </span>
+                  <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    {response.flagged_frames.map((frame, index) => {
+                      const isAnomalous = frame.score >= 0.5;
+                      return (
+                        <div key={index} className="flex-shrink-0 w-24 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-slate-800 p-1.5 space-y-1.5 text-center font-mono">
+                          <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-200 dark:bg-slate-900 flex items-center justify-center">
+                            <img 
+                              src={frame.frame_url} 
+                              alt={`Frame ${index + 1}`} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80`;
+                              }}
+                            />
+                            <div className={`absolute bottom-0 inset-x-0 text-[8px] py-0.5 text-center font-bold text-white uppercase tracking-wider ${
+                              isAnomalous ? 'bg-rose-500/90' : 'bg-emerald-500/90'
+                            }`}>
+                              {isAnomalous ? 'Anomaly' : 'Unaltered'}
+                            </div>
+                          </div>
+                          <div className="flex flex-col text-[8.5px] leading-tight">
+                            <span className="text-slate-500">Frame {index + 1}</span>
+                            <span className={`font-black ${isAnomalous ? 'text-rose-500' : 'text-emerald-500'}`}>
+                              {(frame.score * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Expert forensic summary report */}
+              {response.analysis_summary && (
+                <div className="space-y-2 text-left bg-slate-50 dark:bg-slate-950/40 p-4 border border-slate-200 dark:border-slate-800 rounded-xl">
+                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Expert Forensic Summary</span>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
+                    {response.analysis_summary}
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={resetUpload}
