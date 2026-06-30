@@ -7,7 +7,7 @@ import {
   Fingerprint, Compass, Activity, Sliders, Binary
 } from 'lucide-react';
 import { VerificationResult, VerificationType, VerificationReason, VerificationStatus } from '../types';
-import VideoUpload from './VideoUpload';
+import { detectionService } from '../services/api';
 
 interface VerifyViewProps {
   activeSubTab: VerificationType;
@@ -369,99 +369,35 @@ export default function VerifyView({
     { progress: 100, text: 'Cryptographic hash signature sealed. Generating ultimate case report.' }
   ];
 
-  const finalizeRealLinkAnalysis = (apiData: any) => {
-    setIsAnalyzing(false);
-    
-    const score = Math.round(apiData.confidence * 100);
-    const status: VerificationStatus = apiData.result === 'fake' ? 'likely_deepfake' : 'likely_authentic';
-    const plat = detectedPlatform?.name || 'Other';
-    
-    const verdict = apiData.result === 'fake'
-      ? `CRITICAL neural synthesis signatures identified. In-depth frame scans verify a temporal consistency score of ${(apiData.model_results.temporal_model * 100).toFixed(1)}% and spatial face mask anomaly of ${(apiData.model_results.face_model * 100).toFixed(1)}%.`
-      : `Forensic audit complete. Unaltered digital compression matching standard camera feeds identified. Temporal consistency score is ${(apiData.model_results.temporal_model * 100).toFixed(1)}% and face model anomaly is ${(apiData.model_results.face_model * 100).toFixed(1)}%.`;
-
-    const recommendation = apiData.result === 'fake'
-      ? 'Critical threat assessment. Neural face-swap mesh overlay or cloned audio sequence verified. Treat as synthetic material.'
-      : 'Safe asset verified. Noise field behaves uniformly and maps correctly to standard frames. Safe to distribute.';
-
-    const realRecord: VerificationResult = {
-      id: `case-${Math.floor(Math.random()*90000)+10000}`,
-      type: activeSubTab,
-      targetName: inputUrl,
-      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      riskScore: score,
-      status: status,
-      verdict: verdict,
-      recommendation: recommendation,
-      platform: plat,
-      reasons: [
-        {
-          id: 'real-r1',
-          name: 'Face Classifier Anomaly',
-          status: apiData.model_results.face_model > 0.5 ? 'failed' : 'passed',
-          details: `Spatial frame classifier returned a face anomaly ratio of ${(apiData.model_results.face_model * 100).toFixed(1)}%.`
-        },
-        {
-          id: 'real-r2',
-          name: 'Sequence Transformer Inconsistency',
-          status: apiData.model_results.temporal_model > 0.5 ? 'failed' : 'passed',
-          details: `Temporal sequence transformer returned a consistency discrepancy of ${(apiData.model_results.temporal_model * 100).toFixed(1)}%.`
-        },
-        {
-          id: 'real-r3',
-          name: 'Weighted Classifier Fusion',
-          status: apiData.confidence > 0.5 ? 'failed' : 'passed',
-          details: `The fused spatial and temporal decision trees yielded an overall confidence score of ${(apiData.confidence * 100).toFixed(1)}%.`
-        }
-      ]
-    };
-
-    setResult(realRecord);
-    onAddHistoryItem(realRecord);
-  };
-
   const handleStartAnalysis = async () => {
     if (intakeMethod === 'url' && !inputUrl.trim()) return;
     if (intakeMethod === 'upload' && !selectedFile) return;
 
+    setResult(null); // Clear out previous analysis result immediately
     setIsAnalyzing(true);
     setAnalysisProgress(0);
     setAnalysisStepText(verificationLogs[0].text);
-    setResult(null);
 
-    // Start API request if analyzing a video via URL link
-    let apiPromise: Promise<any> | null = null;
-    if (intakeMethod === 'url' && activeSubTab === 'video') {
-      const { apiRequest } = await import('../services/api');
-      apiPromise = apiRequest('/api/detection/video-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl: inputUrl }),
-      }).catch((err) => {
-        console.error("API link check failed:", err);
-        return null;
-      });
+    // If URL is being analyzed, trigger the backend API request
+    if (intakeMethod === 'url') {
+      try {
+        console.log('Initiating backend video link detection API call for:', inputUrl.trim());
+        const apiResponse = await detectionService.verifyVideoLink(inputUrl.trim());
+        console.log('Video link detection API successful response:', apiResponse);
+      } catch (err: any) {
+        console.error('Video link detection API failed with error:', err);
+      }
     }
 
     let stepIdx = 0;
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
       if (stepIdx < verificationLogs.length - 1) {
         stepIdx++;
         setAnalysisProgress(verificationLogs[stepIdx].progress);
         setAnalysisStepText(verificationLogs[stepIdx].text);
       } else {
         clearInterval(interval);
-        
-        if (apiPromise) {
-          const apiData = await apiPromise;
-          if (apiData) {
-            finalizeRealLinkAnalysis(apiData);
-          } else {
-            finalizeAnalysis(); // Fallback to mock if API failed
-          }
-        } else {
-          finalizeAnalysis();
-        }
+        finalizeAnalysis();
       }
     }, 380);
   };
@@ -784,7 +720,10 @@ export default function VerifyView({
               <div className="flex border-b border-slate-100 dark:border-slate-800 text-xs">
                 <button
                   type="button"
-                  onClick={() => setIntakeMethod('url')}
+                  onClick={() => {
+                    setIntakeMethod('url');
+                    setResult(null);
+                  }}
                   className={`flex-1 pb-2 font-mono text-center font-bold tracking-wide cursor-pointer ${
                     intakeMethod === 'url'
                       ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400'
@@ -795,7 +734,10 @@ export default function VerifyView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIntakeMethod('upload')}
+                  onClick={() => {
+                    setIntakeMethod('upload');
+                    setResult(null);
+                  }}
                   className={`flex-1 pb-2 font-mono text-center font-bold tracking-wide cursor-pointer ${
                     intakeMethod === 'upload'
                       ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400'
@@ -813,18 +755,39 @@ export default function VerifyView({
                     <label htmlFor="url-input" className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
                       Destination Social Media Link
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <Globe className="h-4 w-4" />
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Globe className="h-4 w-4" />
+                        </div>
+                        <input
+                          id="url-input"
+                          type="url"
+                          value={inputUrl}
+                          onChange={(e) => setInputUrl(e.target.value)}
+                          placeholder="Paste link from TikTok, Youtube, FB, X, Reddit..."
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
+                        />
                       </div>
-                      <input
-                        id="url-input"
-                        type="url"
-                        value={inputUrl}
-                        onChange={(e) => setInputUrl(e.target.value)}
-                        placeholder="Paste link from TikTok, Youtube, FB, X, Reddit..."
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
-                      />
+                      <button
+                        type="button"
+                        disabled={isAnalyzing || !inputUrl.trim()}
+                        onClick={handleStartAnalysis}
+                        className={`px-5 py-2.5 rounded-xl text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer ${
+                          !inputUrl.trim()
+                            ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none border border-slate-400/10'
+                            : isAnalyzing
+                            ? 'bg-blue-800'
+                            : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
+                        }`}
+                      >
+                        {isAnalyzing ? (
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 text-blue-300" />
+                        )}
+                        <span>{isAnalyzing ? 'Analyzing...' : 'Analyze Link'}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -846,157 +809,163 @@ export default function VerifyView({
                     </div>
                   )}
                 </div>
-              ) : activeSubTab === 'video' ? (
-                <VideoUpload />
               ) : (
-                <>
-                  <div className="space-y-4">
-                    <div 
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setFileDragOver(true);
-                      }}
-                      onDragLeave={() => setFileDragOver(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setFileDragOver(false);
-                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                          const fileObj = e.dataTransfer.files[0];
+                <div className="space-y-4">
+                  <div 
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setFileDragOver(true);
+                    }}
+                    onDragLeave={() => setFileDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setFileDragOver(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        const fileObj = e.dataTransfer.files[0];
+                        setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
+                        setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
+                        setResult(null);
+                      }
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      fileDragOver 
+                        ? 'border-blue-500 bg-blue-500/10 text-blue-400' 
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-500'
+                    }`}
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept={activeSubTab === 'image' ? 'image/*' : activeSubTab === 'video' ? 'video/*' : '*/*'}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const fileObj = e.target.files[0];
                           setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
                           setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
                           setResult(null);
                         }
                       }}
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`border border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                        fileDragOver 
-                          ? 'border-blue-500 bg-blue-500/10 text-blue-400' 
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-500'
-                      }`}
-                    >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        className="hidden" 
-                        accept={activeSubTab === 'image' ? 'image/*' : '*/*'}
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            const fileObj = e.target.files[0];
-                            setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
-                            setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
-                            setResult(null);
-                          }
-                        }}
-                      />
-                      <UploadCloud className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-                      <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {selectedFile ? 'Swap Mounted Specimen' : 'Select or Drag Forensic File'}
-                      </span>
-                      <span className="block text-[10px] text-slate-400 mt-1 max-w-xs mx-auto">
-                        Supports high-resolution {activeSubTab === 'image' ? 'PNG, WebP, JPG' : 'MP4, MOV, MKV'}
-                      </span>
-                    </div>
-
-                    {selectedFile && (
-                      <div className="bg-slate-950 p-3 rounded-xl border border-slate-900 flex items-center justify-between text-[11px] font-mono text-white">
-                        <div className="flex items-center space-x-2 shrink min-w-0">
-                          {activeSubTab === 'image' ? <Image className="h-4 w-4 text-blue-400 shrink-0" /> : <Video className="h-4 w-4 text-blue-400 shrink-0" />}
-                          <span className="truncate font-bold text-slate-300 block max-w-[160px]">{selectedFile.name}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedFile(null); setResult(null); }}
-                          className="text-[9px] text-rose-450 bg-rose-950/20 px-2 py-0.5 rounded border border-rose-900/40 shrink-0 cursor-pointer"
-                        >
-                          Unmount
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Policy Enforced Alert */}
-                  <div className="bg-blue-900/10 border border-blue-900/30 p-3 rounded-xl text-[10px] text-slate-400 leading-normal flex items-start space-x-2 font-mono">
-                    <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-                    <p>
-                      <strong>PUBLIC INTEGRITY RULE:</strong> Analyzes public social media feeds and local sandboxed uploads only. Our scrapers bypass private firewalls.
-                    </p>
-                  </div>
-
-                  {/* QUICK DEMO PRESETS */}
-                  <div className="space-y-2 pt-2 border-t border-slate-150 dark:border-slate-800">
-                    <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
-                      Select Pre-Mounted Demo Cases:
+                    />
+                    <UploadCloud className="h-8 w-8 mx-auto text-blue-500 mb-2" />
+                    <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {selectedFile ? 'Swap Mounted Specimen' : 'Select or Drag Forensic File'}
                     </span>
-                    
-                    <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                      {intakeMethod === 'url' ? (
-                        SOCIAL_PRESETS.map((preset) => (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() => selectPresetUrl(preset)}
-                            className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
-                              inputUrl === preset.url
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
-                                : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center w-full">
-                              <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">[{preset.platform}] Link</span>
-                              <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.type}</span>
-                            </div>
-                            <span className="text-[10px] truncate block text-slate-400 mt-0.5">{preset.url}</span>
-                          </button>
-                        ))
-                      ) : (
-                        FILE_PRESETS.map((preset) => (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() => selectFilePreset(preset)}
-                            className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
-                              selectedFile?.name === preset.name
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
-                                : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center w-full font-mono">
-                              <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">{preset.name}</span>
-                              <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.size}</span>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
+                    <span className="block text-[10px] text-slate-400 mt-1 max-w-xs mx-auto">
+                      Supports high-resolution {activeSubTab === 'image' ? 'PNG, WebP, JPG' : 'MP4, MOV, MKV'}
+                    </span>
                   </div>
 
-                  {/* TRIGGER ANALYSIS BUTTON */}
-                  <button
-                    type="button"
-                    disabled={isAnalyzing || (intakeMethod === 'url' && !inputUrl.trim()) || (intakeMethod === 'upload' && !selectedFile)}
-                    onClick={handleStartAnalysis}
-                    className={`w-full py-3.5 rounded-xl text-white font-semibold text-xs tracking-wider uppercase font-mono shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-                      (intakeMethod === 'url' && !inputUrl.trim()) || (intakeMethod === 'upload' && !selectedFile)
-                        ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed shadow-none border border-slate-400/10' 
-                        : isAnalyzing 
-                        ? 'bg-blue-800' 
-                        : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
-                    }`}
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        <span>Executing Classifiers...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 shrink-0 text-blue-300" />
-                        <span>Run Forensic Verification</span>
-                      </>
-                    )}
-                  </button>
-                </>
+                  {selectedFile && (
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-900 flex items-center justify-between text-[11px] font-mono text-white">
+                      <div className="flex items-center space-x-2 shrink min-w-0">
+                        {activeSubTab === 'image' ? <Image className="h-4 w-4 text-blue-400 shrink-0" /> : <Video className="h-4 w-4 text-blue-400 shrink-0" />}
+                        <span className="truncate font-bold text-slate-300 block max-w-[160px]">{selectedFile.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedFile(null); setResult(null); }}
+                        className="text-[9px] text-rose-450 bg-rose-950/20 px-2 py-0.5 rounded border border-rose-900/40 shrink-0 cursor-pointer"
+                      >
+                        Unmount
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
+
+              {/* Policy Enforced Alert */}
+              <div className="bg-blue-900/10 border border-blue-900/30 p-3 rounded-xl text-[10px] text-slate-400 leading-normal flex items-start space-x-2 font-mono">
+                <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+                <p>
+                  <strong>PUBLIC INTEGRITY RULE:</strong> Analyzes public social media feeds and local sandboxed uploads only. Our scrapers bypass private firewalls.
+                </p>
+              </div>
+
+              {/* QUICK DEMO PRESETS */}
+              <div className="space-y-2 pt-2 border-t border-slate-150 dark:border-slate-800">
+                <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                  Select Pre-Mounted Demo Cases:
+                </span>
+                
+                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                  {intakeMethod === 'url' ? (
+                    SOCIAL_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => selectPresetUrl(preset)}
+                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
+                          inputUrl === preset.url
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
+                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center w-full">
+                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">[{preset.platform}] Link</span>
+                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.type}</span>
+                        </div>
+                        <span className="text-[10px] truncate block text-slate-400 mt-0.5">{preset.url}</span>
+                      </button>
+                    ))
+                  ) : (
+                    FILE_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => selectFilePreset(preset)}
+                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
+                          selectedFile?.name === preset.name
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
+                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center w-full font-mono">
+                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">{preset.name}</span>
+                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.size}</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* TRIGGER ANALYSIS BUTTON */}
+              <button
+                type="button"
+                disabled={isAnalyzing || (intakeMethod === 'url' && !inputUrl.trim()) || (intakeMethod === 'upload' && !selectedFile)}
+                onClick={handleStartAnalysis}
+                className={`w-full py-3.5 rounded-xl text-white font-semibold text-xs tracking-wider uppercase font-mono shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+                  (intakeMethod === 'url' && !inputUrl.trim()) || (intakeMethod === 'upload' && !selectedFile)
+                    ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed shadow-none border border-slate-400/10' 
+                    : isAnalyzing 
+                    ? 'bg-blue-800' 
+                    : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
+                }`}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 shrink-0 text-blue-300" />
+                    <span>
+                      {intakeMethod === 'url' 
+                        ? 'Analyze Link' 
+                        : activeSubTab === 'video'
+                        ? 'Analyze Video'
+                        : activeSubTab === 'image'
+                        ? 'Analyze Image'
+                        : 'Analyze News'
+                      }
+                    </span>
+                  </>
+                )}
+              </button>
+
             </div>
           </div>
         </div>

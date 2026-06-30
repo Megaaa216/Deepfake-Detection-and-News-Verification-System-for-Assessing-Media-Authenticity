@@ -238,3 +238,13 @@ export const authService = {
     }
   },
 };
+
+export const detectionService = {
+  async verifyVideoLink(videoUrl: string) {
+    return apiRequest('/api/detection/video-link', {
+      method: 'POST',
+      body: { videoUrl },
+    });
+  }
+};
+

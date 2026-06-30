@@ -23,7 +23,7 @@ import { authService } from './services/api';
 export default function App() {
   // Navigation active state
   const [activeTab, setActiveTab] = useState<string>('home');
-  const [activeSubTab, setActiveSubTab] = useState<'image' | 'video' | 'news_link'>('news_link');
+  const [activeSubTab, setActiveSubTab] = useState<'image' | 'video' | 'news_link'>('video');
 
   // Track dynamic result item ID for results detail representation
   const [selectedResultId, setSelectedResultId] = useState<string>('check-103');
