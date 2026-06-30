@@ -25,6 +25,7 @@ class DeepfakeDetectorManager:
     """
     try:
       # 1. Preprocess video frames into a tensor: shape (1, 10, 3, 224, 224)
+      print(f"[AI Service] Preprocessing video file: {video_path}")
       sequence_tensor = self.preprocessor.preprocess_video(
         video_path, 
         sequence_length=10
@@ -32,6 +33,7 @@ class DeepfakeDetectorManager:
       sequence_tensor = sequence_tensor.to(self.device)
 
       # 2. Run model forward pass under no-grad context
+      print(f"[AI Service] Tensor shape entering model: {sequence_tensor.shape}")
       with torch.no_grad():
         face_scores, temporal_scores = self.model(sequence_tensor)
       
