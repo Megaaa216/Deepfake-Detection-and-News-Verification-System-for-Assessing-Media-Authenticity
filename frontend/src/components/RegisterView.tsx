@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Eye, EyeOff, User, Mail, Lock, Check, ShieldAlert } from 'lucide-react';
+import { authService } from '../services/api';
 
 interface RegisterViewProps {
   onNavigateToLogin: () => void;
@@ -15,11 +16,16 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  // Email verification state
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+
   // UI state
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Helper validation checkers
   const validateEmail = (val: string) => {
@@ -33,9 +39,10 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
     return val.length >= 8 && hasLetter && hasNumber;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     // 1. Check empty fields
     if (!fullName.trim() || !username.trim() || !email.trim() || !password || !confirmPassword) {
@@ -73,17 +80,137 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
       return;
     }
 
-    // Successful registration
-    setSuccessMsg('Security credentials generated! Your account has been registered successfully.');
-    
-    setTimeout(() => {
-      onRegisterSuccess({
+    setIsLoading(true);
+    try {
+      await authService.register({
         fullName: fullName.trim(),
         username: username.trim().toLowerCase(),
-        email: email.trim().toLowerCase()
+        email: email.trim().toLowerCase(),
+        password: password,
       });
-    }, 2000);
+
+      setSuccessMsg('Account registered successfully! An email verification code has been transmitted.');
+      setTimeout(() => {
+        setIsVerifyingEmail(true);
+        setSuccessMsg(null);
+        setErrorMsg(null);
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An error occurred during registration. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (!otpCode.trim()) {
+      setErrorMsg('Please enter the OTP verification code.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await authService.verifyEmail({
+        email: email.trim().toLowerCase(),
+        code: otpCode.trim(),
+      });
+
+      setSuccessMsg('Email verified successfully! Loading secure login session shortly...');
+      setTimeout(() => {
+        onRegisterSuccess({
+          fullName: fullName.trim(),
+          username: username.trim().toLowerCase(),
+          email: email.trim().toLowerCase(),
+        });
+      }, 2000);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Verification failed. Please check the OTP code and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isVerifyingEmail) {
+    return (
+      <div id="register-container" className="flex items-center justify-center py-10 px-4">
+        <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden text-white relative">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-blue-600/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="p-8 space-y-6">
+            <div className="flex items-center space-x-3 pb-4 border-b border-slate-800">
+              <div className="bg-blue-600/20 p-2.5 rounded-xl text-blue-400 border border-blue-500/30 shrink-0">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-display font-semibold text-white">Email Verification</h3>
+                <p className="text-xs text-slate-400">Verify your security identity</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-300">
+              We have transmitted an authorization OTP to <strong className="text-blue-400">{email}</strong>. Enter the OTP code below to verify your account.
+            </p>
+
+            {errorMsg && (
+              <div className="bg-rose-950/40 border border-rose-900/50 p-4 rounded-xl flex items-start space-x-2.5 text-rose-200 text-xs text-left animate-fade-in" id="otp-error-box">
+                <ShieldAlert className="h-4.5 w-4.5 text-rose-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed font-semibold">{errorMsg}</span>
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="bg-emerald-950/40 border border-emerald-900/50 p-4 rounded-xl flex items-start space-x-2.5 text-emerald-200 text-xs text-left animate-fade-in" id="otp-success-box">
+                <Check className="h-4.5 w-4.5 text-emerald-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed font-semibold">{successMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono tracking-wide text-slate-300 uppercase mb-1.5">
+                  Verification OTP Code
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 123456"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 px-3.5 py-2.5 rounded-lg text-white placeholder-slate-600 text-sm focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg text-sm transition-all shadow-md disabled:bg-slate-800 cursor-pointer"
+              >
+                {isLoading ? 'Verifying Email OTP...' : 'Verify Email'}
+              </button>
+            </form>
+
+            <div className="text-center pt-4 border-t border-slate-800/80">
+              <button
+                onClick={() => {
+                  setIsVerifyingEmail(false);
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                }}
+                className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
+              >
+                Back to Registration
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="register-container" className="flex items-center justify-center py-10 px-4">
@@ -138,6 +265,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
                   id="reg-fullname"
                   type="text"
                   required
+                  disabled={isLoading}
                   placeholder="e.g. Dr. Alan Brent"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -161,6 +289,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
                     id="reg-username"
                     type="text"
                     required
+                    disabled={isLoading}
                     placeholder="abrent_forensics"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -182,6 +311,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
                     id="reg-email"
                     type="email"
                     required
+                    disabled={isLoading}
                     placeholder="name@agency.verify"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -206,6 +336,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
                     id="reg-password"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    disabled={isLoading}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -234,6 +365,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
                     id="reg-confirm"
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
+                    disabled={isLoading}
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -257,6 +389,7 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
                 id="terms-checkbox"
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
+                disabled={isLoading}
                 className="mt-1 h-4 w-4 rounded border-slate-800 bg-slate-950 text-blue-600 focus:ring-blue-500"
               />
               <label htmlFor="terms-checkbox" className="text-xs text-slate-400 leading-normal select-none">
@@ -269,9 +402,10 @@ export default function RegisterView({ onNavigateToLogin, onRegisterSuccess }: R
               <button
                 type="submit"
                 id="register-btn"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg text-sm transition-all shadow-md cursor-pointer hover:shadow-blue-900/30"
+                disabled={isLoading}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg text-sm transition-all shadow-md cursor-pointer hover:shadow-blue-900/30 disabled:bg-slate-800 flex items-center justify-center space-x-2"
               >
-                Register Security Account
+                <span>{isLoading ? 'Creating Account Credentials...' : 'Register Security Account'}</span>
               </button>
             </div>
           </form>

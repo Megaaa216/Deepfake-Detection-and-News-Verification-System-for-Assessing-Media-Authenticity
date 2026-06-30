@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { KeyRound, ShieldAlert, Check, Mail, Lock, Eye, EyeOff, Hash, ArrowLeft } from 'lucide-react';
+import { authService } from '../services/api';
 
 interface ForgotPasswordViewProps {
   onNavigateToLogin: () => void;
 }
 
 export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPasswordViewProps) {
-  // Navigation steps: 1 = request code, 2 = verify & reset
-  const [step, setStep] = useState<1 | 2>(1);
+  // Navigation steps: 1 = request code, 2 = verify OTP, 3 = reset password
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Form input states
   const [email, setEmail] = useState('');
@@ -20,9 +21,14 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendCode = (e: React.FormEvent) => {
+  // Helper validation checker
+  const validateEmailFormat = (val: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+  };
+
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -32,45 +38,75 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!validateEmailFormat(email)) {
       setErrorMsg('Please enter a valid email format.');
       return;
     }
 
-    setIsSendingCode(true);
+    setIsLoading(true);
 
-    // Simulate sending recovery code
-    setTimeout(() => {
-      setIsSendingCode(false);
-      setSuccessMsg('A security recovery code of 6 digits has been dispatched to your email address.');
-      setVerificationCode(''); // Initial value placeholder
+    try {
+      await authService.forgotPassword({ email: email.trim().toLowerCase() });
+      setSuccessMsg('A security recovery code has been dispatched to your email address.');
       
       // Move to step 2 after a brief delay
       setTimeout(() => {
         setStep(2);
         setSuccessMsg(null);
+        setErrorMsg(null);
       }, 1500);
-
-    }, 1200);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to dispatch recovery code. Please check your email and try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!verificationCode.trim() || !newPassword || !confirmNewPassword) {
-      setErrorMsg('All fields are required. Please input the code and new passwords.');
+    if (!verificationCode.trim()) {
+      setErrorMsg('Please enter the verification code.');
       return;
     }
 
-    if (verificationCode.trim().length < 4) {
-      setErrorMsg('Verification code is invalid. Codes are at least 4-6 numeric values.');
+    setIsLoading(true);
+
+    try {
+      await authService.verifyForgotPassword({
+        email: email.trim().toLowerCase(),
+        code: verificationCode.trim(),
+      });
+
+      setSuccessMsg('Verification OTP is authorized! You may now configure a new passphrase.');
+      
+      // Move to step 3 after a brief delay
+      setTimeout(() => {
+        setStep(3);
+        setSuccessMsg(null);
+        setErrorMsg(null);
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Invalid or expired verification OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (!newPassword || !confirmNewPassword) {
+      setErrorMsg('Both password fields are required.');
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      setErrorMsg('Passwords do not match. Please verify the matching values.');
+      setErrorMsg('Passwords do not match. Please verify matching values.');
       return;
     }
 
@@ -82,12 +118,25 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
       return;
     }
 
-    // Success!
-    setSuccessMsg('Your security password has been updated securely. Redirecting to login shortly...');
-    
-    setTimeout(() => {
-      onNavigateToLogin();
-    }, 2000);
+    setIsLoading(true);
+
+    try {
+      await authService.resetPassword({
+        email: email.trim().toLowerCase(),
+        code: verificationCode.trim(),
+        password: newPassword,
+      });
+
+      setSuccessMsg('Your security password has been updated securely. Redirecting to login shortly...');
+      
+      setTimeout(() => {
+        onNavigateToLogin();
+      }, 2000);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to update credentials. Please request a new recovery code.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -106,13 +155,17 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
           </div>
 
           {/* Indicators */}
-          <div className="flex items-center space-x-2 text-[11px] font-mono">
-            <span className={`px-2 py-0.5 rounded-full ${step === 1 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
-              Step 1: Code Request
+          <div className="flex items-center justify-between text-[10px] font-mono gap-1">
+            <span className={`px-2 py-0.5 rounded-full text-center flex-1 ${step === 1 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-450'}`}>
+              1. Code Request
             </span>
             <span className="text-slate-600">→</span>
-            <span className={`px-2 py-0.5 rounded-full ${step === 2 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
-              Step 2: Reset Credentials
+            <span className={`px-2 py-0.5 rounded-full text-center flex-1 ${step === 2 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-450'}`}>
+              2. Verify OTP
+            </span>
+            <span className="text-slate-600">→</span>
+            <span className={`px-2 py-0.5 rounded-full text-center flex-1 ${step === 3 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-450'}`}>
+              3. Reset Passphrase
             </span>
           </div>
 
@@ -131,8 +184,8 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
             </div>
           )}
 
-          {/* Step 1 Form */}
-          {step === 1 ? (
+          {/* Step 1 Form: Request OTP */}
+          {step === 1 && (
             <form onSubmit={handleSendCode} className="space-y-4">
               <p className="text-xs text-slate-300 leading-normal">
                 Input your registered analyst email address. Our security node will transmit a digital verification token to initiate reset.
@@ -149,6 +202,7 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
                   <input
                     type="email"
                     required
+                    disabled={isLoading}
                     placeholder="name@agency.verify"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -159,20 +213,21 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
 
               <button
                 type="submit"
-                disabled={isSendingCode}
+                disabled={isLoading}
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition-colors cursor-pointer flex items-center justify-center space-x-2 disabled:bg-slate-800"
               >
-                <span>{isSendingCode ? 'Transmitting Code...' : 'Send Recovery Code'}</span>
+                <span>{isLoading ? 'Transmitting Code...' : 'Send Recovery Code'}</span>
               </button>
             </form>
-          ) : (
-            /* Step 2 Form */
-            <form onSubmit={handleResetPassword} className="space-y-4">
+          )}
+
+          {/* Step 2 Form: Verify OTP */}
+          {step === 2 && (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
               <p className="text-xs text-slate-300 leading-normal">
-                Enter the security code sent to <strong className="text-blue-400">{email}</strong> and configure your new authentication passphrase.
+                Enter the security code sent to <strong className="text-blue-400">{email}</strong> to authenticate authorization.
               </p>
 
-              {/* Code */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-mono tracking-wide text-slate-300 uppercase">
                   Verification Code
@@ -184,6 +239,7 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
                   <input
                     type="text"
                     required
+                    disabled={isLoading}
                     maxLength={6}
                     placeholder="e.g. 583920"
                     value={verificationCode}
@@ -192,6 +248,37 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
                   />
                 </div>
               </div>
+
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => {
+                    setStep(1);
+                    setErrorMsg(null);
+                    setSuccessMsg(null);
+                  }}
+                  className="w-1/3 border border-slate-800 hover:bg-slate-800 text-slate-300 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:bg-slate-800"
+                >
+                  {isLoading ? 'Verifying...' : 'Verify OTP Code'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Step 3 Form: Reset Password */}
+          {step === 3 && (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <p className="text-xs text-slate-300 leading-normal">
+                Verify OTP authorized! Please define your new security passphrase below.
+              </p>
 
               {/* New Password */}
               <div className="space-y-1.5">
@@ -205,6 +292,7 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     required
+                    disabled={isLoading}
                     placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -232,6 +320,7 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
+                    disabled={isLoading}
                     placeholder="••••••••"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
@@ -247,19 +336,13 @@ export default function ForgotPasswordView({ onNavigateToLogin }: ForgotPassword
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="w-1/3 border border-slate-800 hover:bg-slate-800 text-slate-300 py-2 rounded-lg text-xs transition-colors cursor-pointer"
-                >
-                  Back
-                </button>
+              <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-2/3 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg text-xs transition-colors cursor-pointer"
+                  disabled={isLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition-colors cursor-pointer disabled:bg-slate-800"
                 >
-                  Update Credentials
+                  {isLoading ? 'Updating Credentials...' : 'Update & Reset Passphrase'}
                 </button>
               </div>
             </form>

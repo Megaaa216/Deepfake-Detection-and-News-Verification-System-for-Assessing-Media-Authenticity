@@ -3,9 +3,10 @@ import {
   ShieldCheck, Eye, EyeOff, User, Mail, Lock, Check, ShieldAlert,
   ArrowRight, Shield
 } from 'lucide-react';
+import { authService, setTokens, setStoredUser } from '../services/api';
 
 interface LoginViewProps {
-  onLogin: (customUser?: { fullName: string; username: string; email: string }) => void;
+  onLogin: (customUser?: { fullName: string; username: string; email: string; role?: 'admin' | 'analyst'; avatarUrl?: string }) => void;
   onNavigateToRegister: () => void;
   onNavigateToForgotPassword: () => void;
   initialEmail?: string;
@@ -39,12 +40,7 @@ export default function LoginView({
     }
   }, [initialEmail, registrationSuccessMessage]);
 
-  // Helper validation checkers
-  const validateEmailFormat = (val: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -57,47 +53,45 @@ export default function LoginView({
       return;
     }
 
-    // 2. Clear Whitespace check for username format (if not containing @)
-    if (!input.includes('@') && input.includes(' ')) {
-      setErrorMsg('Username must not contain any blank spaces.');
-      return;
-    }
-
-    // 3. Email Format Validation (Only check if they include '@')
-    if (input.includes('@') && !validateEmailFormat(input)) {
-      setErrorMsg('Invalid email format. Please enter a valid email address (e.g. name@agency.verify).');
-      return;
-    }
-
-    // 4. Mock credentials validation rules
-    // User requested "Validation messages for empty, invalid email, incorrect credentials"
-    // Let's implement a rule: simulated incorrect password for demonstration
-    // If username is "error_user", block. Or password length < 4, block.
-    if (password.length < 4) {
-      setErrorMsg('Incorrect credentials. The password entered is too short for a secure session.');
-      return;
-    }
-
-    // Handle normal mock login flow
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Check for custom credentials simulation
-      const isAdmin = input.toLowerCase() === 'a.brent@cyber-forensics.verify' || input.toLowerCase() === 'abrent_forensics';
-      
+    try {
+      // Call backend auth API
+      const response = await authService.login({
+        email: input,
+        password: password,
+      });
+
       setSuccessMsg('Access Authorized! Initializing secure console token.');
 
+      const token = response.accessToken || response.token;
+      const refresh = response.refreshToken || response.refreshToken;
+      const responseUser = response.user || {};
+
+      if (token) {
+        setTokens(token, refresh || '');
+      }
+
+      // Consolidate backend returned user details with defaults if any fields are empty
+      const authenticatedUser = {
+        fullName: responseUser.fullName || responseUser.name || 'Research Analyst',
+        username: responseUser.username || (input.includes('@') ? input.split('@')[0] : input),
+        email: responseUser.email || (input.includes('@') ? input : `${input}@trustlens.verify`),
+        role: responseUser.role || ((responseUser.email === 'a.brent@cyber-forensics.verify' || input === 'a.brent@cyber-forensics.verify') ? 'admin' : 'analyst'),
+        avatarUrl: responseUser.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><circle cx='12' cy='12' r='12' fill='%23f1f5f9'/><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' fill='%2394a3b8'/></svg>"
+      };
+
+      setStoredUser(authenticatedUser);
+
       setTimeout(() => {
-        onLogin({
-          fullName: isAdmin ? 'Dr. Alan Brent' : 'Research Analyst',
-          username: input.includes('@') ? input.split('@')[0] : input,
-          email: input.includes('@') ? input : `${input}@trustlens.verify`,
-        });
+        onLogin(authenticatedUser);
       }, 1500);
 
-    }, 1800);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Incorrect credentials. Please verify your email/username and password.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -222,22 +216,18 @@ export default function LoginView({
                 </div>
               </div>
 
-              {/* Remember Me and Credentials hint */}
+              {/* Remember Me checkbox */}
               <div className="flex items-center justify-between pt-1">
                 <label className="flex items-center space-x-2 text-xs text-slate-400 select-none cursor-pointer">
                   <input
                     type="checkbox"
                     checked={rememberMe}
+                    disabled={isLoading}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-blue-600 focus:ring-blue-500/50"
                   />
                   <span>Remember Me</span>
                 </label>
-              </div>
-
-              {/* Enter Credentials Advice */}
-              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-850 text-[11px] font-mono leading-relaxed text-slate-400">
-                ⭐ Enter any email or username. Use <strong className="text-blue-300">a.brent@cyber-forensics.verify</strong> to authenticate with Administrator clearances.
               </div>
 
               {/* Submit button */}
