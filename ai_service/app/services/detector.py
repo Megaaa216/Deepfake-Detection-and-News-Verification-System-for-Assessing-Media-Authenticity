@@ -1,8 +1,17 @@
 import torch
+import numpy as np
+import random
 import os
 from safetensors.torch import load_file
 from app.services.preprocessor import VideoPreprocessor
 from app.services.models import FaceClassifier, VideoTransformerClassifier
+
+# Set deterministic random seed constraints to freeze model parameter initialization
+torch.manual_seed(42)
+np.random.seed(42)
+random.seed(42)
+if torch.cuda.is_available():
+  torch.cuda.manual_seed_all(42)
 
 class DeepfakeDetectorManager:
   """
@@ -52,9 +61,9 @@ class DeepfakeDetectorManager:
     Runs media processing and PyTorch classification using loaded model weights.
     """
     try:
-      # 1. Preprocess video frames into a tensor: shape (1, 10, 3, 224, 224)
+      # 1. Preprocess video frames into a tensor: shape (1, 10, 3, 224, 224) and file names list
       print(f"[AI Service] Preprocessing video file: {video_path}")
-      sequence_tensor = self.preprocessor.preprocess_video(
+      sequence_tensor, saved_filenames = self.preprocessor.preprocess_video(
         video_path, 
         sequence_length=10
       )
@@ -81,6 +90,15 @@ class DeepfakeDetectorManager:
       result = "fake" if final_score >= 0.5 else "real"
       confidence = final_score if result == "fake" else (1.0 - final_score)
 
+      # Compile individual frame metadata
+      flagged_frames = []
+      for i, filename in enumerate(saved_filenames):
+        frame_score = float(face_probs[i, 1].item())
+        flagged_frames.append({
+          "frame_url": filename,
+          "score": round(frame_score, 4)
+        })
+
       print(f"[AI Service] Inference successful. Results: result={result}, confidence={confidence:.4f}")
 
       return {
@@ -89,7 +107,8 @@ class DeepfakeDetectorManager:
         "model_results": {
           "face_model": round(face_score, 4),
           "temporal_model": round(temporal_score, 4)
-        }
+        },
+        "flagged_frames": flagged_frames
       }
 
     except Exception as e:

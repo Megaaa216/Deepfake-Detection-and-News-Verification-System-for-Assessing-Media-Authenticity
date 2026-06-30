@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
 import torch
-from typing import List
+from typing import List, Tuple
 import os
+import uuid
 
 class VideoPreprocessor:
   """
@@ -21,47 +22,31 @@ class VideoPreprocessor:
     if self.face_cascade.empty():
       raise IOError(f"Could not load Haar Cascade face detector from {cascade_path}")
     
-    # ImageNet standard normalization parameters
+    # Define normalization constants (ImageNet defaults)
     self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
     self.std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
-  def _crop_face(self, frame: np.ndarray, face_box) -> np.ndarray:
+  def _crop_face(self, img: np.ndarray, bbox: tuple) -> np.ndarray:
     """
-    Crops the detected face with a 20% outer bounding box padding.
+    Extracts bounding box region from frame.
     """
-    height, width, _ = frame.shape
-    x, y, w, h = face_box
-    
-    # Add 20% padding
-    pad_w = int(w * 0.2)
-    pad_h = int(h * 0.2)
-    
-    x1 = max(0, x - pad_w)
-    y1 = max(0, y - pad_h)
-    x2 = min(width, x + w + pad_w)
-    y2 = min(height, y + h + pad_h)
-    
-    if x2 > x1 and y2 > y1:
-      return frame[y1:y2, x1:x2]
-    
-    return self._center_crop(frame)
+    x, y, w, h = bbox
+    return img[y:y+h, x:x+w]
 
-  def _center_crop(self, frame: np.ndarray) -> np.ndarray:
+  def _center_crop(self, img: np.ndarray) -> np.ndarray:
     """
-    Crops a square center region of the frame as a fallback.
+    Fallback center cropping when face detection fails.
     """
-    h, w, _ = frame.shape
-    min_dim = min(h, w)
-    start_x = (w - min_dim) // 2
-    start_y = (h - min_dim) // 2
-    return frame[start_y:start_y + min_dim, start_x:start_x + min_dim]
+    h, w = img.shape[:2]
+    crop_size = min(h, w)
+    start_y = (h - crop_size) // 2
+    start_x = (w - crop_size) // 2
+    return img[start_y:start_y+crop_size, start_x:start_x+crop_size]
 
   def _normalize_image(self, img: np.ndarray) -> np.ndarray:
     """
-    Normalizes image coordinates by dividing by 255.0 and applying ImageNet normalization.
-    Returns channel-first shape: (3, H, W)
+    Normalizes pixel range and scales channels.
     """
-    # Scale to [0.0, 1.0]
     img_normalized = img.astype(np.float32) / 255.0
     # Apply standard mean and standard deviation
     img_normalized = (img_normalized - self.mean) / self.std
@@ -72,14 +57,14 @@ class VideoPreprocessor:
     self, 
     video_path: str, 
     sequence_length: int = 10
-  ) -> torch.Tensor:
+  ) -> Tuple[torch.Tensor, List[str]]:
     """
     Main preprocessing execution pipeline.
     Args:
         video_path (str): Filepath of the uploaded video.
         sequence_length (int): Count of frames to extract.
     Returns:
-        torch.Tensor: Normalized tensor, shape (1, sequence_length, 3, 224, 224)
+        Tuple[torch.Tensor, List[str]]: Normalized tensor and names of saved face crop frames.
     """
     if not os.path.exists(video_path):
       raise FileNotFoundError(f"Video file not found at path: {video_path}")
@@ -102,6 +87,13 @@ class VideoPreprocessor:
     )
     
     processed_frames: List[np.ndarray] = []
+    saved_filenames: List[str] = []
+    
+    # Define processed_frames save path directory inside the root-level folder of the Python service
+    processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../processed_frames"))
+    os.makedirs(processed_dir, exist_ok=True)
+    
+    unique_id = uuid.uuid4().hex[:8]
 
     for idx in frame_indices:
       cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
@@ -113,6 +105,11 @@ class VideoPreprocessor:
           dtype=np.uint8
         )
         processed_frames.append(self._normalize_image(placeholder))
+        
+        # Save empty frame placeholder as jpg
+        frame_name = f"frame_{unique_id}_{len(saved_filenames)}.jpg"
+        cv2.imwrite(os.path.join(processed_dir, frame_name), placeholder)
+        saved_filenames.append(frame_name)
         continue
 
       # Convert BGR to RGB for consistent model processing
@@ -143,6 +140,14 @@ class VideoPreprocessor:
         interpolation=cv2.INTER_AREA
       )
       
+      # Save the face crop to disk
+      frame_name = f"frame_{unique_id}_{len(saved_filenames)}.jpg"
+      frame_save_path = os.path.join(processed_dir, frame_name)
+      # OpenCV imwrite expects BGR, so convert RGB back to BGR
+      face_bgr = cv2.cvtColor(face_resized, cv2.COLOR_RGB2BGR)
+      cv2.imwrite(frame_save_path, face_bgr)
+      saved_filenames.append(frame_name)
+
       # Normalize and convert to channel-first
       processed_frames.append(self._normalize_image(face_resized))
 
@@ -153,4 +158,4 @@ class VideoPreprocessor:
     
     # Expand dims to add batch: (1, sequence_length, 3, 224, 224)
     sequence_tensor = torch.from_numpy(sequence_array).unsqueeze(0)
-    return sequence_tensor
+    return sequence_tensor, saved_filenames
