@@ -29,8 +29,8 @@ class VideoPreprocessor:
       transforms.Resize((299, 299)), # 299 for Xception, 224 if still using EfficientNet
       transforms.ToTensor(),          # Automatically scales pixels to [0.0, 1.0]
       transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
+        mean=[0.5, 0.5, 0.5],
+        std=[0.5, 0.5, 0.5]
       )
     ])
 

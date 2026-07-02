@@ -1,3 +1,4 @@
+const path = require("path");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const logger = require("../utils/logger");
@@ -71,6 +72,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
 
   logger.info(`Received video upload: ${req.file.originalname} (${req.file.size} bytes)`);
 
+  const videoDiskPath = path.resolve(req.file.path);
   const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
   
   try {
@@ -80,7 +82,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        video_path: req.file.path
+        video_path: videoDiskPath
       })
     });
 
