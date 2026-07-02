@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { 
   Globe, AlertTriangle, CheckCircle2, XCircle, Search, Sparkles, 
   RefreshCw, BarChart2, ShieldCheck, ChevronRight, HelpCircle, 
@@ -30,6 +31,7 @@ export default function VerifyView({
   // Input states
   const [inputUrl, setInputUrl] = useState('https://www.tiktok.com/@finance_trends/video/732890184');
   const [selectedFile, setSelectedFile] = useState<{ name: string; size: string } | null>(null);
+  const [rawFile, setRawFile] = useState<File | null>(null);
   const [fileDragOver, setFileDragOver] = useState(false);
   const [fileSizeStr, setFileSizeStr] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +41,14 @@ export default function VerifyView({
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepText, setAnalysisStepText] = useState('');
   const [result, setResult] = useState<VerificationResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  // Keep result synchronized with analysisResult for full layout compatibility
+  useEffect(() => {
+    if (analysisResult) {
+      setResult(analysisResult);
+    }
+  }, [analysisResult]);
 
   // Auto-detected metadata based on URL input
   const [detectedPlatform, setDetectedPlatform] = useState<{ name: string; badgeColor: string; details: string } | null>(null);
@@ -346,7 +356,9 @@ export default function VerifyView({
     setInputUrl(preset.url);
     setActiveSubTab(preset.type as VerificationType);
     setIntakeMethod('url');
+    setRawFile(null);
     setResult(null);
+    setAnalysisResult(null);
   };
 
   const selectFilePreset = (preset: typeof FILE_PRESETS[number]) => {
@@ -354,7 +366,9 @@ export default function VerifyView({
     setFileSizeStr(preset.size);
     setActiveSubTab(preset.type as VerificationType);
     setIntakeMethod('upload');
+    setRawFile(null);
     setResult(null);
+    setAnalysisResult(null);
   };
 
   // Mock stage analysis logs
@@ -369,6 +383,19 @@ export default function VerifyView({
     { progress: 100, text: 'Cryptographic hash signature sealed. Generating ultimate case report.' }
   ];
 
+  const handleVideoUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('video', file); // Targets our upload.single('video') field perfectly
+
+    const response = await axios.post('http://localhost:5000/api/detection/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    // Save the output array directly into our analytics layout state
+    setAnalysisResult(response.data);
+    return response.data;
+  };
+
   const handleStartAnalysis = async () => {
     if (intakeMethod === 'url' && !inputUrl.trim()) return;
     if (intakeMethod === 'upload' && !selectedFile) return;
@@ -378,14 +405,24 @@ export default function VerifyView({
     setAnalysisProgress(0);
     setAnalysisStepText(verificationLogs[0].text);
 
+    let fetchedData: any = null;
     // If URL is being analyzed, trigger the backend API request
     if (intakeMethod === 'url') {
       try {
         console.log('Initiating backend video link detection API call for:', inputUrl.trim());
         const apiResponse = await detectionService.verifyVideoLink(inputUrl.trim());
         console.log('Video link detection API successful response:', apiResponse);
+        fetchedData = apiResponse;
+        setAnalysisResult(apiResponse);
       } catch (err: any) {
         console.error('Video link detection API failed with error:', err);
+      }
+    } else if (intakeMethod === 'upload' && rawFile) {
+      try {
+        console.log('Initiating backend video upload API call for:', rawFile.name);
+        fetchedData = await handleVideoUpload(rawFile);
+      } catch (err: any) {
+        console.error('Video upload API failed with error:', err);
       }
     }
 
@@ -397,119 +434,141 @@ export default function VerifyView({
         setAnalysisStepText(verificationLogs[stepIdx].text);
       } else {
         clearInterval(interval);
-        finalizeAnalysis();
+        finalizeAnalysis(fetchedData);
       }
     }, 380);
   };
 
-  const finalizeAnalysis = () => {
+  const finalizeAnalysis = (fetchedData?: any) => {
     setIsAnalyzing(false);
 
     let simulatedRecord: VerificationResult;
+    const backendData = fetchedData?.data || fetchedData;
 
-    if (intakeMethod === 'url') {
-      const match = SOCIAL_PRESETS.find(p => p.url.trim().toLowerCase() === inputUrl.trim().toLowerCase());
-      
-      if (match) {
-        simulatedRecord = {
-          id: `check-${Date.now()}`,
-          type: match.type as VerificationType,
-          targetName: match.url,
-          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: match.riskScore,
-          status: match.status as any,
-          verdict: match.verdict,
-          recommendation: match.recommendation,
-          platform: match.platform,
-          reasons: match.reasons as VerificationReason[]
-        };
-      } else {
-        // Custom URL dynamic generation
-        const score = Math.floor(Math.random() * 85) + 10;
-        let status: VerificationStatus = 'likely_authentic';
-        let outcomeText = '';
-        let recommend = '';
-        
-        if (score < 20) {
-          status = 'likely_authentic';
-          outcomeText = 'Verification sweep completed for public URL. Structural metrics indicate a high probability of unmanipulated content, aligning perfectly with standard public feeds.';
-          recommend = 'Nominal credibility. The content follows standard journalistic frameworks and contains unaltered digital structures. Safe to share.';
-        } else if (score < 55) {
-          status = 'suspicious';
-          outcomeText = 'Elevated structural discrepancies flagged in target content. Visual features or text patterns indicate localized modification, sensational tone, or unverified claims.';
-          recommend = 'Exercise alert observation. The data exhibits language bias or light edits. Cross-reference statements with major independent networks before referencing.';
-        } else {
-          status = 'likely_deepfake';
-          outcomeText = 'Critical synthesis indicators detected. Forensic examination of the media layers demonstrates heavy neural modification, voice synthesis matching cloning APIs, or fully fabricated news syntax.';
-          recommend = 'Critical threat assessment. High risk of false dissemination. Multiple synthetic fingerprints identified. Strenuously avoid distribution.';
-        }
+    if (backendData) {
+      const score = typeof backendData.riskScore === 'number' ? backendData.riskScore : (typeof backendData.risk_score === 'number' ? backendData.risk_score : 85);
+      let status: VerificationStatus = 'likely_deepfake';
+      if (score < 20) status = 'likely_authentic';
+      else if (score < 60) status = 'suspicious';
 
-        const plat = detectedPlatform?.name || 'Other';
-
-        simulatedRecord = {
-          id: `case-${Math.floor(Math.random()*90000)+10000}`,
-          type: activeSubTab,
-          targetName: inputUrl,
-          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: score,
-          status: status,
-          verdict: outcomeText,
-          recommendation: recommend,
-          platform: plat,
-          reasons: getDynamicReasons(activeSubTab, score)
-        };
-      }
+      simulatedRecord = {
+        id: backendData.id || `check-${Date.now()}`,
+        type: backendData.type || (activeSubTab as VerificationType),
+        targetName: backendData.targetName || backendData.name || backendData.videoUrl || selectedFile?.name || inputUrl,
+        date: backendData.date || new Date().toISOString().replace('T', ' ').substring(0, 16),
+        riskScore: score,
+        status: status,
+        verdict: backendData.verdict || 'Analysis completed by active backend pipeline.',
+        recommendation: backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.',
+        platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),
+        reasons: backendData.reasons || getDynamicReasons(activeSubTab, score),
+        flagged_frames: backendData.flagged_frames || backendData.flaggedFrames
+      };
     } else {
-      // Staged file
-      const match = FILE_PRESETS.find(f => f.name === selectedFile?.name);
-
-      if (match) {
-        simulatedRecord = {
-          id: `check-${Date.now()}`,
-          type: match.type as VerificationType,
-          targetName: match.name,
-          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: match.riskScore,
-          status: match.status as any,
-          verdict: match.verdict,
-          recommendation: match.recommendation,
-          size: match.size,
-          platform: 'Uploaded Asset',
-          reasons: match.reasons as VerificationReason[]
-        };
-      } else {
-        const score = Math.floor(Math.random() * 80) + 15;
-        let status: VerificationStatus = 'likely_authentic';
-        let outcomeText = '';
-        let recommend = '';
-
-        if (score < 20) {
-          status = 'likely_authentic';
-          outcomeText = 'Forensic local asset sweep completed. File structure matches natural image/video compression standards with unedited noise fields.';
-          recommend = 'Safe asset verified. Hardware capture credentials verified. No malicious manipulation found.';
-        } else if (score < 60) {
-          status = 'suspicious';
-          outcomeText = 'Localized visual anomalies detected. Pixel density is non-uniform, suggesting potential localized touchups or graphic filters applied.';
-          recommend = 'Medium concern. Digital retouching signs found. Content should be backed by separate raw documentation.';
+      if (intakeMethod === 'url') {
+        const match = SOCIAL_PRESETS.find(p => p.url.trim().toLowerCase() === inputUrl.trim().toLowerCase());
+        
+        if (match) {
+          simulatedRecord = {
+            id: `check-${Date.now()}`,
+            type: match.type as VerificationType,
+            targetName: match.url,
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            riskScore: match.riskScore,
+            status: match.status as any,
+            verdict: match.verdict,
+            recommendation: match.recommendation,
+            platform: match.platform,
+            reasons: match.reasons as VerificationReason[]
+          };
         } else {
-          status = 'likely_deepfake';
-          outcomeText = 'Deep synthetic traces identified in local file. Neural face landmarks show irregular edge blending, and acoustic voiceprints match generative voice cloning libraries.';
-          recommend = 'High risk. Visual face-swap mesh overlay or synthetic voiceclone verified. Treat as artificial material.';
-        }
+          // Custom URL dynamic generation
+          const score = Math.floor(Math.random() * 85) + 10;
+          let status: VerificationStatus = 'likely_authentic';
+          let outcomeText = '';
+          let recommend = '';
+          
+          if (score < 20) {
+            status = 'likely_authentic';
+            outcomeText = 'Verification sweep completed for public URL. Structural metrics indicate a high probability of unmanipulated content, aligning perfectly with standard public feeds.';
+            recommend = 'Nominal credibility. The content follows standard journalistic frameworks and contains unaltered digital structures. Safe to share.';
+          } else if (score < 55) {
+            status = 'suspicious';
+            outcomeText = 'Elevated structural discrepancies flagged in target content. Visual features or text patterns indicate localized modification, sensational tone, or unverified claims.';
+            recommend = 'Exercise alert observation. The data exhibits language bias or light edits. Cross-reference statements with major independent networks before referencing.';
+          } else {
+            status = 'likely_deepfake';
+            outcomeText = 'Critical synthesis indicators detected. Forensic examination of the media layers demonstrates heavy neural modification, voice synthesis matching cloning APIs, or fully fabricated news syntax.';
+            recommend = 'Critical threat assessment. High risk of false dissemination. Multiple synthetic fingerprints identified. Strenuously avoid distribution.';
+          }
 
-        simulatedRecord = {
-          id: `case-${Math.floor(Math.random()*90000)+10000}`,
-          type: activeSubTab,
-          targetName: selectedFile?.name || 'custom_upload.mp4',
-          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          riskScore: score,
-          status: status,
-          verdict: outcomeText,
-          recommendation: recommend,
-          size: fileSizeStr || '4.2 MB',
-          platform: 'Uploaded Asset',
-          reasons: getDynamicReasons(activeSubTab, score)
-        };
+          const plat = detectedPlatform?.name || 'Other';
+
+          simulatedRecord = {
+            id: `case-${Math.floor(Math.random()*90000)+10000}`,
+            type: activeSubTab,
+            targetName: inputUrl,
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            riskScore: score,
+            status: status,
+            verdict: outcomeText,
+            recommendation: recommend,
+            platform: plat,
+            reasons: getDynamicReasons(activeSubTab, score)
+          };
+        }
+      } else {
+        // Staged file
+        const match = FILE_PRESETS.find(f => f.name === selectedFile?.name);
+
+        if (match) {
+          simulatedRecord = {
+            id: `check-${Date.now()}`,
+            type: match.type as VerificationType,
+            targetName: match.name,
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            riskScore: match.riskScore,
+            status: match.status as any,
+            verdict: match.verdict,
+            recommendation: match.recommendation,
+            size: match.size,
+            platform: 'Uploaded Asset',
+            reasons: match.reasons as VerificationReason[]
+          };
+        } else {
+          const score = Math.floor(Math.random() * 80) + 15;
+          let status: VerificationStatus = 'likely_authentic';
+          let outcomeText = '';
+          let recommend = '';
+
+          if (score < 20) {
+            status = 'likely_authentic';
+            outcomeText = 'Forensic local asset sweep completed. File structure matches natural image/video compression standards with unedited noise fields.';
+            recommend = 'Safe asset verified. Hardware capture credentials verified. No malicious manipulation found.';
+          } else if (score < 60) {
+            status = 'suspicious';
+            outcomeText = 'Localized visual anomalies detected. Pixel density is non-uniform, suggesting potential localized touchups or graphic filters applied.';
+            recommend = 'Medium concern. Digital retouching signs found. Content should be backed by separate raw documentation.';
+          } else {
+            status = 'likely_deepfake';
+            outcomeText = 'Deep synthetic traces identified in local file. Neural face landmarks show irregular edge blending, and acoustic voiceprints match generative voice cloning libraries.';
+            recommend = 'High risk. Visual face-swap mesh overlay or synthetic voiceclone verified. Treat as artificial material.';
+          }
+
+          simulatedRecord = {
+            id: `case-${Math.floor(Math.random()*90000)+10000}`,
+            type: activeSubTab,
+            targetName: selectedFile?.name || 'custom_upload.mp4',
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            riskScore: score,
+            status: status,
+            verdict: outcomeText,
+            recommendation: recommend,
+            size: fileSizeStr || '4.2 MB',
+            platform: 'Uploaded Asset',
+            reasons: getDynamicReasons(activeSubTab, score)
+          };
+        }
       }
     }
 
@@ -824,7 +883,9 @@ export default function VerifyView({
                         const fileObj = e.dataTransfer.files[0];
                         setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
                         setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
+                        setRawFile(fileObj);
                         setResult(null);
+                        setAnalysisResult(null);
                       }
                     }}
                     onClick={() => fileInputRef.current?.click()}
@@ -832,7 +893,7 @@ export default function VerifyView({
                       fileDragOver 
                         ? 'border-blue-500 bg-blue-500/10 text-blue-400' 
                         : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-500'
-                    }`}
+                     }`}
                   >
                     <input 
                       type="file" 
@@ -844,7 +905,9 @@ export default function VerifyView({
                           const fileObj = e.target.files[0];
                           setSelectedFile({ name: fileObj.name, size: (fileObj.size / (1024 * 1024)).toFixed(1) + ' MB' });
                           setFileSizeStr((fileObj.size / (1024 * 1024)).toFixed(1) + ' MB');
+                          setRawFile(fileObj);
                           setResult(null);
+                          setAnalysisResult(null);
                         }
                       }}
                     />
@@ -1338,38 +1401,25 @@ export default function VerifyView({
                       ⏳ Forensic Pipeline Timeline
                     </span>
                     <div className="space-y-2 pl-2 border-l border-slate-200 dark:border-slate-800 font-mono text-[10px] text-slate-500">
-                      <div className="relative">
-                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
-                          <span>[0.0s] Handshake Resolution</span>
-                          <span className="text-emerald-400">PASSED</span>
+                      {analysisResult?.flagged_frames && analysisResult.flagged_frames.length > 0 ? (
+                        analysisResult.flagged_frames.map((frame: any, idx: number) => {
+                          const isFrameFake = frame.verdict === 'FAKE';
+                          return (
+                            <div key={frame.frame_id || idx} className="relative">
+                              <div className={`absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full ${isFrameFake ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
+                              <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                                <span>[Frame #{frame.frame_id || idx + 1}] Analysis</span>
+                                <span className={isFrameFake ? 'text-rose-450' : 'text-emerald-400'}>{frame.verdict}</span>
+                              </div>
+                              <span className="text-[9px] block pl-2">{frame.details}</span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-center py-4 text-slate-500 font-mono" id="no-data-payload-container">
+                          No data payload received
                         </div>
-                        <span className="text-[9px] block pl-2">Platform socket opened and secure CDN handshake established.</span>
-                      </div>
-                      <div className="relative">
-                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
-                          <span>[0.3s] Signal Demultiplexing</span>
-                          <span className="text-emerald-400">PASSED</span>
-                        </div>
-                        <span className="text-[9px] block pl-2">Extracted raw stream partitions (Acoustics, Visual frame buffer).</span>
-                      </div>
-                      <div className="relative">
-                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
-                          <span>[0.8s] Neural Network Evaluation</span>
-                          <span className="text-emerald-400">PASSED</span>
-                        </div>
-                        <span className="text-[9px] block pl-2">Dispatched streams to dynamic CNN & Transformer models.</span>
-                      </div>
-                      <div className="relative">
-                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
-                          <span>[1.2s] Metadata Integrity Seal</span>
-                          <span className="text-emerald-400">PASSED</span>
-                        </div>
-                        <span className="text-[9px] block pl-2">Completed checksum sealing and saved query to local history.</span>
-                      </div>
+                      )}
                     </div>
                   </div>
 

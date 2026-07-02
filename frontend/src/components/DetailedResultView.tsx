@@ -17,9 +17,11 @@ interface DetailedResultViewProps {
 export default function DetailedResultView({ resultId, historyList, onBackToHistory }: DetailedResultViewProps) {
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   // Locate the target result
   const targetReport = historyList.find(r => r.id === resultId) || historyList[0];
+  const analysisResult = targetReport;
 
   if (!targetReport) {
     return (
@@ -406,96 +408,49 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                 
                 {/* Visual frame strip */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-900">
-                  {(targetReport.flagged_frames || [
+                  {(analysisResult?.flagged_frames || [
                     { frame_id: '048', image_name: 'frame_01.jpg', verdict: 'AUTHENTIC' as const, details: 'Specular reflections correct. Standard iris contours verified.' },
                     { frame_id: '192', image_name: 'frame_02.jpg', verdict: 'AUTHENTIC' as const, details: 'Normal jaw mesh locking verified. Face boundaries intact.' },
                     { frame_id: '336', image_name: 'frame_03.jpg', verdict: isFake ? 'FAKE' as const : 'AUTHENTIC' as const, details: isFake ? 'SUSPICIOUS: 140ms lip audio delay. Mesh vertex jitter.' : 'Passed temporal cohesion test. Speech matches lips.' },
                     { frame_id: '528', image_name: 'frame_04.jpg', verdict: isFake ? 'FAKE' as const : 'AUTHENTIC' as const, details: isFake ? 'SUSPICIOUS: Frame interpolation anomalies near cheek boundaries.' : 'Boundary pixels coherent with primary camera sensor.' },
                   ]).map((frame, index) => {
-                    // Extract anomaly score if present in the details (e.g. "Face anomaly score of 84.4% detected.")
-                    const scoreMatch = frame.details.match(/anomaly score of (\d+(\.\d+)?)%/i);
-                    const scoreVal = scoreMatch ? parseFloat(scoreMatch[1]) : (frame.verdict === 'FAKE' ? 80 : 15);
-                    
-                    // Determine state dynamic styling based on spectrum thresholds:
-                    // < 30%: AUTHENTIC (Green)
-                    // 30% - 70%: SUSPICIOUS (Orange)
-                    // >= 70%: MANIPULATED (Red)
-                    let frameColor = '';
-                    let frameStatus = '';
-                    let ringColor = '';
-                    let badgeClass = '';
-                    let badgeText = '';
-                    let isAnomaly = false;
-                    let svgColor = 'text-slate-600';
-                    let circleColor = 'stroke-slate-700';
-                    
-                    if (scoreVal >= 70) {
-                      frameColor = 'border-rose-500 text-rose-400 animate-pulse bg-rose-950/20';
-                      frameStatus = 'MANIPULATED';
-                      ringColor = 'ring-1 ring-rose-500/20';
-                      badgeClass = 'bg-rose-950/80 border-rose-500/30 text-rose-400';
-                      badgeText = 'ANOMALY';
-                      isAnomaly = true;
-                      svgColor = 'text-rose-500';
-                      circleColor = 'stroke-rose-500 stroke-[1.2]';
-                    } else if (scoreVal >= 30) {
-                      frameColor = 'border-amber-500 text-amber-400 bg-amber-950/20';
-                      frameStatus = 'SUSPICIOUS';
-                      ringColor = 'ring-1 ring-amber-500/20';
-                      badgeClass = 'bg-amber-950/80 border-amber-500/30 text-amber-400';
-                      badgeText = 'WARNING';
-                      isAnomaly = true;
-                      svgColor = 'text-amber-500';
-                      circleColor = 'stroke-amber-500 stroke-[1.2]';
-                    } else {
-                      frameColor = 'border-emerald-500/40 text-emerald-400 bg-emerald-950/10';
-                      frameStatus = 'AUTHENTIC';
-                      ringColor = '';
-                      isAnomaly = false;
-                      svgColor = 'text-slate-600';
-                      circleColor = 'stroke-slate-700';
-                    }
+                    const isFrameFake = frame.verdict === 'FAKE';
+                    const frameColor = isFrameFake ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500/40 text-emerald-400';
+                    const frameStatus = isFrameFake ? 'FAKE' : 'AUTHENTIC';
                     
                     return (
-                      <div key={index} className={`bg-slate-900 rounded border p-2 text-center space-y-2 relative overflow-hidden flex flex-col justify-between ${ringColor}`}>
+                      <div key={index} className={`bg-slate-900 rounded border p-2 text-center space-y-2 relative overflow-hidden flex flex-col justify-between ${
+                        isFrameFake ? 'ring-1 ring-rose-500/20' : ''
+                      }`}>
                         <div className="absolute top-1 right-1 text-[8px] font-mono bg-slate-950 px-1 text-slate-400 rounded z-10">
                           #{frame.frame_id}
                         </div>
                         
                         {/* Cropped face image with standard face-mesh fallback */}
                         <div className="relative h-28 w-full overflow-hidden rounded bg-slate-950 flex items-center justify-center border border-slate-800">
-                          {isAnomaly && (
-                            <div className={`absolute top-1 left-1 z-10 border px-1 text-[8px] font-mono font-bold rounded tracking-widest ${badgeClass}`}>
-                              {badgeText}
+                          {isFrameFake && (
+                            <div className="absolute top-1 left-1 z-10 bg-rose-950/80 border border-rose-500/30 px-1 text-[8px] font-mono font-bold text-rose-400 rounded tracking-widest">
+                              ANOMALY
                             </div>
                           )}
-                          <img 
-                            src={frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`} 
-                            alt={`Cropped Face Frame ${frame.frame_id}`} 
-                            className="w-full h-full object-cover rounded border border-slate-700"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                const placeholder = parent.querySelector('.frame-placeholder');
-                                if (placeholder) {
-                                  placeholder.classList.remove('hidden');
-                                }
-                              }
-                            }}
-                          />
                           
-                          {/* Fallback Face wireframe svg */}
-                          <div className="frame-placeholder hidden w-full h-full flex items-center justify-center relative">
-                            <svg className={`w-10 h-10 stroke-[0.8] fill-none ${svgColor}`}>
-                              <circle cx="20" cy="16" r="11" className={circleColor} />
-                              <ellipse cx="20" cy="18" rx="7" ry="10" />
-                              <line x1="15" y1="14" x2="17" y2="14" className={isAnomaly ? (frameStatus === 'MANIPULATED' ? 'stroke-rose-500 stroke-2' : 'stroke-amber-500 stroke-2') : 'stroke-blue-400'} />
-                              <line x1="23" y1="14" x2="25" y2="14" className={isAnomaly ? (frameStatus === 'MANIPULATED' ? 'stroke-rose-500 stroke-2' : 'stroke-amber-500 stroke-2') : 'stroke-blue-400'} />
-                              <circle cx="20" cy="23" r="2.5" className={isAnomaly ? (frameStatus === 'MANIPULATED' ? 'stroke-rose-500 stroke-2 animate-ping' : 'stroke-amber-500 stroke-2 animate-ping') : 'stroke-blue-400'} />
-                            </svg>
-                          </div>
+                          {imageErrors[frame.frame_id] ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-2 text-center space-y-1 relative">
+                              <div className="absolute inset-0 bg-blue-500/5 animate-pulse"></div>
+                              <Scan className="h-6 w-6 text-blue-500 animate-pulse" />
+                              <span className="text-[8px] font-mono text-slate-400 uppercase tracking-wider">Syncing Frame...</span>
+                              <span className="text-[7px] font-mono text-slate-600">Writing file...</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={`http://localhost:5000/public/frames/${frame.image_name}`} 
+                              alt={`Cropped Face Frame ${frame.frame_id}`} 
+                              className="w-full h-full object-cover rounded border border-slate-700"
+                              onError={() => {
+                                setImageErrors(prev => ({ ...prev, [frame.frame_id]: true }));
+                              }}
+                            />
+                          )}
                         </div>
 
                         <div className="text-[9px] font-mono space-y-0.5">

@@ -102,6 +102,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
       data.flagged_frames = data.flagged_frames.map((frame, index) => {
         const isFake = frame.score >= 0.5;
         return {
+          ...frame,
           frame_id: `frame_${index + 1}`,
           image_name: `${protocol}://${host}/public/frames/${frame.frame_url}`,
           verdict: isFake ? 'FAKE' : 'AUTHENTIC',
@@ -188,6 +189,7 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
       data.flagged_frames = data.flagged_frames.map((frame, index) => {
         const isFake = frame.score >= 0.5;
         return {
+          ...frame,
           frame_id: `frame_${index + 1}`,
           image_name: `${protocol}://${host}/public/frames/${frame.frame_url}`,
           verdict: isFake ? 'FAKE' : 'AUTHENTIC',

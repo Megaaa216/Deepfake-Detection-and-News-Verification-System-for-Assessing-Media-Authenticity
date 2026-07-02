@@ -108,6 +108,7 @@ class DeepfakeDetectorManager:
       }
 
     except Exception as e:
+      print(f"PYTHON DETECTOR ERROR: {str(e)}")
       raise RuntimeError(f"Deepfake prediction execution failed: {str(e)}")
 
 # Single instance coordinator
