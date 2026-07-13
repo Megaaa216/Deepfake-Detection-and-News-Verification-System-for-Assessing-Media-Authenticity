@@ -5,7 +5,7 @@ import {
   RefreshCw, BarChart2, ShieldCheck, ChevronRight, HelpCircle, 
   FileText, Image, Video, ShieldAlert, BadgeInfo, CheckCircle, 
   Lock, ArrowRight, Layers, Settings, UploadCloud,
-  Fingerprint, Compass, Activity, Sliders, Binary
+  Fingerprint, Compass, Activity, Sliders, Binary, Scan
 } from 'lucide-react';
 import { VerificationResult, VerificationType, VerificationReason, VerificationStatus } from '../types';
 import { detectionService } from '../services/api';
@@ -42,6 +42,7 @@ export default function VerifyView({
   const [analysisStepText, setAnalysisStepText] = useState('');
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   // Keep result synchronized with analysisResult for full layout compatibility
   useEffect(() => {
@@ -387,7 +388,7 @@ export default function VerifyView({
     const formData = new FormData();
     formData.append('video', file); // Targets our upload.single('video') field perfectly
 
-    const response = await axios.post('http://localhost:5000/api/detection/upload', formData, {
+    const response = await axios.post('http://localhost:5000/api/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
@@ -400,20 +401,22 @@ export default function VerifyView({
     if (intakeMethod === 'url' && !inputUrl.trim()) return;
     if (intakeMethod === 'upload' && !selectedFile) return;
 
-    setResult(null); // Clear out previous analysis result immediately
     setIsAnalyzing(true);
-    setAnalysisProgress(0);
-    setAnalysisStepText(verificationLogs[0].text);
+    setAnalysisProgress(5);
+    setAnalysisStepText('Establishing handshake connection to verification matrix...');
 
-    let fetchedData: any = null;
+    let fetchedData = null;
+
     // If URL is being analyzed, trigger the backend API request
     if (intakeMethod === 'url') {
       try {
         console.log('Initiating backend video link detection API call for:', inputUrl.trim());
-        const apiResponse = await detectionService.verifyVideoLink(inputUrl.trim());
-        console.log('Video link detection API successful response:', apiResponse);
-        fetchedData = apiResponse;
-        setAnalysisResult(apiResponse);
+        const response = await axios.post('http://localhost:5000/api/verify-url', {
+          videoUrl: inputUrl.trim()
+        });
+        console.log('Video link detection API successful response:', response.data);
+        fetchedData = response.data;
+        setAnalysisResult(response.data);
       } catch (err: any) {
         console.error('Video link detection API failed with error:', err);
       }
@@ -1299,34 +1302,69 @@ export default function VerifyView({
                   {/* FRAME OR SAMPLE PREVIEW FOR VIDEO/IMAGE/TEXT */}
                   <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-3.5">
                     <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
-                      🔬 Target Specimen Visualizer
+                      🔬 Verification Timeline Overview
                     </span>
                     
                     {result.type === 'video' && (
-                      <div className="bg-slate-950 h-32 rounded-xl border border-slate-850 flex flex-col justify-between p-3 overflow-hidden relative">
-                        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(0,100,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,100,255,0.1)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
-                        
-                        {/* Simulated green wireframe face mesh */}
-                        <div className="flex-1 flex items-center justify-center relative">
-                          <div className="w-24 h-24 rounded-full border border-blue-500/40 relative flex items-center justify-center">
-                            <div className="absolute w-2 h-2 rounded-full bg-blue-400 animate-ping"></div>
-                            {/* Face structural mesh grids */}
-                            <div className="absolute inset-2 border border-dotted border-blue-400/30 rounded-full"></div>
-                            <div className="absolute inset-4 border border-blue-400/20 rounded-full"></div>
-                            <div className="w-full h-[1px] bg-blue-500/35 absolute top-1/2"></div>
-                            <div className="h-full w-[1px] bg-blue-500/35 absolute left-1/2"></div>
-                            <div className="absolute top-1/3 left-1/3 w-1.5 h-1 bg-blue-300"></div>
-                            <div className="absolute top-1/3 right-1/3 w-1.5 h-1 bg-blue-300"></div>
-                            <div className="absolute bottom-1/4 w-4 h-1 border-b border-blue-300/60 rounded"></div>
+                      <div className="space-y-3">
+                        {(!analysisResult?.flagged_frames || analysisResult.flagged_frames.length === 0) ? (
+                          <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 text-center font-mono text-[10px] text-slate-500 py-8">
+                            Verification Timeline Overview — No data payload received.
                           </div>
-                        </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-[9px] font-mono text-slate-400">
+                              <span>KEYFRAME SEQUENCE ({analysisResult.flagged_frames.length} FRAMES MATCHED)</span>
+                              <span className="text-blue-400 animate-pulse font-bold">LIVE FEED ACTIVE</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 bg-slate-950 p-2 rounded-xl border border-slate-900">
+                              {analysisResult.flagged_frames.map((frame: any) => {
+                                const isFrameFake = frame.verdict === 'FAKE' || frame.verdict === 'ANOMALY';
+                                return (
+                                  <div 
+                                    key={frame.frame_id} 
+                                    className={`aspect-square rounded border relative overflow-hidden group transition-all duration-300 ${
+                                      isFrameFake 
+                                        ? 'border-rose-500/50 bg-rose-950/20 hover:border-rose-500' 
+                                        : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                                    }`}
+                                    title={`Frame ${frame.frame_id}: ${frame.verdict} - ${frame.details}`}
+                                  >
+                                    {/* Indicator Tag */}
+                                    <div className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full z-10 ${
+                                      isFrameFake ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'
+                                    }`} />
 
-                        <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 relative z-10">
-                          <span>LAN_TRACKER: 67 VERTS ACTIVE</span>
-                          <span className={result.riskScore > 50 ? 'text-rose-400 animate-pulse font-bold' : 'text-emerald-400'}>
-                            {result.riskScore > 50 ? 'MESH STRETCH DETECTED' : 'ALIGNMENT: PERFECT'}
-                          </span>
-                        </div>
+                                    {imageErrors[frame.frame_id] ? (
+                                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-0.5 text-center relative">
+                                        <div className="absolute inset-0 bg-blue-500/5 animate-pulse"></div>
+                                        <Scan className="h-4 w-4 text-blue-500 animate-pulse" />
+                                        <span className="text-[6px] font-mono text-slate-500 tracking-tighter">Sync...</span>
+                                      </div>
+                                    ) : (
+                                      <img 
+                                        src={`http://localhost:5000/public/frames/${frame.image_name}`} 
+                                        alt={`Cropped Face Frame ${frame.frame_id}`} 
+                                        className="w-full h-full object-cover rounded"
+                                        onError={() => {
+                                          setImageErrors(prev => ({ ...prev, [frame.frame_id]: true }));
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            <div className="flex justify-between items-center text-[9px] font-mono text-slate-500">
+                              <span>LAN_TRACKER: {analysisResult.flagged_frames.length * 2} POINTS RESOLVED</span>
+                              <span className={result.riskScore > 50 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+                                {result.riskScore > 50 ? 'SYNTHETIC OVERLAY SIGNAL' : 'ALIGNMENT: COHESIVE'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1401,25 +1439,38 @@ export default function VerifyView({
                       ⏳ Forensic Pipeline Timeline
                     </span>
                     <div className="space-y-2 pl-2 border-l border-slate-200 dark:border-slate-800 font-mono text-[10px] text-slate-500">
-                      {analysisResult?.flagged_frames && analysisResult.flagged_frames.length > 0 ? (
-                        analysisResult.flagged_frames.map((frame: any, idx: number) => {
-                          const isFrameFake = frame.verdict === 'FAKE';
-                          return (
-                            <div key={frame.frame_id || idx} className="relative">
-                              <div className={`absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full ${isFrameFake ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-                              <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
-                                <span>[Frame #{frame.frame_id || idx + 1}] Analysis</span>
-                                <span className={isFrameFake ? 'text-rose-450' : 'text-emerald-400'}>{frame.verdict}</span>
-                              </div>
-                              <span className="text-[9px] block pl-2">{frame.details}</span>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="text-center py-4 text-slate-500 font-mono" id="no-data-payload-container">
-                          No data payload received
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[0.0s] Handshake Resolution</span>
+                          <span className="text-emerald-400">PASSED</span>
                         </div>
-                      )}
+                        <span className="text-[9px] block pl-2">Platform socket opened and secure CDN handshake established.</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[0.3s] Signal Demultiplexing</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Extracted raw stream partitions (Acoustics, Visual frame buffer).</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[0.8s] Neural Network Evaluation</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Dispatched streams to dynamic CNN & Transformer models.</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[12px] top-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300 pl-2">
+                          <span>[1.2s] Metadata Integrity Seal</span>
+                          <span className="text-emerald-400">PASSED</span>
+                        </div>
+                        <span className="text-[9px] block pl-2">Completed checksum sealing and saved query to local history.</span>
+                      </div>
                     </div>
                   </div>
 

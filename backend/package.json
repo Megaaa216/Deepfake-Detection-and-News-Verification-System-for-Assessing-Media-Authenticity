@@ -9,6 +9,7 @@
   "main": "index.js",
   "dependencies": {
     "accepts": "^2.0.0",
+    "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.3.0",
     "bson": "^7.3.1",
