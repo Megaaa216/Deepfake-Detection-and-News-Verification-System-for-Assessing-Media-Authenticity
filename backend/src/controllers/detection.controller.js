@@ -93,7 +93,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
         return {
           ...frame,
           frame_id: `frame_${index + 1}`,
-          image_name: `${protocol}://${host}/public/frames/${frame.frame_url}`,
+          image_name: frame.frame_url,
           verdict: isFake ? 'FAKE' : 'AUTHENTIC',
           details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
         };
@@ -168,7 +168,7 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
         return {
           ...frame,
           frame_id: `frame_${index + 1}`,
-          image_name: `${protocol}://${host}/public/frames/${frame.frame_url}`,
+          image_name: frame.frame_url,
           verdict: isFake ? 'FAKE' : 'AUTHENTIC',
           details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
         };
@@ -239,7 +239,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
           return {
             ...frame,
             frame_id: `frame_${index + 1}`,
-            image_name: `${protocol}://${host}/public/frames/${frame.frame_url}`,
+            image_name: frame.frame_url,
             verdict: isFake ? 'FAKE' : 'AUTHENTIC',
             details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
           };
@@ -309,7 +309,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
           return {
             ...frame,
             frame_id: `frame_${index + 1}`,
-            image_name: `${protocol}://${host}/public/frames/${frame.frame_url}`,
+            image_name: frame.frame_url,
             verdict: isFake ? 'FAKE' : 'AUTHENTIC',
             details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
           };
