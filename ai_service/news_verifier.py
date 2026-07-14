@@ -1,90 +1,97 @@
 import os
 import torch
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sentence_transformers import SentenceTransformer, util
 
-class NewsVerifier:
-    def __init__(self) -> None:
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-        # Set cache paths according to the organized model directory layout
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
-        self.news_model_dir = os.path.join(base_dir, "models", "news")
-        os.makedirs(self.news_model_dir, exist_ok=True)
-        
-        print(f"[News Verifier] Initializing Hugging Face classification pipeline in: {self.news_model_dir}")
-        self.classifier = pipeline(
-            "text-classification",
-            model="mrm8488/bert-tiny-finetuned-fake-news-detection",
-            device=0 if torch.cuda.is_available() else -1,
-            model_kwargs={"cache_dir": self.news_model_dir}
-        )
-        
-        print(f"[News Verifier] Initializing Sentence Transformer consensus model in: {self.news_model_dir}")
-        self.embedder = SentenceTransformer(
-            "all-MiniLM-L6-v2",
-            cache_folder=self.news_model_dir
-        )
-        
-        # Peer journalistic consensus base bank
-        self.consensus_db = [
-            {"claim": "Deepfake technology utilizes deep neural networks to generate synthetic face replacements.", "label": "true"},
-            {"claim": "Vite is a modern frontend build tool designed for rapid hot module replacement.", "label": "true"},
-            {"claim": "FastAPI is a high-performance Python web framework for building REST APIs.", "label": "true"},
-            {"claim": "Media authenticity is assessed by examining edge blending anomalies and temporal sequence irregularities.", "label": "true"},
-            {"claim": "Official reports confirm that the international space station remains in stable orbit.", "label": "true"}
-        ]
+# ==========================================
+# 🧠 DUAL-MODEL ENGINE INITIALIZATION
+# ==========================================
 
-    def verify(self, text: str) -> dict:
+# Set cache paths according to the organized model directory layout
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+news_model_dir = os.path.join(base_dir, "models", "news")
+os.makedirs(news_model_dir, exist_ok=True)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+print(f"[News Verifier] Initializing Stylistic Classifier in: {news_model_dir}")
+ROBERTA_MODEL = "winterForestStump/Roberta-fake-news-detector"
+text_tokenizer = AutoTokenizer.from_pretrained(ROBERTA_MODEL, cache_dir=news_model_dir)
+style_model = AutoModelForSequenceClassification.from_pretrained(ROBERTA_MODEL, cache_dir=news_model_dir)
+style_model = style_model.to(device)
+style_model.eval()
+
+print(f"[News Verifier] Initializing Factual Semantic Encoder in: {news_model_dir}")
+fact_encoder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", cache_folder=news_model_dir)
+fact_encoder = fact_encoder.to(device)
+
+# 📂 Temporary Fact Cache Registry (Local cross-referencing truth anchors)
+TRUTH_KNOWLEDGE_BASE = [
+    "The official election polling numbers were audited and confirmed accurate by national security agencies.",
+    "Global climate metrics indicate an average temperature increase across historical tracking zones.",
+    "Health authorities verified that the newly distributed vaccine sequence passed all baseline human trials.",
+    "Economic database indices confirmed that inflation metrics settled back under standard levels this quarter."
+]
+truth_embeddings = fact_encoder.encode(TRUTH_KNOWLEDGE_BASE, convert_to_tensor=True)
+
+
+class NewsVerifierManager:
+    def verify(self, input_text: str):
         """
-        Performs text authenticity classification and consensus matching.
+        Executes a dual-pass evaluation loop across stylistic and semantic fact indices.
         """
         try:
-            if not text or not text.strip():
-                return {"success": False, "detail": "Text content cannot be empty"}
+            if not input_text or not input_text.strip():
+                return {"success": False, "message": "Text payload is empty."}
 
-            cleaned_text = text.strip()
-            
-            # 1. Classification
-            pred = self.classifier(cleaned_text)[0]
-            label = pred["label"]
-            score = float(pred["score"])
-            
-            # Map labels: LABEL_0 is FAKE, LABEL_1 is REAL for mrm8488's model
-            verdict = "REAL" if label == "LABEL_1" else "FAKE"
-            
-            # 2. Semantic matching against our consensus bank
-            text_emb = self.embedder.encode(cleaned_text, convert_to_tensor=True)
-            db_claims = [item["claim"] for item in self.consensus_db]
-            db_embs = self.embedder.encode(db_claims, convert_to_tensor=True)
-            
-            cos_scores = util.cos_sim(text_emb, db_embs)[0]
-            best_idx = int(torch.argmax(cos_scores).item())
-            best_similarity = float(cos_scores[best_idx].item())
-            matched_claim = self.consensus_db[best_idx]["claim"]
-            
-            # 3. Compile credibility metric scores
-            if verdict == "FAKE":
-                credibility_score = (1.0 - score) * 100
-                sensationalism = score * 100
-            else:
-                credibility_score = score * 100
-                sensationalism = (1.0 - score) * 100
+            cleaned_text = input_text.strip()
 
-            # Dynamic verification summary response
+            # ----------------------------------------------------
+            # 🎯 PASS 1: Stylistic Anomaly Check (RoBERTa)
+            # ----------------------------------------------------
+            # In this specific model framework: Label 0 = FAKE, Label 1 = REAL
+            inputs = text_tokenizer(cleaned_text, max_length=512, padding=True, truncation=True, return_tensors="pt")
+            inputs = {k: v.to(device) for k, v in inputs.items()}
+            
+            with torch.no_grad():
+                outputs = style_model(**inputs)
+                probabilities = torch.softmax(outputs.logits, dim=1)
+                
+                fake_probability = float(probabilities[0][0].item() * 100) # Percentage index for 'FAKE' class
+                real_probability = float(probabilities[0][1].item() * 100) # Percentage index for 'REAL' class
+
+            # ----------------------------------------------------
+            # 🔍 PASS 2: Factual Alignment Check (Sentence-BERT)
+            # ----------------------------------------------------
+            input_embedding = fact_encoder.encode(cleaned_text, convert_to_tensor=True)
+            # Ensure input_embedding is on same device as truth_embeddings
+            input_embedding = input_embedding.to(device)
+            global truth_embeddings
+            truth_embeddings = truth_embeddings.to(device)
+            
+            cosine_scores = util.cos_sim(input_embedding, truth_embeddings)
+            
+            # Pull the maximum match percentage coefficient relative to our truth cache
+            max_score, max_index = torch.max(cosine_scores, dim=1)
+            factual_alignment_score = max(0.0, float(max_score.item()) * 100)
+
+            # ----------------------------------------------------
+            # 📊 AGGREGATION ENGINE (Unified Trust Matrix Outputs)
+            # ----------------------------------------------------
+            # Higher score means more manipulative language tokens were extracted
+            propaganda_bias_rating = round(fake_probability, 2)
+            factual_consistency_rating = round(factual_alignment_score, 2)
+
             return {
                 "success": True,
-                "verdict": verdict,
-                "confidence": round(score, 4),
-                "credibility_score": round(credibility_score, 1),
-                "sensationalism_index": round(sensationalism, 1),
-                "sentiment_bias": "high" if score < 0.6 else "low",
-                "matched_consensus_claim": matched_claim,
-                "consensus_similarity": round(best_similarity, 4)
+                "propaganda_bias_index": propaganda_bias_rating,
+                "factual_consistency_index": factual_consistency_rating,
+                "stylistic_verdict": "HIGHLY_MANIPULATIVE" if propaganda_bias_rating > 60 else "NEUTRAL_TONE",
+                "factual_verdict": "VERIFIED_ALIGNMENT" if factual_consistency_rating > 50 else "UNVERIFIED_CLAIM"
             }
-        except Exception as e:
-            print(f"[News Verifier Error] Analysis failed: {str(e)}")
-            return {"success": False, "detail": str(e)}
 
-# Single instance coordinator
-news_verifier = NewsVerifier()
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+# Export single instance compatible with main.py endpoint import
+news_verifier = NewsVerifierManager()
