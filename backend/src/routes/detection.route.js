@@ -45,4 +45,6 @@ router.post("/verify-url", express.json(), detectionController.analyzeVideoLink)
 // Unified verify-media route
 router.post("/verify-media", upload.single("video"), detectionController.verifyMedia);
 
+router.post("/verify-text", express.json(), detectionController.verifyText);
+
 module.exports = router;
