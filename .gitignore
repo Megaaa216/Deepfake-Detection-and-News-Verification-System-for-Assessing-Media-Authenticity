@@ -20,3 +20,20 @@ frontend/node_modules/
 .env.production.local
 backend/.env
 frontend/.env
+
+# Python virtual environments
+.venv/
+venv/
+ai_service/venv/
+
+# Deep learning models & caches
+models/
+models/**
+
+# Temporary downloads and generated assets
+ai_service/temp_downloads/
+ai_service/static_frames/
+backend/static_frames/
+**/__pycache__/
+*.pyc
+
