@@ -11,3 +11,6 @@ torch>=2.2.0
 torchvision>=0.17.0
 timm>=0.9.16
 yt-dlp>=2024.3.10
+transformers>=4.40.0
+sentence-transformers>=3.0.0
+

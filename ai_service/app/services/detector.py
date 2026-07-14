@@ -29,8 +29,8 @@ class DeepfakeDetectorManager:
     
     # Define weight paths relative to the project workspace root directory
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-    model1_path = os.path.join(base_dir, "video_model_1", "efficientnet_b0_ffpp_c23.pth")
-    model2_path = os.path.join(base_dir, "video_model_2", "model.safetensors")
+    model1_path = os.path.join(base_dir, "models", "video", "efficientnet_b0_ffpp_c23.pth")
+    model2_path = os.path.join(base_dir, "models", "video", "model.safetensors")
     
     # 1. Instantiate Spatial Face Model
     # Note: Model 1 has been upgraded to timm's pre-trained academic Xception block,

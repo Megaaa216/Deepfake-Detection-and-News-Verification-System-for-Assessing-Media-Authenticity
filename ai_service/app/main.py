@@ -27,12 +27,16 @@ from app.services.detector import deepfake_detector
 from app.services.downloader import download_video_link
 from fastapi import HTTPException
 import os
+from news_verifier import news_verifier
 
 class VideoAnalysisRequest(BaseModel):
   video_path: str
 
 class LinkAnalysisRequest(BaseModel):
   video_url: str
+
+class TextAnalysisRequest(BaseModel):
+  text: str
 
 @app.post("/analyze", tags=["analysis"])
 async def analyze_video(payload: VideoAnalysisRequest):
@@ -71,6 +75,18 @@ async def analyze_link(payload: LinkAnalysisRequest):
         print(f"[AI Service] Cleaned up temporary download file: {local_path}")
       except Exception as rm_err:
         print(f"[WARNING] Failed to remove temp file {local_path}: {rm_err}")
+
+@app.post("/analyze-text", tags=["analysis"])
+async def analyze_text(payload: TextAnalysisRequest):
+  """
+  Accepts news article text content, calculates credibility score,
+  sentiment bias, and checks claim match consensus.
+  """
+  try:
+    result = news_verifier.verify(payload.text)
+    return result
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/", tags=["health"])
 async def root():
