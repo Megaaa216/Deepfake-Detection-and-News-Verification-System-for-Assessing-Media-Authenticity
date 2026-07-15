@@ -93,11 +93,22 @@ class VideoPreprocessor:
       cap.release()
       raise ValueError("Invalid total frame count detected (empty video file).")
 
+    # Get FPS and calculate duration to determine sequence length dynamically
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    duration_seconds = total_frames / fps if fps > 0 else 0
+    
+    if duration_seconds > 0 and duration_seconds < 10:
+      actual_sequence_length = total_frames
+      print(f"[AI Service] Video duration is under 10s ({duration_seconds:.2f}s). Processing ALL {actual_sequence_length} frames.")
+    else:
+      actual_sequence_length = sequence_length
+      print(f"[AI Service] Video duration is {duration_seconds:.2f}s. Processing uniform slice of {actual_sequence_length} frames.")
+
     # Select frame indices evenly spaced across duration
     frame_indices = np.linspace(
       0, 
       total_frames - 1, 
-      num=sequence_length, 
+      num=actual_sequence_length, 
       dtype=int
     )
     

@@ -84,22 +84,28 @@ class DeepfakeDetectorManager:
           
           print(f"[AI Service] Processing spatial TTA batch step: {start_idx} to {end_idx} of {num_frames} frames...")
           
-          # Pass A: Predict confidence on the original standard face crop tensor
+          # Original image
           logits_orig = self.face_model(batch)
           probs_orig = torch.softmax(logits_orig, dim=1)
           
-          # Pass B: Predict confidence on a horizontally flipped variation of the crop tensor (torchvision.transforms.functional.hflip)
+          # Horizontally flipped version
           flipped = TF.hflip(batch)
           logits_flip = self.face_model(flipped)
           probs_flip = torch.softmax(logits_flip, dim=1)
           
-          # Pass C: Calculate the final composite score for that frame by taking the clean mathematical average (mean) of both prediction outputs
-          batch_avg_probs = (probs_orig + probs_flip) / 2.0
-          all_face_probs.append(batch_avg_probs)
+          # Slightly rotated version (+5 degrees)
+          rot_p5 = TF.rotate(batch, 5)
+          logits_p5 = self.face_model(rot_p5)
+          probs_p5 = torch.softmax(logits_p5, dim=1)
           
-          # Console Metrics Output: Add a tracking statement inside the loop execution logic that outputs the composite calculated prediction value block
-          batch_fake_scores = batch_avg_probs[:, 1].tolist()
-          print(f"[AI Service] Composite calculated prediction value block: {[round(s, 4) for s in batch_fake_scores]}")
+          # Slightly rotated version (-5 degrees)
+          rot_n5 = TF.rotate(batch, -5)
+          logits_n5 = self.face_model(rot_n5)
+          probs_n5 = torch.softmax(logits_n5, dim=1)
+          
+          # Average confidence scores
+          batch_avg_probs = (probs_orig + probs_flip + probs_p5 + probs_n5) / 4.0
+          all_face_probs.append(batch_avg_probs)
           
         face_probs = torch.cat(all_face_probs, dim=0)
         

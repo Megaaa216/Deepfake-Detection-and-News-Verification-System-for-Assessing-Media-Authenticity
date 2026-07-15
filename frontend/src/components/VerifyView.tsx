@@ -1394,7 +1394,7 @@ export default function VerifyView({
                                   {/* Direct Static Asset Bridge to Express Port 5000 */}
                                   <div className="relative w-full h-32 bg-slate-900 rounded-lg overflow-hidden border border-slate-900">
                                     <img 
-                                      src={`http://localhost:5000/public/frames/${frame.image_name}`} 
+                                      src={frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`} 
                                       alt={`Forensic Extraction ${idx}`}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
