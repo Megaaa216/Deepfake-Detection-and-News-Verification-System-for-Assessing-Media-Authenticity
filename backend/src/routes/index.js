@@ -41,5 +41,6 @@ router.use("/detection", detectionRoute);
 router.post("/verify-url", express.json(), detectionController.analyzeVideoLink);
 router.post("/upload", upload.single("video"), detectionController.uploadVideo);
 router.post("/verify-text", express.json(), detectionController.verifyText);
+router.post("/verify-media", upload.single("video"), detectionController.verifyMedia);
 
 module.exports = router;

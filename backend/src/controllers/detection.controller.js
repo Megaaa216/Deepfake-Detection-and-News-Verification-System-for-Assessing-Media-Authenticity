@@ -193,10 +193,10 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
     
     // Fallback: Populate realistic mock frames and dynamic summaries to prevent blank UI panels
     const mockFlaggedFrames = [
-      { frame_id: "frame_1", image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
-      { frame_id: "frame_2", image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
-      { frame_id: "frame_3", image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
-      { frame_id: "frame_4", image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
+      { frame_id: "frame_1", frame_index: 0, score: 0.95, image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
+      { frame_id: "frame_2", frame_index: 1, score: 0.88, image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
+      { frame_id: "frame_3", frame_index: 2, score: 0.72, image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
+      { frame_id: "frame_4", frame_index: 3, score: 0.15, image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
     ];
     const mockSummary = await generateForensicSummary("fake", 0.85, 0.90, 0.78);
 
@@ -261,10 +261,10 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
       logger.warn("Falling back to hardcoded mock predictions");
       
       const mockFlaggedFrames = [
-        { frame_id: "frame_1", image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
-        { frame_id: "frame_2", image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
-        { frame_id: "frame_3", image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
-        { frame_id: "frame_4", image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
+        { frame_id: "frame_1", frame_index: 0, score: 0.95, image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
+        { frame_id: "frame_2", frame_index: 1, score: 0.88, image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
+        { frame_id: "frame_3", frame_index: 2, score: 0.72, image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
+        { frame_id: "frame_4", frame_index: 3, score: 0.15, image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
       ];
       const mockSummary = await generateForensicSummary("fake", 0.85, 0.90, 0.78);
 

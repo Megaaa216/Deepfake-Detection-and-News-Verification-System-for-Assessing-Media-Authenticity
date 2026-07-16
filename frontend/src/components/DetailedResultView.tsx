@@ -423,7 +423,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                         isFrameFake ? 'ring-1 ring-rose-500/20' : ''
                       }`}>
                         <div className="absolute top-1 right-1 text-[8px] font-mono bg-slate-950 px-1 text-slate-400 rounded z-10">
-                          #{frame.frame_id} {frame.score !== undefined && `(${(frame.score <= 1.0 ? frame.score * 100 : frame.score).toFixed(1)}%)`}
+                          Frame #{frame.frame_index !== undefined ? frame.frame_index : (frame.frame_id || index)} {frame.score !== undefined && `(${(frame.score <= 1.0 ? frame.score * 100 : frame.score).toFixed(1)}%)`}
                         </div>
                         
                         {/* Cropped face image with standard face-mesh fallback */}
@@ -443,7 +443,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                             </div>
                           ) : (
                             <img 
-                              src={frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`} 
+                              src={frame.image_url ? (frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`) : (frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`)} 
                               alt={`Cropped Face Frame ${frame.frame_id}`} 
                               className="w-full h-full object-cover rounded border border-slate-700"
                               onError={() => {
