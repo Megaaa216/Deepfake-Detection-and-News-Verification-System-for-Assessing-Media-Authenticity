@@ -183,4 +183,5 @@ class VideoPreprocessor:
     
     # Expand dims to add batch: (1, sequence_length, 3, 299, 299)
     sequence_tensor = sequence_tensor.unsqueeze(0)
+    print(f"Saved {len(saved_filenames)} frames to static_frames/")
     return sequence_tensor, saved_filenames

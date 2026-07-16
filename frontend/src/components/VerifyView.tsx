@@ -1378,24 +1378,40 @@ export default function VerifyView({
                           /* Horizontal scroll track so 32 frames layout beautifully */
                           <div className="flex gap-4 overflow-x-auto pb-4 max-w-full custom-scrollbar">
                             {analysisResult.flagged_frames.map((frame: any, idx: number) => {
-                              // Enforce fallback boundaries for the score mapping values
-                              const score = typeof frame.score === 'number' ? frame.score : parseFloat(frame.score) || 0;
-                              const displayScore = score <= 1.0 ? score * 100 : score;
+                              // Standardize the frame item: could be string or object
+                              const isObj = frame && typeof frame === 'object';
                               
-                              // Determine image URL path with Express port fallback
-                              const imageSrc = frame.image_url 
-                                ? (frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`)
-                                : (frame.image_name && frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name || ''}`);
-                                
+                              const frame_index = isObj && frame.frame_index !== undefined ? frame.frame_index : idx;
+                              
+                              const rawScore = isObj && frame.score !== undefined 
+                                ? frame.score 
+                                : (isObj && frame.confidence !== undefined ? frame.confidence : 0);
+                              const scorePercent = rawScore <= 1.0 ? rawScore * 100 : rawScore;
+                              
+                              // Determine image URL
+                              let imageSrc = "https://placehold.co/150x150/1e293b/ffffff?text=Syncing+Face...";
+                              
+                              if (isObj) {
+                                if (frame.image_url) {
+                                  imageSrc = frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`;
+                                } else if (frame.image_name) {
+                                  imageSrc = frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`;
+                                } else if (frame.frame_url) {
+                                  imageSrc = frame.frame_url.startsWith('http') ? frame.frame_url : `http://localhost:5000/public/frames/${frame.frame_url}`;
+                                }
+                              } else if (typeof frame === 'string') {
+                                imageSrc = frame.startsWith('http') ? frame : `http://localhost:5000/public/frames/${frame}`;
+                              }
+                              
                               return (
                                 <div 
                                   key={idx} 
                                   className="flex-shrink-0 w-48 border border-slate-800/80 bg-slate-950/60 p-3 rounded-xl transition-all hover:border-slate-700"
                                 >
                                   <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mb-2">
-                                    <span>Frame #{frame.frame_index !== undefined ? frame.frame_index : idx}</span>
+                                    <span>Frame #{frame_index}</span>
                                     <span className="text-slate-650 font-bold bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
-                                      {frame.score !== undefined ? (frame.score * 100).toFixed(1) + '%' : (displayScore).toFixed(1) + '%'}
+                                      {scorePercent.toFixed(1)}%
                                     </span>
                                   </div>
                                   
@@ -1414,13 +1430,13 @@ export default function VerifyView({
                                   
                                   {/* Dynamic Color Badge Tier System */}
                                   <div className={`mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-center py-1 rounded border ${
-                                    score > 0.60 
+                                    (scorePercent / 100) > 0.60 
                                       ? 'text-red-400 border-red-950/60 bg-red-950/20' 
-                                      : score >= 0.25 
+                                      : (scorePercent / 100) >= 0.25 
                                         ? 'text-amber-400 border-amber-950/60 bg-amber-950/20' 
                                         : 'text-emerald-400 border-emerald-950/60 bg-emerald-950/20'
                                   }`}>
-                                    {score > 0.60 ? 'MANIPULATED' : score >= 0.25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
+                                    {(scorePercent / 100) > 0.60 ? 'MANIPULATED' : (scorePercent / 100) >= 0.25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
                                   </div>
                                 </div>
                               );

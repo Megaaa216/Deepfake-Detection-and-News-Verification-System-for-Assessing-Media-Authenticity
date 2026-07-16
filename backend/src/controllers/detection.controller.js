@@ -1,3 +1,4 @@
+const path = require("path");
 const axios = require("axios");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");

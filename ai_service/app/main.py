@@ -45,6 +45,9 @@ async def analyze_video(payload: VideoAnalysisRequest):
   and performs sequence inference.
   """
   try:
+    static_frames_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static_frames"))
+    from news_verifier import cleanup_previous_frames
+    cleanup_previous_frames(static_frames_path)
     result = await deepfake_detector.analyze_video(payload.video_path)
     return result
   except Exception as e:
@@ -59,6 +62,9 @@ async def analyze_link(payload: LinkAnalysisRequest):
   temp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../temp_downloads"))
   local_path = None
   try:
+    static_frames_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static_frames"))
+    from news_verifier import cleanup_previous_frames
+    cleanup_previous_frames(static_frames_path)
     # 1. Download video to temporary folder
     local_path = download_video_link(payload.video_url, temp_dir)
     
