@@ -31,7 +31,6 @@ class DeepfakeDetectorManager:
     
     # Define weight paths relative to the project workspace root directory
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-    model1_path = os.path.join(base_dir, "models", "video", "efficientnet_b0_ffpp_c23.pth")
     model2_path = os.path.join(base_dir, "models", "video", "model.safetensors")
     
     # 1. Instantiate Spatial Face Model
@@ -128,9 +127,17 @@ class DeepfakeDetectorManager:
       for i, filename in enumerate(saved_filenames):
         frame_score = float(face_probs[i, 1].item())
         flagged_frames.append({
-          "frame_url": filename,
-          "score": round(frame_score, 4)
+          "frame_index": i,
+          "score": round(frame_score, 4),
+          "image_url": f"/public/frames/{filename}",
+          "frame_url": filename  # Keep frame_url for controller compatibility
         })
+
+      # Sort this list mathematically by score in descending order (highest scores first)
+      flagged_frames.sort(key=lambda x: x["score"], reverse=True)
+
+      # Take a slice of only the top 16 items
+      flagged_frames = flagged_frames[:16]
 
       print(f"[AI Service] Inference successful. Results: result={result}, confidence={confidence:.4f}")
 

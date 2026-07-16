@@ -18,6 +18,9 @@ export interface FlaggedFrame {
   image_name: string;
   verdict: 'AUTHENTIC' | 'FAKE';
   details: string;
+  score?: number;
+  frame_index?: number;
+  image_url?: string;
 }
 
 export interface VerificationResult {

@@ -1380,21 +1380,29 @@ export default function VerifyView({
                             {analysisResult.flagged_frames.map((frame: any, idx: number) => {
                               // Enforce fallback boundaries for the score mapping values
                               const score = typeof frame.score === 'number' ? frame.score : parseFloat(frame.score) || 0;
+                              const displayScore = score <= 1.0 ? score * 100 : score;
                               
+                              // Determine image URL path with Express port fallback
+                              const imageSrc = frame.image_url 
+                                ? (frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`)
+                                : (frame.image_name && frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name || ''}`);
+                                
                               return (
                                 <div 
                                   key={idx} 
                                   className="flex-shrink-0 w-48 border border-slate-800/80 bg-slate-950/60 p-3 rounded-xl transition-all hover:border-slate-700"
                                 >
                                   <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mb-2">
-                                    <span>INDEX #{frame.frame_id || idx + 1}</span>
-                                    <span className="text-slate-600">{(score).toFixed(1)}%</span>
+                                    <span>Frame #{frame.frame_index !== undefined ? frame.frame_index : idx}</span>
+                                    <span className="text-slate-650 font-bold bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
+                                      {frame.score !== undefined ? (frame.score * 100).toFixed(1) + '%' : (displayScore).toFixed(1) + '%'}
+                                    </span>
                                   </div>
                                   
                                   {/* Direct Static Asset Bridge to Express Port 5000 */}
                                   <div className="relative w-full h-32 bg-slate-900 rounded-lg overflow-hidden border border-slate-900">
                                     <img 
-                                      src={frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`} 
+                                      src={imageSrc} 
                                       alt={`Forensic Extraction ${idx}`}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
@@ -1406,13 +1414,13 @@ export default function VerifyView({
                                   
                                   {/* Dynamic Color Badge Tier System */}
                                   <div className={`mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-center py-1 rounded border ${
-                                    score > 60 
+                                    score > 0.60 
                                       ? 'text-red-400 border-red-950/60 bg-red-950/20' 
-                                      : score >= 25 
+                                      : score >= 0.25 
                                         ? 'text-amber-400 border-amber-950/60 bg-amber-950/20' 
                                         : 'text-emerald-400 border-emerald-950/60 bg-emerald-950/20'
                                   }`}>
-                                    {score > 60 ? 'MANIPULATED' : score >= 25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
+                                    {score > 0.60 ? 'MANIPULATED' : score >= 0.25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
                                   </div>
                                 </div>
                               );
