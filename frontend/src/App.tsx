@@ -76,11 +76,14 @@ export default function App() {
       }
 
       const knownTabs = [
-        'home', 'verify', 'methods', 'history', 'reports', 'about', 
+        'home', 'verify', 'methods', 'history', 'about', 
         'login', 'register', 'forgot-password', 'profile', 'results', 'admin', 'settings'
       ];
 
-      if (knownTabs.includes(targetTab)) {
+      if (targetTab === 'reports') {
+        setActiveTab('home');
+        window.location.hash = '#/home';
+      } else if (knownTabs.includes(targetTab)) {
         setActiveTab(targetTab);
         if (targetTab === 'results' && paramId) {
           setSelectedResultId(paramId);
@@ -97,6 +100,11 @@ export default function App() {
 
   // Update URL hash whenever active properties undergo client changes
   const handleTabChange = (newTab: string, optionalParam?: string) => {
+    if (newTab === 'reports') {
+      setActiveTab('home');
+      window.location.hash = '#/home';
+      return;
+    }
     setActiveTab(newTab);
     if (newTab === 'results' && optionalParam) {
       setSelectedResultId(optionalParam);
@@ -146,7 +154,7 @@ export default function App() {
 
   // Redirect protected tabs to login if not authenticated
   useEffect(() => {
-    const protectedTabs = ['history', 'verify', 'reports', 'admin', 'profile', 'settings'];
+    const protectedTabs = ['history', 'verify', 'admin', 'profile', 'settings']; // 'reports' temporarily disabled
     if (protectedTabs.includes(activeTab)) {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('veramedia_accessToken');
       if (!token || !user.loggedIn) {
@@ -337,13 +345,13 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'reports' && (
+        {/* {activeTab === 'reports' && (
           <ReportsView 
             historyList={historyList} 
             preselectedResult={reportFocusItem} 
             onClearPreselection={() => setReportFocusItem(null)} 
           />
-        )}
+        )} */}
 
         {activeTab === 'about' && (
           <AboutView />

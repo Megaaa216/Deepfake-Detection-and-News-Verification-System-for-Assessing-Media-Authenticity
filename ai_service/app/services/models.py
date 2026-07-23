@@ -145,3 +145,47 @@ class VideoTransformerClassifier(nn.Module):
     logit = self.head(cls_out).squeeze(1)  # Shape: (batch,)
     score = torch.sigmoid(logit)
     return score
+
+
+class Model(nn.Module):
+    def __init__(self, num_classes=2, latent_dim=2048, lstm_layers=2, hidden_dim=2048, bidirectional=True):
+        super(Model, self).__init__()
+        # Feature extractor: Pretrained ResNeXt50 (32x4d)
+        try:
+            backbone = models.resnext50_32x4d(weights=models.ResNeXt50_32X4D_Weights.DEFAULT)
+        except Exception:
+            backbone = models.resnext50_32x4d(pretrained=True)
+        self.features = nn.Sequential(*list(backbone.children())[:-1])
+
+        # Recurrent decoder: LSTM layer to capture temporal frames over time
+        self.lstm = nn.LSTM(latent_dim, hidden_dim, num_layers=lstm_layers, 
+                            bidirectional=bidirectional, batch_first=True)
+
+        # Final classification layer
+        num_directions = 2 if bidirectional else 1
+        self.dp = nn.Dropout(0.4)
+        self.linearOut = nn.Linear(hidden_dim * num_directions, num_classes)
+        self.init_weights()
+
+    def init_weights(self):
+        torch.manual_seed(42)
+        for name, param in self.lstm.named_parameters():
+            if 'weight_ih' in name:
+                nn.init.xavier_uniform_(param.data)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param.data)
+            elif 'bias' in name:
+                param.data.fill_(0.0)
+        nn.init.orthogonal_(self.linearOut.weight, gain=1.5)
+        self.linearOut.bias.data[0] = 0.5   # Real bias
+        self.linearOut.bias.data[1] = -0.5  # Fake bias
+
+    def forward(self, x):
+        # Input shape: [batch_size, sequence_length, channels, height, width]
+        batch_size, seq_length, c, h, w = x.shape
+        ii = x.view(-1, c, h, w)
+        f_out = self.features(ii)
+        f_out = f_out.view(batch_size, seq_length, -1)
+        lstm_out, _ = self.lstm(f_out)
+        out = self.linearOut(self.dp(lstm_out[:, -1, :]))
+        return out

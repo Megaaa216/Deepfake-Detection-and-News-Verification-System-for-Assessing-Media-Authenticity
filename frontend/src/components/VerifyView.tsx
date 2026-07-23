@@ -1360,98 +1360,116 @@ export default function VerifyView({
                       🔬 Verification Timeline Overview
                     </span>
                     
-                    {result.type === 'video' && (
-                      /* --- REBUILT FORENSIC EVIDENCE PREVIEW CONTAINER --- */
-                      <div className="mt-6 border border-slate-800 bg-slate-900/40 rounded-2xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-sm font-mono tracking-wider text-slate-300 uppercase">
-                            Scanned Key Frame Sequence & Lip-Sync Analysis
-                          </h3>
-                          {analysisResult?.flagged_frames && (
-                            <span className="text-[11px] font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
-                              {analysisResult.flagged_frames.length} Fields Captured
-                            </span>
-                          )}
-                        </div>
+                    {result.type === 'video' && (() => {
+                      const isAuthentic = result.status === 'likely_authentic' || result.riskScore < 20 || (analysisResult && (analysisResult.result === 'real' || analysisResult.is_fake === false));
 
-                        {analysisResult && analysisResult.flagged_frames && analysisResult.flagged_frames.length > 0 ? (
-                          /* Horizontal scroll track so 32 frames layout beautifully */
-                          <div className="flex gap-4 overflow-x-auto pb-4 max-w-full custom-scrollbar">
-                            {analysisResult.flagged_frames.map((frame: any, idx: number) => {
-                              // Standardize the frame item: could be string or object
-                              const isObj = frame && typeof frame === 'object';
-                              
-                              const frame_index = isObj && frame.frame_index !== undefined ? frame.frame_index : idx;
-                              
-                              const rawScore = isObj && frame.score !== undefined 
-                                ? frame.score 
-                                : (isObj && frame.confidence !== undefined ? frame.confidence : 0);
-                              const scorePercent = rawScore <= 1.0 ? rawScore * 100 : rawScore;
-                              
-                              // Determine image URL
-                              let imageSrc = "https://placehold.co/150x150/1e293b/ffffff?text=Syncing+Face...";
-                              
-                              if (isObj) {
-                                if (frame.image_url) {
-                                  imageSrc = frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`;
-                                } else if (frame.image_name) {
-                                  imageSrc = frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`;
-                                } else if (frame.frame_url) {
-                                  imageSrc = frame.frame_url.startsWith('http') ? frame.frame_url : `http://localhost:5000/public/frames/${frame.frame_url}`;
-                                }
-                              } else if (typeof frame === 'string') {
-                                imageSrc = frame.startsWith('http') ? frame : `http://localhost:5000/public/frames/${frame}`;
-                              }
-                              
-                              return (
-                                <div 
-                                  key={idx} 
-                                  className="flex-shrink-0 w-48 border border-slate-800/80 bg-slate-950/60 p-3 rounded-xl transition-all hover:border-slate-700"
-                                >
-                                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mb-2">
-                                    <span>Frame #{frame_index}</span>
-                                    <span className="text-slate-650 font-bold bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
-                                      {scorePercent.toFixed(1)}%
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Direct Static Asset Bridge to Express Port 5000 */}
-                                  <div className="relative w-full h-32 bg-slate-900 rounded-lg overflow-hidden border border-slate-900">
-                                    <img 
-                                      src={imageSrc} 
-                                      alt={`Forensic Extraction ${idx}`}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        // Fallback to a clean placeholder canvas if the disk write stream is lagging
-                                        e.currentTarget.src = "https://placehold.co/150x150/1e293b/ffffff?text=Syncing+Face...";
-                                      }}
-                                    />
-                                  </div>
-                                  
-                                  {/* Dynamic Color Badge Tier System */}
-                                  <div className={`mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-center py-1 rounded border ${
-                                    (scorePercent / 100) > 0.60 
-                                      ? 'text-red-400 border-red-950/60 bg-red-950/20' 
-                                      : (scorePercent / 100) >= 0.25 
-                                        ? 'text-amber-400 border-amber-950/60 bg-amber-950/20' 
-                                        : 'text-emerald-400 border-emerald-950/60 bg-emerald-950/20'
-                                  }`}>
-                                    {(scorePercent / 100) > 0.60 ? 'MANIPULATED' : (scorePercent / 100) >= 0.25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          /* Empty Fallback State Card */
-                          <div className="p-8 text-center border border-dashed border-slate-800/80 rounded-xl bg-slate-950/20">
-                            <p className="text-sm text-slate-500">
-                              No frame matrix telemetry loaded. Submit a media asset above to populate forensic timelines.
+                      if (isAuthentic) {
+                        return (
+                          <div className="mt-6 bg-emerald-950/20 border border-emerald-800/40 rounded-2xl p-5 text-emerald-400 space-y-2 font-mono text-left">
+                            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider">
+                              <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                              <span>AUTHENTIC MEDIA PROFILE VERIFIED</span>
+                            </div>
+                            <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                              Video evaluated as Authentic. No suspicious frame anomalies detected.
                             </p>
                           </div>
-                        )}
-                      </div>
-                    )}
+                        );
+                      }
+
+                      return (
+                        /* --- REBUILT FORENSIC EVIDENCE PREVIEW CONTAINER FOR MANIPULATED/SUSPICIOUS VIDEOS --- */
+                        <div className="mt-6 border border-slate-800 bg-slate-900/40 rounded-2xl p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-mono tracking-wider text-slate-300 uppercase">
+                              Scanned Key Frame Sequence & Lip-Sync Analysis
+                            </h3>
+                            {analysisResult?.flagged_frames && (
+                              <span className="text-[11px] font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+                                {analysisResult.flagged_frames.length} Fields Captured
+                              </span>
+                            )}
+                          </div>
+
+                          {analysisResult && analysisResult.flagged_frames && analysisResult.flagged_frames.length > 0 ? (
+                            /* Horizontal scroll track so 32 frames layout beautifully */
+                            <div className="flex gap-4 overflow-x-auto pb-4 max-w-full custom-scrollbar">
+                              {analysisResult.flagged_frames.map((frame: any, idx: number) => {
+                                // Standardize the frame item: could be string or object
+                                const isObj = frame && typeof frame === 'object';
+                                
+                                const frame_index = isObj && frame.frame_index !== undefined ? frame.frame_index : idx;
+                                
+                                const rawScore = isObj && frame.score !== undefined 
+                                  ? frame.score 
+                                  : (isObj && frame.confidence !== undefined ? frame.confidence : 0);
+                                const scorePercent = rawScore <= 1.0 ? rawScore * 100 : rawScore;
+                                
+                                // Determine image URL
+                                let imageSrc = "https://placehold.co/150x150/1e293b/ffffff?text=Syncing+Face...";
+                                
+                                if (isObj) {
+                                  if (frame.image_url) {
+                                    imageSrc = frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`;
+                                  } else if (frame.image_name) {
+                                    imageSrc = frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`;
+                                  } else if (frame.frame_url) {
+                                    imageSrc = frame.frame_url.startsWith('http') ? frame.frame_url : `http://localhost:5000/public/frames/${frame.frame_url}`;
+                                  }
+                                } else if (typeof frame === 'string') {
+                                  imageSrc = frame.startsWith('http') ? frame : `http://localhost:5000/public/frames/${frame}`;
+                                }
+                                
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className="flex-shrink-0 w-48 border border-slate-800/80 bg-slate-950/60 p-3 rounded-xl transition-all hover:border-slate-700"
+                                  >
+                                    <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mb-2">
+                                      <span>Frame #{frame_index}</span>
+                                      <span className="text-slate-650 font-bold bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
+                                        {scorePercent.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Direct Static Asset Bridge to Express Port 5000 */}
+                                    <div className="relative w-full h-32 bg-slate-900 rounded-lg overflow-hidden border border-slate-900">
+                                      <img 
+                                        src={imageSrc} 
+                                        alt={`Forensic Extraction ${idx}`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          // Fallback to a clean placeholder canvas if the disk write stream is lagging
+                                          e.currentTarget.src = "https://placehold.co/150x150/1e293b/ffffff?text=Syncing+Face...";
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    {/* Dynamic Color Badge Tier System */}
+                                    <div className={`mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-center py-1 rounded border ${
+                                      (scorePercent / 100) > 0.60 
+                                        ? 'text-red-400 border-red-950/60 bg-red-950/20' 
+                                        : (scorePercent / 100) >= 0.25 
+                                          ? 'text-amber-400 border-amber-950/60 bg-amber-950/20' 
+                                          : 'text-emerald-400 border-emerald-950/60 bg-emerald-950/20'
+                                    }`}>
+                                      {(scorePercent / 100) > 0.60 ? 'MANIPULATED' : (scorePercent / 100) >= 0.25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            /* Empty Fallback State Card */
+                            <div className="p-8 text-center border border-dashed border-slate-800/80 rounded-xl bg-slate-950/20">
+                              <p className="text-sm text-slate-500">
+                                No frame matrix telemetry loaded. Submit a media asset above to populate forensic timelines.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {result.type === 'image' && (
                       <div className="bg-slate-950 h-32 rounded-xl border border-slate-850 flex flex-col justify-between p-3 overflow-hidden relative">

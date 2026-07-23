@@ -221,42 +221,54 @@ export default function VideoUpload() {
               </div>
               
               {/* Flagged face frames crops section */}
-              {response.flagged_frames && response.flagged_frames.length > 0 && (
-                <div className="space-y-2 text-left">
-                  <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
-                    🔬 Detected Face Crops
-                  </span>
-                  <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
-                    {response.flagged_frames.map((frame, index) => {
-                      const isFake = frame.verdict === 'FAKE';
-                      return (
-                        <div key={frame.frame_id || index} className="flex-shrink-0 w-24 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-slate-800 p-1.5 space-y-1.5 text-center font-mono">
-                          <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-200 dark:bg-slate-900 flex items-center justify-center">
-                            <img 
-                              src={frame.image_name} 
-                              alt={`Frame ${index + 1}`} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80`;
-                              }}
-                            />
-                            <div className={`absolute bottom-0 inset-x-0 text-[8px] py-0.5 text-center font-bold text-white uppercase tracking-wider ${
-                              isFake ? 'bg-rose-500/90' : 'bg-emerald-500/90'
-                            }`}>
-                              {isFake ? 'Anomaly' : 'Unaltered'}
+              {response.result === 'real' ? (
+                <div className="bg-emerald-950/20 border border-emerald-800/40 rounded-xl p-4 text-emerald-400 space-y-1 text-left font-mono">
+                  <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider">
+                    <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>AUTHENTIC MEDIA PROFILE VERIFIED</span>
+                  </div>
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Video evaluated as Authentic. No suspicious frame anomalies detected.
+                  </p>
+                </div>
+              ) : (
+                response.flagged_frames && response.flagged_frames.length > 0 && (
+                  <div className="space-y-2 text-left">
+                    <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                      🔬 Detected Face Crops
+                    </span>
+                    <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                      {response.flagged_frames.map((frame, index) => {
+                        const isFake = frame.verdict === 'FAKE';
+                        return (
+                          <div key={frame.frame_id || index} className="flex-shrink-0 w-24 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-slate-800 p-1.5 space-y-1.5 text-center font-mono">
+                            <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-200 dark:bg-slate-900 flex items-center justify-center">
+                              <img 
+                                src={frame.image_name} 
+                                alt={`Frame ${index + 1}`} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80`;
+                                }}
+                              />
+                              <div className={`absolute bottom-0 inset-x-0 text-[8px] py-0.5 text-center font-bold text-white uppercase tracking-wider ${
+                                isFake ? 'bg-rose-500/90' : 'bg-emerald-500/90'
+                              }`}>
+                                {isFake ? 'Anomaly' : 'Unaltered'}
+                              </div>
+                            </div>
+                            <div className="flex flex-col text-[8.5px] leading-tight">
+                              <span className="text-slate-500">Frame {index + 1}</span>
+                              <span className={`font-black ${isFake ? 'text-rose-500' : 'text-emerald-500'} truncate block`} title={frame.details}>
+                                {frame.details}
+                              </span>
                             </div>
                           </div>
-                          <div className="flex flex-col text-[8.5px] leading-tight">
-                            <span className="text-slate-500">Frame {index + 1}</span>
-                            <span className={`font-black ${isFake ? 'text-rose-500' : 'text-emerald-500'} truncate block`} title={frame.details}>
-                              {frame.details}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )
               )}
 
               {/* Expert forensic summary report */}

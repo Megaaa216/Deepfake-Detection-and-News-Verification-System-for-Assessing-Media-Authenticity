@@ -14,7 +14,7 @@ class VideoPreprocessor:
   3. Detects and crops faces using OpenCV's built-in Haar Cascade frontal face detector.
   4. Resizes and normalizes faces to feed the PyTorch network.
   """
-  def __init__(self, target_size: int = 299) -> None:
+  def __init__(self, target_size: int = 112) -> None:
     self.target_size = target_size
     
     # Load OpenCV built-in frontal face Haar Cascade
@@ -23,14 +23,14 @@ class VideoPreprocessor:
     if self.face_cascade.empty():
       raise IOError(f"Could not load Haar Cascade face detector from {cascade_path}")
     
-    # Define standard PyTorch vision transform pipeline
+    # Define standard PyTorch vision transform pipeline with ImageNet normalization
     self.preprocess = transforms.Compose([
       transforms.ToPILImage(),
-      transforms.Resize((299, 299)), # 299 for Xception, 224 if still using EfficientNet
+      transforms.Resize((112, 112)),
       transforms.ToTensor(),          # Automatically scales pixels to [0.0, 1.0]
       transforms.Normalize(
-        mean=[0.5, 0.5, 0.5],
-        std=[0.5, 0.5, 0.5]
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
       )
     ])
 
