@@ -34,6 +34,47 @@ class VideoPreprocessor:
       )
     ])
 
+  def _validate_face_box(
+    self, 
+    bbox: tuple, 
+    confidence: float, 
+    frame_w: int, 
+    frame_h: int
+  ) -> Tuple[bool, str]:
+    """
+    Applies strict validation constraints to eliminate false positive non-face detections
+    (e.g., channel logos, watermarks, background graphics, banners):
+    1. Confidence Thresholding (>= 0.75)
+    2. Size Constraints (Min 80x80 px AND >= 10% frame height)
+    3. Aspect Ratio Check (0.7 <= w/h <= 1.4)
+    4. Corner Exclusion Mask (Excludes extreme top-left and top-right logo zones unless confidence > 0.90)
+    """
+    x, y, w, h = bbox
+    
+    # 1. Confidence threshold check (min 0.75)
+    if confidence < 0.75:
+      return False, f"Confidence {confidence:.2f} < min threshold 0.75"
+      
+    # 2. Minimum Face Size check (min 80x80 AND >= 10% of frame height)
+    min_h = max(80, int(frame_h * 0.10))
+    if w < 80 or h < min_h:
+      return False, f"Size ({w}x{h}) below min 80x80 or 10% frame height ({min_h}px)"
+      
+    # 3. Aspect Ratio Check (0.7 <= width / height <= 1.4)
+    aspect_ratio = float(w) / float(h)
+    if aspect_ratio < 0.7 or aspect_ratio > 1.4:
+      return False, f"Aspect ratio {aspect_ratio:.2f} out of bounds [0.7, 1.4]"
+      
+    # 4. Corner Exclusion Mask (Top-left & top-right logo/watermark zones)
+    in_top_left = (x + w <= frame_w * 0.25) and (y <= frame_h * 0.25)
+    in_top_right = (x >= frame_w * 0.75) and (y <= frame_h * 0.25)
+    
+    if (in_top_left or in_top_right) and confidence <= 0.90:
+      zone = "top-left" if in_top_left else "top-right"
+      return False, f"Located in extreme {zone} logo zone with confidence {confidence:.2f} <= 0.90"
+      
+    return True, "Valid face ROI"
+
   def _crop_face(self, img: np.ndarray, bbox: tuple, padding_ratio: float = 0.15) -> np.ndarray:
     """
     Extracts bounding box region from frame with a 15% margin padding around the face box
@@ -146,22 +187,42 @@ class VideoPreprocessor:
 
       # Convert to grayscale for face detection on BGR raw frame
       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-      faces = self.face_cascade.detectMultiScale(
+      frame_h, frame_w = frame.shape[:2]
+
+      # Detect candidate faces using OpenCV Haar Cascade with confidence level weights
+      rects, reject_levels, level_weights = self.face_cascade.detectMultiScale3(
         gray, 
         scaleFactor=1.1, 
         minNeighbors=4, 
-        minSize=(30, 30)
+        minSize=(60, 60),
+        outputRejectLevels=True
       )
       
+      valid_candidates = []
+      if len(rects) > 0:
+        for bbox, weight in zip(rects, level_weights):
+          # Normalize raw cascade detection weight to a 0.0 - 1.0 confidence score
+          raw_w = float(weight[0] if hasattr(weight, '__iter__') else weight)
+          conf = min(1.0, raw_w / 3.5)
+          
+          # Validate candidate against confidence, size, aspect ratio, and corner exclusion constraints
+          is_valid, reason = self._validate_face_box(tuple(bbox), conf, frame_w, frame_h)
+          if is_valid:
+            valid_candidates.append((bbox, conf))
+          else:
+            print(f"[Preprocessor Warning] Rejected candidate box ({bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}): {reason}")
+
       cropped_face = None
-      if len(faces) > 0:
-        # Sort detected faces by bounding box area to extract the primary face
-        faces = sorted(faces, key=lambda b: b[2] * b[3], reverse=True)
-        # Extract face ROI with 15% margin padding
-        cropped_face = self._crop_face(frame, faces[0], padding_ratio=0.15)
+      if len(valid_candidates) > 0:
+        # Sort valid candidates by bounding box area (w * h) in descending order to prioritize the primary subject face
+        valid_candidates = sorted(valid_candidates, key=lambda c: c[0][2] * c[0][3], reverse=True)
+        primary_bbox, primary_conf = valid_candidates[0]
+        
+        # Extract primary face ROI with 15% margin padding
+        cropped_face = self._crop_face(frame, primary_bbox, padding_ratio=0.15)
         faces_detected_count += 1
       else:
-        # Fallback if no face was found: center crop frame
+        # Fallback if no valid face passed filters: center crop frame
         cropped_face = self._center_crop(frame)
 
       # Immediately convert to RGB color space after cropping
@@ -199,6 +260,6 @@ class VideoPreprocessor:
     sequence_tensor = sequence_tensor.unsqueeze(0)
     
     detection_pct = (faces_detected_count / actual_sequence_length * 100) if actual_sequence_length > 0 else 0.0
-    print(f"[Preprocessor] Faces detected in {faces_detected_count}/{actual_sequence_length} frames ({detection_pct:.1f}% detection rate)")
+    print(f"[Preprocessor] Valid faces detected in {faces_detected_count}/{actual_sequence_length} frames ({detection_pct:.1f}% detection rate)")
     print(f"Saved {len(saved_filenames)} face crop frames to static_frames/ (mean Laplacian variance: {np.mean(laplacian_vars):.2f})")
     return sequence_tensor, saved_filenames, laplacian_vars
