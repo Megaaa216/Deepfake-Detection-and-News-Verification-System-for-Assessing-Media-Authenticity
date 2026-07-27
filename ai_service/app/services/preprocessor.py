@@ -34,23 +34,26 @@ class VideoPreprocessor:
       )
     ])
 
-  def _crop_face(self, img: np.ndarray, bbox: tuple) -> np.ndarray:
+  def _crop_face(self, img: np.ndarray, bbox: tuple, padding_ratio: float = 0.15) -> np.ndarray:
     """
-    Extracts bounding box region from frame, clamping coordinates to input image
-    dimensions to ensure we only capture crisp facial features without introducing
-    blank/black padding borders.
+    Extracts bounding box region from frame with a 15% margin padding around the face box
+    to capture facial boundaries (forehead, jawline, ears) cleanly.
     """
     img_h, img_w = img.shape[:2]
     x, y, w, h = bbox
-    x1 = max(0, x)
-    y1 = max(0, y)
-    x2 = min(img_w, x + w)
-    y2 = min(img_h, y + h)
+    
+    pad_w = int(w * padding_ratio)
+    pad_h = int(h * padding_ratio)
+    
+    x1 = max(0, x - pad_w)
+    y1 = max(0, y - pad_h)
+    x2 = min(img_w, x + w + pad_w)
+    y2 = min(img_h, y + h + pad_h)
     return img[y1:y2, x1:x2]
 
   def _center_crop(self, img: np.ndarray) -> np.ndarray:
     """
-    Fallback center cropping when face detection fails.
+    Fallback center cropping when face detection fails for a frame.
     """
     h, w = img.shape[:2]
     crop_size = min(h, w)
@@ -115,6 +118,7 @@ class VideoPreprocessor:
     processed_frames: List[np.ndarray] = []
     saved_filenames: List[str] = []
     laplacian_vars: List[float] = []
+    faces_detected_count = 0
     
     # Define static_frames save path directory inside the root-level folder of the Python service
     processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
@@ -145,22 +149,25 @@ class VideoPreprocessor:
       faces = self.face_cascade.detectMultiScale(
         gray, 
         scaleFactor=1.1, 
-        minNeighbors=5, 
+        minNeighbors=4, 
         minSize=(30, 30)
       )
       
       cropped_face = None
       if len(faces) > 0:
-        # Extract first detected face
-        cropped_face = self._crop_face(frame, faces[0])
+        # Sort detected faces by bounding box area to extract the primary face
+        faces = sorted(faces, key=lambda b: b[2] * b[3], reverse=True)
+        # Extract face ROI with 15% margin padding
+        cropped_face = self._crop_face(frame, faces[0], padding_ratio=0.15)
+        faces_detected_count += 1
       else:
-        # Fallback if no face was found
+        # Fallback if no face was found: center crop frame
         cropped_face = self._center_crop(frame)
 
       # Immediately convert to RGB color space after cropping
       face_rgb = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
 
-      # Resize for disk saving and model input
+      # Resize to 112x112 target size for model input and disk saving
       face_resized = cv2.resize(
         face_rgb, 
         (self.target_size, self.target_size), 
@@ -190,5 +197,8 @@ class VideoPreprocessor:
     
     # Expand dims to add batch: (1, sequence_length, 3, 112, 112)
     sequence_tensor = sequence_tensor.unsqueeze(0)
-    print(f"Saved {len(saved_filenames)} frames to static_frames/ (mean Laplacian variance: {np.mean(laplacian_vars):.2f})")
+    
+    detection_pct = (faces_detected_count / actual_sequence_length * 100) if actual_sequence_length > 0 else 0.0
+    print(f"[Preprocessor] Faces detected in {faces_detected_count}/{actual_sequence_length} frames ({detection_pct:.1f}% detection rate)")
+    print(f"Saved {len(saved_filenames)} face crop frames to static_frames/ (mean Laplacian variance: {np.mean(laplacian_vars):.2f})")
     return sequence_tensor, saved_filenames, laplacian_vars
