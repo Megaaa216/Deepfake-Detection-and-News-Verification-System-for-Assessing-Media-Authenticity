@@ -89,7 +89,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
       const protocol = req.protocol;
       const host = req.get("host");
       data.flagged_frames = data.flagged_frames.map((frame, index) => {
-        const isFake = frame.score >= 0.5;
+        const isFake = frame.score >= 0.35;
         return {
           ...frame,
           frame_id: `frame_${index + 1}`,
@@ -164,7 +164,7 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
       const protocol = req.protocol;
       const host = req.get("host");
       data.flagged_frames = data.flagged_frames.map((frame, index) => {
-        const isFake = frame.score >= 0.5;
+        const isFake = frame.score >= 0.35;
         return {
           ...frame,
           frame_id: `frame_${index + 1}`,
@@ -235,7 +235,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
         const protocol = req.protocol;
         const host = req.get("host");
         data.flagged_frames = data.flagged_frames.map((frame, index) => {
-          const isFake = frame.score >= 0.5;
+          const isFake = frame.score >= 0.35;
           return {
             ...frame,
             frame_id: `frame_${index + 1}`,
@@ -305,7 +305,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
         const protocol = req.protocol;
         const host = req.get("host");
         data.flagged_frames = data.flagged_frames.map((frame, index) => {
-          const isFake = frame.score >= 0.5;
+          const isFake = frame.score >= 0.35;
           return {
             ...frame,
             frame_id: `frame_${index + 1}`,

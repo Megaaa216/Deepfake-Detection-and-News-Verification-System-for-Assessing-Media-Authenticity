@@ -72,14 +72,14 @@ class VideoPreprocessor:
     self, 
     video_path: str, 
     sequence_length: int = 32
-  ) -> Tuple[torch.Tensor, List[str]]:
+  ) -> Tuple[torch.Tensor, List[str], List[float]]:
     """
     Main preprocessing execution pipeline.
     Args:
         video_path (str): Filepath of the uploaded video.
         sequence_length (int): Count of frames to extract.
     Returns:
-        Tuple[torch.Tensor, List[str]]: Normalized tensor and names of saved face crop frames.
+        Tuple[torch.Tensor, List[str], List[float]]: Normalized tensor, names of saved face crop frames, and Laplacian frequency variance list.
     """
     if not os.path.exists(video_path):
       raise FileNotFoundError(f"Video file not found at path: {video_path}")
@@ -114,6 +114,7 @@ class VideoPreprocessor:
     
     processed_frames: List[np.ndarray] = []
     saved_filenames: List[str] = []
+    laplacian_vars: List[float] = []
     
     # Define static_frames save path directory inside the root-level folder of the Python service
     processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
@@ -136,6 +137,7 @@ class VideoPreprocessor:
         frame_name = f"frame_{unique_id}_{len(saved_filenames)}.jpg"
         cv2.imwrite(os.path.join(processed_dir, frame_name), placeholder)
         saved_filenames.append(frame_name)
+        laplacian_vars.append(0.0)
         continue
 
       # Convert to grayscale for face detection on BGR raw frame
@@ -158,13 +160,18 @@ class VideoPreprocessor:
       # Immediately convert to RGB color space after cropping
       face_rgb = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
 
-      # Resize for disk saving (optional, but keep it matching self.target_size)
+      # Resize for disk saving and model input
       face_resized = cv2.resize(
         face_rgb, 
         (self.target_size, self.target_size), 
         interpolation=cv2.INTER_AREA
       )
       
+      # 🔬 Laplacian Frequency Variance check for high-frequency noise / neural over-smoothing
+      gray_face = cv2.cvtColor(face_resized, cv2.COLOR_RGB2GRAY)
+      lap_var = float(cv2.Laplacian(gray_face, cv2.CV_64F).var())
+      laplacian_vars.append(lap_var)
+
       # Save the face crop to disk
       frame_name = f"frame_{unique_id}_{len(saved_filenames)}.jpg"
       frame_save_path = os.path.join(processed_dir, frame_name)
@@ -178,10 +185,10 @@ class VideoPreprocessor:
 
     cap.release()
 
-    # Stack into sequence shape: (sequence_length, 3, 299, 299)
+    # Stack into sequence shape: (sequence_length, 3, 112, 112)
     sequence_tensor = torch.stack(processed_frames, dim=0)
     
-    # Expand dims to add batch: (1, sequence_length, 3, 299, 299)
+    # Expand dims to add batch: (1, sequence_length, 3, 112, 112)
     sequence_tensor = sequence_tensor.unsqueeze(0)
-    print(f"Saved {len(saved_filenames)} frames to static_frames/")
-    return sequence_tensor, saved_filenames
+    print(f"Saved {len(saved_filenames)} frames to static_frames/ (mean Laplacian variance: {np.mean(laplacian_vars):.2f})")
+    return sequence_tensor, saved_filenames, laplacian_vars
