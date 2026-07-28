@@ -161,6 +161,10 @@ class VideoPreprocessor:
     laplacian_vars: List[float] = []
     faces_detected_count = 0
     
+    # Track smoothed bounding box across consecutive frames to eliminate spatial coordinate jitter
+    prev_smoothed_box: Optional[Tuple[int, int, int, int]] = None
+    alpha_ema = 0.35
+    
     # Define static_frames save path directory inside the root-level folder of the Python service
     processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
     os.makedirs(processed_dir, exist_ok=True)
@@ -218,8 +222,23 @@ class VideoPreprocessor:
         valid_candidates = sorted(valid_candidates, key=lambda c: c[0][2] * c[0][3], reverse=True)
         primary_bbox, primary_conf = valid_candidates[0]
         
+        # -----------------------------------------------------------------
+        # 📐 1. BOUNDING BOX EXPONENTIAL MOVING AVERAGE (EMA) SMOOTHING (alpha = 0.35)
+        # -----------------------------------------------------------------
+        px, py, pw, ph = primary_bbox
+        if prev_smoothed_box is not None:
+          sx = int(alpha_ema * px + (1.0 - alpha_ema) * prev_smoothed_box[0])
+          sy = int(alpha_ema * py + (1.0 - alpha_ema) * prev_smoothed_box[1])
+          sw = int(alpha_ema * pw + (1.0 - alpha_ema) * prev_smoothed_box[2])
+          sh = int(alpha_ema * ph + (1.0 - alpha_ema) * prev_smoothed_box[3])
+          smoothed_box = (sx, sy, sw, sh)
+        else:
+          smoothed_box = (int(px), int(py), int(pw), int(ph))
+
+        prev_smoothed_box = smoothed_box
+
         # Extract primary face ROI with 15% margin padding
-        cropped_face = self._crop_face(frame, primary_bbox, padding_ratio=0.15)
+        cropped_face = self._crop_face(frame, smoothed_box, padding_ratio=0.15)
         faces_detected_count += 1
       else:
         # Fallback if no valid face passed filters: center crop frame

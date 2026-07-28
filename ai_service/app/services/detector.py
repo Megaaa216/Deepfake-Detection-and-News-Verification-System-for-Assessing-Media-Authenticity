@@ -153,7 +153,12 @@ class DeepfakeDetectorManager:
         print(f"[AI Service] Frame probabilities with T=1.5 (first 16 sample): {[round(s, 4) for s in frame_scores[:16]]}")
 
         # -----------------------------------------------------------------
-        # 🔍 2. 8-FRAME CONSECUTIVE CLUSTER INSPECTION (> 0.38)
+        # 📊 2. TRIMMED MEAN SCORE AGGREGATION
+        # -----------------------------------------------------------------
+        trimmed_mean_score = _calculate_trimmed_mean(frame_scores, trim_ratio=0.10)
+
+        # -----------------------------------------------------------------
+        # 🔍 3. 8-FRAME CONSECUTIVE CLUSTER INSPECTION (> 0.38)
         # -----------------------------------------------------------------
         cluster_size = 8
         cluster_scores = []
@@ -165,17 +170,26 @@ class DeepfakeDetectorManager:
         else:
           max_cluster_score = max(frame_scores) if frame_scores else 0.0
 
+        print(f"[AI Service] Trimmed Mean score (middle 80%): {trimmed_mean_score:.4f}")
         print(f"[AI Service] Max 8-frame cluster anomaly score: {max_cluster_score:.4f}")
 
-        # Overall sequence prediction score
+        # Overall sequence prediction candidate score
         last_frame_score = float(all_probs[0, -1, 1].item())
-        sequence_mean_score = sum(frame_scores) / len(frame_scores) if frame_scores else 0.0
+        candidate_score = max(trimmed_mean_score, max_cluster_score, last_frame_score)
         
-        # Composite score prioritizes peak temporal cluster anomalies and sequence averages
-        final_score = max(sequence_mean_score, max_cluster_score, last_frame_score)
+        # -----------------------------------------------------------------
+        # 🎯 4. SCORE CALIBRATION SANITY CHECK (HIGH TEMPORAL VARIANCE DAMPING)
+        # -----------------------------------------------------------------
+        frame_variance = float(np.var(frame_scores)) if frame_scores else 0.0
+        
+        if 0.65 <= candidate_score <= 0.85 and frame_variance > 0.045:
+          final_score = candidate_score * 0.80
+          print(f"[AI Service] Sanity Check Triggered: Ambiguous score ({candidate_score:.4f}) with high frame variance ({frame_variance:.4f}). Soft-damped by 0.80 -> {final_score:.4f}")
+        else:
+          final_score = candidate_score
       
       # -----------------------------------------------------------------
-      # 🎯 3. DECISION BOUNDARY CALIBRATION (Threshold = 0.35 OR Cluster > 0.38)
+      # 🎯 5. DECISION BOUNDARY CALIBRATION (Threshold = 0.35 OR Cluster > 0.38)
       # -----------------------------------------------------------------
       is_fake = (final_score >= 0.35) or (max_cluster_score > 0.38)
       result = "fake" if is_fake else "real"

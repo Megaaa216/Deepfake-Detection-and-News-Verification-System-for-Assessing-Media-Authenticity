@@ -58,7 +58,7 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
 
   last_error = None
   masked_key = f"...{api_key[-4:]}" if len(api_key) >= 4 else "INVALID"
-  print(f"📡 Sending request to Gemini API with key ending in: {masked_key}")
+  print(f"[Gemini Auditor] Sending request to Gemini API with key ending in: {masked_key}")
 
   for idx, model_name in enumerate(PRIMARY_MODELS):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
@@ -72,7 +72,7 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
 
       if response.status_code == 429:
         next_model_name = PRIMARY_MODELS[idx + 1] if idx + 1 < len(PRIMARY_MODELS) else "local synthesis"
-        print(f"⚠️ Model {model_name} rate-limited (429). Retrying with {next_model_name}...")
+        print(f"[Gemini Warning] Model {model_name} rate-limited (429). Retrying with {next_model_name}...")
         last_error = f"429 Rate Limited ({model_name})"
         continue
 
@@ -80,15 +80,15 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
       result_json = response.json()
       raw_text = result_json["candidates"][0]["content"]["parts"][0]["text"]
       parsed = json.loads(raw_text)
-      print(f"✅ Gemini API response received successfully from model '{model_name}'!")
+      print(f"[Gemini Success] Gemini API response received successfully from model '{model_name}'!")
       return parsed
     except Exception as err:
       last_error = err
       next_model_name = PRIMARY_MODELS[idx + 1] if idx + 1 < len(PRIMARY_MODELS) else "local synthesis"
-      print(f"⚠️ Model {model_name} request error ({err}). Retrying with {next_model_name}...")
+      print(f"[Gemini Warning] Model {model_name} request error ({err}). Retrying with {next_model_name}...")
       continue
 
-  print(f"⚠️ [WARNING] Gemini API call failed or rate-limited across all models. Falling back to local synthesis rules. (Last error: {last_error})")
+  print(f"[Gemini Warning] Gemini API call failed or rate-limited across all models. Falling back to local synthesis rules. (Last error: {last_error})")
   raise RuntimeError(f"Gemini REST API request failed across models: {last_error}")
 
 
