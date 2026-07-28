@@ -9,17 +9,21 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
+PRIMARY_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-1.5-flash",
+  "gemini-2.0-flash-lite"
+]
+
 def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = None) -> Dict[str, Any]:
   """
-  Executes a direct REST HTTP POST request to Google Gemini API (gemini-2.5-flash / gemini-1.5-flash)
+  Executes a direct REST HTTP POST request to Google Gemini API with fallback model rotation
   using requests with response_mime_type="application/json" to receive structured JSON output.
   """
   api_key = os.getenv("GEMINI_API_KEY", GEMINI_API_KEY)
   if not api_key:
     raise ValueError("GEMINI_API_KEY is not set in environment variables.")
 
-  models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
-  
   parts: List[Dict[str, Any]] = []
 
   # Attach face crop images as base64 inline data parts if provided
@@ -56,7 +60,7 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
   masked_key = f"...{api_key[-4:]}" if len(api_key) >= 4 else "INVALID"
   print(f"📡 Sending request to Gemini API with key ending in: {masked_key}")
 
-  for model_name in models:
+  for idx, model_name in enumerate(PRIMARY_MODELS):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
     try:
       response = requests.post(
@@ -65,6 +69,13 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
         headers={"Content-Type": "application/json"},
         timeout=15
       )
+
+      if response.status_code == 429:
+        next_model_name = PRIMARY_MODELS[idx + 1] if idx + 1 < len(PRIMARY_MODELS) else "local synthesis"
+        print(f"⚠️ Model {model_name} rate-limited (429). Retrying with {next_model_name}...")
+        last_error = f"429 Rate Limited ({model_name})"
+        continue
+
       response.raise_for_status()
       result_json = response.json()
       raw_text = result_json["candidates"][0]["content"]["parts"][0]["text"]
@@ -73,7 +84,8 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
       return parsed
     except Exception as err:
       last_error = err
-      print(f"⚠️ [WARNING] Gemini API call attempt for model '{model_name}' failed: {err}")
+      next_model_name = PRIMARY_MODELS[idx + 1] if idx + 1 < len(PRIMARY_MODELS) else "local synthesis"
+      print(f"⚠️ Model {model_name} request error ({err}). Retrying with {next_model_name}...")
       continue
 
   print(f"⚠️ [WARNING] Gemini API call failed or rate-limited across all models. Falling back to local synthesis rules. (Last error: {last_error})")
