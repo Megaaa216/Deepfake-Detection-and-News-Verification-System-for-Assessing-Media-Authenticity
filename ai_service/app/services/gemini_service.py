@@ -10,9 +10,10 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 PRIMARY_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-1.5-flash",
-  "gemini-2.0-flash-lite"
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro"
 ]
 
 def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -110,6 +111,13 @@ class GeminiForensicAuditor:
     
     # Rule-based fallback payload conforming to strict user rules
     fallback_payload: Dict[str, Any] = {
+      "is_false_positive": False,
+      "confidence_in_verdict": 0.50,
+      "recalibrated_score": float(score),
+      "adjusted_score": float(score),
+      "false_positive_cause": "none",
+      "override_applied": False,
+      "forensic_explanation": "Fallback rule-based forensic assessment executed.",
       "summary_text": (
         f"Video sequence evaluated as Authentic with a composite anomaly index of {score * 100:.1f}%. "
         "Facial geometry exhibits structural mesh alignment, accompanied by specular vector coherence and biological breathing cadence."
@@ -139,22 +147,21 @@ class GeminiForensicAuditor:
       return fallback_payload
 
     prompt_text = (
-      f"You are an expert Senior Digital Forensics & Deepfake Specialist conducting a quantitative and qualitative audit "
-      f"on video frames and temporal signals.\n\n"
-      f"Our primary ML spatial-temporal detector classified this video sequence as '{classification_res.upper()}' "
-      f"with a composite anomaly score of {score * 100:.1f}% (0.0=authentic, 100.0=fake).\n\n"
-      f"Avoid vague phrases like 'looks suspicious', 'appears fake', or simple percentage repetition. "
-      f"Instead, analyze and articulate specific visual, geometric, and signal anomalies using professional forensic terminology, including:\n"
-      f"- Spatial & Surface Anomalies: Spatial boundary jitter, specular vector misalignment, skin texture smoothing/blurring, edge-interpolation noise, chromatic aberration along face boundaries.\n"
-      f"- Facial & Feature Tracking: Landmark trajectory variance, ocular reflection inconsistency, pupillary dilation discrepancy, mask boundary seam artifacts.\n"
-      f"- Temporal & Audio/Visual Alignment: Phoneme-viseme desynchronization, temporal flickering across frame transitions, unnatural micro-expression cadence, frame-rate interpolation lag.\n\n"
-      f"Mandate that the `summary_text` follow this concise, technical style:\n"
-      f"'Video sequence evaluated as [{'Authentic' if not is_fake else 'Manipulated'}] with a composite anomaly index of {score * 100:.1f}%. "
-      f"[{'Landmark mesh' if is_fake else 'Facial geometry'}] exhibits [specific forensic term, e.g. spatial boundary jitter], "
-      f"accompanied by [specific forensic term, e.g. specular vector misalignment] and [specific forensic term, e.g. phoneme latency].'\n\n"
-      f"Return a structured JSON object matching EXACTLY this JSON schema:\n"
+      f"You are a Senior Digital Forensics Auditor evaluating potential deepfake video frame samples.\n\n"
+      f"The secondary ResNeXt model flagged this video with a raw risk score of {score * 100:.1f}%. "
+      f"Your job is to verify whether this score is justified by genuine AI manipulation or triggered by non-synthetic video artifacts.\n\n"
+      f"EXPLICITLY CHECK FOR NON-SYNTHETIC ARTIFACTS:\n"
+      f"- Compression & Bitrate: H.264 macroblocking, low video resolution, web camera downscaling.\n"
+      f"- Environmental Lighting: Dynamic stage backlighting, strong specular highlights, lens glare across eyes.\n"
+      f"- Natural Expressions: Fast head turns, wide vocal/mouth articulation during singing or speech.\n\n"
+      f"Return a structured JSON object matching EXACTLY this schema:\n"
       f"{{\n"
-      f'  "summary_text": "Video sequence evaluated as ...",\n'
+      f'  "is_false_positive": boolean,\n'
+      f'  "confidence_in_verdict": float (0.0 to 1.0),\n'
+      f'  "recalibrated_score": float (0.15 to 0.35 if is_false_positive=true, or {score:.4f} if false),\n'
+      f'  "false_positive_cause": "compression_artifacts" | "lighting_glare" | "natural_motion" | "none",\n'
+      f'  "forensic_explanation": "Detailed concise explanation of findings...",\n'
+      f'  "summary_text": "Video sequence evaluated as...",\n'
       f'  "sub_scores": {{\n'
       f'    "facial_consistency": {"85" if is_fake else "8"},\n'
       f'    "temporal_coherence": {"80" if is_fake else "6"},\n'
@@ -166,20 +173,33 @@ class GeminiForensicAuditor:
       f'    "frame_transition": {"79" if is_fake else "7"}\n'
       f'  }},\n'
       f'  "signal_logs": [\n'
-      f'    "Specular highlights in ocular region diverge by >12 degrees across frames 30-45.",\n'
-      f'    "Boundary mask interpolation failure detected around jawline contour.",\n'
-      f'    "Phoneme-viseme delay measured at approximately +120ms during speech onset."\n'
+      f'    "Detailed forensic observation string..."\n'
       f'  ]\n'
       f"}}\n\n"
-      f"STRICT LOGIC RULES:\n"
-      f"- For Authentic videos (is_fake=False): sub_scores MUST be low (2% to 12%).\n"
-      f"- For Deepfake videos (is_fake=True): sub_scores MUST be high (70% to 95%).\n"
       f"Return ONLY valid JSON matching this structure."
     )
 
     try:
       parsed = query_gemini_analysis(prompt_text, frame_paths)
-      if isinstance(parsed, dict) and "summary_text" in parsed and "sub_scores" in parsed:
+      if isinstance(parsed, dict) and "summary_text" in parsed:
+        is_fp = parsed.get("is_false_positive") is True
+        conf = float(parsed.get("confidence_in_verdict", 0.80))
+        recal_raw = float(parsed.get("recalibrated_score", parsed.get("adjusted_score", score)))
+        fp_cause = str(parsed.get("false_positive_cause", "compression_artifacts" if is_fp else "none"))
+
+        if is_fp and conf > 0.70:
+          # Force recalibrated score into safe 0.15 - 0.35 range
+          bounded_recal_score = max(0.15, min(0.35, recal_raw))
+          print(f"[GEMINI OVERRIDE] Recalibrated score from {score:.2f} to {bounded_recal_score:.2f} due to {fp_cause}")
+          parsed["override_applied"] = True
+          parsed["override_reason"] = f"Score Recalibrated: Compression/Lighting Artifacts Detected ({fp_cause})"
+          parsed["recalibrated_score"] = bounded_recal_score
+          parsed["adjusted_score"] = bounded_recal_score
+        else:
+          parsed["override_applied"] = False
+          parsed["recalibrated_score"] = float(score)
+          parsed["adjusted_score"] = float(score)
+
         return parsed
     except Exception as e:
       print(f"[Gemini Auditor] Frame audit REST API call warning: {e}")

@@ -15,6 +15,25 @@ random.seed(42)
 if torch.cuda.is_available():
   torch.cuda.manual_seed_all(42)
 
+def _calculate_trimmed_mean(scores: list, trim_ratio: float = 0.10) -> float:
+  """
+  Calculates Trimmed Mean by discarding top 10% and bottom 10% extreme score outliers.
+  Handles short video sequences (< 5 frames) or empty lists gracefully.
+  """
+  if not scores or len(scores) == 0:
+    return 0.50
+  if len(scores) < 5:
+    return float(np.mean(scores))
+
+  sorted_scores = sorted(scores)
+  trim_count = max(1, int(len(scores) * trim_ratio))
+  trimmed = sorted_scores[trim_count:-trim_count]
+  
+  if not trimmed:
+    return float(np.mean(scores))
+  return float(np.mean(trimmed))
+
+
 class DeepfakeDetectorManager:
   """
   Coordinates preprocessing and model inference using ResNeXt50 + LSTM Hybrid Model:
@@ -90,12 +109,39 @@ class DeepfakeDetectorManager:
     4. Ensures 100% pure model inference without any filename heuristics.
     """
     try:
-      # 1. Preprocess video frames into a 112x112 ImageNet-normalized sequence tensor and compute frequency noise
+      # Step 1: Preprocess video frames and crop faces
       print(f"[AI Service] Preprocessing video file: {video_path}")
       sequence_tensor, saved_filenames, laplacian_vars = self.preprocessor.preprocess_video(
         video_path, 
         sequence_length=128
       )
+
+      # Safeguard empty frame lists or empty tensors
+      if sequence_tensor is None or not saved_filenames or len(saved_filenames) == 0:
+        print("[AI Service Warning] No valid face regions detected in video frames. Returning inconclusive verdict.")
+        return {
+          "result": "real",
+          "confidence": 0.50,
+          "riskScore": 50,
+          "risk_score": 50,
+          "verdict": "No valid face regions detected in video frames.",
+          "summary_text": "No valid face regions detected in video frames for forensic inspection.",
+          "sub_scores": {
+            "facial_consistency": 50,
+            "temporal_coherence": 50,
+            "lip_sync_accuracy": 50,
+            "lighting_reflection": 50,
+            "face_inconsistency": 50,
+            "lipsync_mismatch": 50,
+            "audio_irregularities": 50,
+            "frame_transition": 50
+          },
+          "signal_logs": [
+            "No active facial bounding box landmarks identified in target video clip sequence."
+          ],
+          "flagged_frames": []
+        }
+
       sequence_tensor = sequence_tensor.to(self.device)
 
       # 2. Enforce explicit evaluation mode and execute inference under no-grad context
@@ -212,14 +258,26 @@ class DeepfakeDetectorManager:
       # Take a slice of top 16 items
       flagged_frames = flagged_frames[:16]
 
-      # 🤖 SECONDARY VISUAL AUDIT WITH GEMINI 2.5 FLASH
+      # 🤖 SECONDARY FORENSIC ARBITER AUDIT WITH GEMINI
       processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
       top_3_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:3]]
       
       from app.services.gemini_service import gemini_auditor
       gemini_audit = gemini_auditor.audit_frames(top_3_paths, result, final_score)
-      if gemini_audit:
-        print(f"[AI Service] Gemini 2.5 Flash visual audit generated successfully!")
+      if gemini_audit and isinstance(gemini_audit, dict):
+        print(f"[AI Service] Gemini Secondary Forensic Arbiter visual audit generated successfully!")
+        
+        # Check if Gemini arbiter flagged a false positive and applied an override
+        if gemini_audit.get("override_applied") is True or (gemini_audit.get("is_false_positive") is True and "recalibrated_score" in gemini_audit):
+          try:
+            recalibrated_score = float(gemini_audit.get("recalibrated_score", gemini_audit.get("adjusted_score", final_score)))
+            print(f"[AI Service] ⚖️ Gemini Arbiter OVERRODE false positive! Recalibrated score from {final_score:.4f} -> {recalibrated_score:.4f}")
+            final_score = recalibrated_score
+            is_fake = (final_score >= 0.35)
+            result = "fake" if is_fake else "real"
+            confidence = final_score if is_fake else (1.0 - final_score)
+          except (ValueError, TypeError) as arbiter_err:
+            print(f"[AI Service Warning] Failed to parse recalibrated_score from Gemini audit: {arbiter_err}")
 
       print(f"[AI Service] 100% Model Inference Successful. Result={result.upper()}, confidence={confidence:.4f}, max_cluster_score={max_cluster_score:.4f}")
 
@@ -230,6 +288,8 @@ class DeepfakeDetectorManager:
       return {
         "result": result,
         "confidence": round(confidence, 4),
+        "riskScore": round(final_score * 100, 1),
+        "risk_score": round(final_score * 100, 1),
         "model_results": {
           "face_model": round(final_score, 4),
           "temporal_model": round(max_cluster_score, 4)

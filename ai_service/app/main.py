@@ -22,11 +22,17 @@ app.add_middleware(
 # Mount Routers
 app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["analysis"])
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+static_frames_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static_frames"))
+os.makedirs(static_frames_path, exist_ok=True)
+app.mount("/public/frames", StaticFiles(directory=static_frames_path), name="static_frames")
+
 from pydantic import BaseModel
 from app.services.detector import deepfake_detector
 from app.services.downloader import download_video_link
 from fastapi import HTTPException
-import os
 from news_verifier import news_verifier
 
 class VideoAnalysisRequest(BaseModel):

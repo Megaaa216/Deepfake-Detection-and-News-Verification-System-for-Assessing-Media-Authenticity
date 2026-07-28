@@ -79,6 +79,7 @@ class VideoPreprocessor:
     """
     Extracts bounding box region from frame with a 15% margin padding around the face box
     to capture facial boundaries (forehead, jawline, ears) cleanly.
+    Calculates integer pixel bounds and clamps strictly within image dimensions.
     """
     img_h, img_w = img.shape[:2]
     x, y, w, h = bbox
@@ -86,10 +87,15 @@ class VideoPreprocessor:
     pad_w = int(w * padding_ratio)
     pad_h = int(h * padding_ratio)
     
-    x1 = max(0, x - pad_w)
-    y1 = max(0, y - pad_h)
-    x2 = min(img_w, x + w + pad_w)
-    y2 = min(img_h, y + h + pad_h)
+    x1 = max(0, int(x - pad_w))
+    y1 = max(0, int(y - pad_h))
+    x2 = min(img_w, int(x + w + pad_w))
+    y2 = min(img_h, int(y + h + pad_h))
+
+    # Guard against zero-width or zero-height crops
+    if (x2 - x1) <= 0 or (y2 - y1) <= 0:
+      return self._center_crop(img)
+
     return img[y1:y2, x1:x2]
 
   def _center_crop(self, img: np.ndarray) -> np.ndarray:
@@ -125,6 +131,8 @@ class VideoPreprocessor:
     Returns:
         Tuple[torch.Tensor, List[str], List[float]]: Normalized tensor, names of saved face crop frames, and Laplacian frequency variance list.
     """
+    # Reset EMA smoothed box state at the beginning of EVERY new video processing task
+    self.prev_smoothed_box = None
     if not os.path.exists(video_path):
       raise FileNotFoundError(f"Video file not found at path: {video_path}")
 
