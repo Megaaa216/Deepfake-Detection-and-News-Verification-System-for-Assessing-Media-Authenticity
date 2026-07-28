@@ -78,6 +78,12 @@ class NewsVerifierManager:
             factual_alignment_score = max(0.0, float(max_score.item()) * 100)
 
             # ----------------------------------------------------
+            # 🤖 PASS 3: Gemini 2.5 Flash Fact Audit
+            # ----------------------------------------------------
+            from app.services.gemini_service import gemini_auditor
+            gemini_text_audit = gemini_auditor.audit_text(cleaned_text)
+
+            # ----------------------------------------------------
             # 📊 AGGREGATION ENGINE (Unified Trust Matrix Outputs)
             # ----------------------------------------------------
             # Higher score means more manipulative language tokens were extracted
@@ -89,7 +95,8 @@ class NewsVerifierManager:
                 "propaganda_bias_index": propaganda_bias_rating,
                 "factual_consistency_index": factual_consistency_rating,
                 "stylistic_verdict": "HIGHLY_MANIPULATIVE" if propaganda_bias_rating > 60 else "NEUTRAL_TONE",
-                "factual_verdict": "VERIFIED_ALIGNMENT" if factual_consistency_rating > 50 else "UNVERIFIED_CLAIM"
+                "factual_verdict": "VERIFIED_ALIGNMENT" if factual_consistency_rating > 50 else "UNVERIFIED_CLAIM",
+                "gemini_audit": gemini_text_audit
             }
 
         except Exception as e:

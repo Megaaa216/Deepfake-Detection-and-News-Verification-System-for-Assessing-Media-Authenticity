@@ -100,13 +100,17 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
       });
     }
 
-    // Generate LLM forensic summary report
-    data.verdict = await generateForensicSummary(
-      data.result,
-      data.confidence,
-      data.model_results.face_model,
-      data.model_results.temporal_model
-    );
+    // Generate LLM forensic summary report (prefer Gemini 2.5 Flash audit if available)
+    if (data.gemini_audit) {
+      data.verdict = data.gemini_audit;
+    } else {
+      data.verdict = await generateForensicSummary(
+        data.result,
+        data.confidence,
+        data.model_results.face_model,
+        data.model_results.temporal_model
+      );
+    }
     data.analysis_summary = data.verdict;
     data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
     // Explicitly guarantee flagged_frames is present in the payload (fallback to empty list if missing)
@@ -175,13 +179,17 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
       });
     }
 
-    // Generate LLM forensic summary report
-    data.verdict = await generateForensicSummary(
-      data.result,
-      data.confidence,
-      data.model_results.face_model,
-      data.model_results.temporal_model
-    );
+    // Generate LLM forensic summary report (prefer Gemini 2.5 Flash audit if available)
+    if (data.gemini_audit) {
+      data.verdict = data.gemini_audit;
+    } else {
+      data.verdict = await generateForensicSummary(
+        data.result,
+        data.confidence,
+        data.model_results.face_model,
+        data.model_results.temporal_model
+      );
+    }
     data.analysis_summary = data.verdict;
     data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
     // Explicitly guarantee flagged_frames is present in the payload (fallback to empty list if missing)
@@ -246,12 +254,17 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
         });
       }
 
-      data.verdict = await generateForensicSummary(
-        data.result,
-        data.confidence,
-        data.model_results.face_model,
-        data.model_results.temporal_model
-      );
+      // Prefer Gemini 2.5 Flash audit if available
+      if (data.gemini_audit) {
+        data.verdict = data.gemini_audit;
+      } else {
+        data.verdict = await generateForensicSummary(
+          data.result,
+          data.confidence,
+          data.model_results.face_model,
+          data.model_results.temporal_model
+        );
+      }
       data.analysis_summary = data.verdict;
       data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
       data.flagged_frames = data.flagged_frames || [];
@@ -316,12 +329,17 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
         });
       }
 
-      data.verdict = await generateForensicSummary(
-        data.result,
-        data.confidence,
-        data.model_results.face_model,
-        data.model_results.temporal_model
-      );
+      // Prefer Gemini 2.5 Flash audit if available
+      if (data.gemini_audit) {
+        data.verdict = data.gemini_audit;
+      } else {
+        data.verdict = await generateForensicSummary(
+          data.result,
+          data.confidence,
+          data.model_results.face_model,
+          data.model_results.temporal_model
+        );
+      }
       data.analysis_summary = data.verdict;
       data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
       data.flagged_frames = data.flagged_frames || [];

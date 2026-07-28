@@ -198,6 +198,15 @@ class DeepfakeDetectorManager:
       # Take a slice of top 16 items
       flagged_frames = flagged_frames[:16]
 
+      # 🤖 SECONDARY VISUAL AUDIT WITH GEMINI 2.5 FLASH
+      processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
+      top_3_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:3]]
+      
+      from app.services.gemini_service import gemini_auditor
+      gemini_audit = gemini_auditor.audit_frames(top_3_paths, result, final_score)
+      if gemini_audit:
+        print(f"[AI Service] Gemini 2.5 Flash visual audit generated successfully!")
+
       print(f"[AI Service] 100% Model Inference Successful. Result={result.upper()}, confidence={confidence:.4f}, max_cluster_score={max_cluster_score:.4f}")
 
       return {
@@ -207,7 +216,8 @@ class DeepfakeDetectorManager:
           "face_model": round(final_score, 4),
           "temporal_model": round(max_cluster_score, 4)
         },
-        "flagged_frames": flagged_frames
+        "flagged_frames": flagged_frames,
+        "gemini_audit": gemini_audit
       }
 
     except Exception as e:
