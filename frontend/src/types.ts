@@ -57,6 +57,8 @@ export interface VerificationResult {
   summary_text?: string;
   sub_scores?: SubScores;
   signal_logs?: SignalLog[];
+  gemini_audit?: any;
+  analysis_summary?: any;
 }
 
 export interface Stats {

@@ -23,6 +23,17 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
   const targetReport = historyList.find(r => r.id === resultId) || historyList[0];
   const analysisResult = targetReport;
 
+  // Extract nested Gemini Data safely
+  const geminiData = (targetReport && typeof targetReport.gemini_audit === 'object' && targetReport.gemini_audit)
+    ? targetReport.gemini_audit
+    : (targetReport && typeof targetReport.analysis_summary === 'object' && targetReport.analysis_summary)
+    ? targetReport.analysis_summary
+    : (targetReport && typeof targetReport.verdict === 'object' && targetReport.verdict)
+    ? targetReport.verdict
+    : targetReport;
+
+  console.log("DetailedResultView prop inspect:", geminiData);
+
   if (!targetReport) {
     return (
       <div className="py-20 text-center space-y-4 max-w-md mx-auto" id="missing-report-view">
@@ -122,12 +133,32 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
     }
   };
 
+  const getSummaryText = (report: VerificationResult): string => {
+    if (typeof report.summary_text === 'string' && report.summary_text) {
+      return report.summary_text;
+    }
+    if (report.summary_text && typeof report.summary_text === 'object' && (report.summary_text as any).summary_text) {
+      return String((report.summary_text as any).summary_text);
+    }
+    if (typeof report.verdict === 'string' && report.verdict) {
+      return report.verdict;
+    }
+    if (report.verdict && typeof report.verdict === 'object' && (report.verdict as any).summary_text) {
+      return String((report.verdict as any).summary_text);
+    }
+    return "Forensic examination completed for target specimen sequence.";
+  };
+
+  const summaryTextDisplay = getSummaryText(targetReport);
+
   const subscores = getSubscores(targetReport.type, targetReport.riskScore);
-  const liveSubscores = targetReport.sub_scores || {};
-  const faceInconsistencyScore = liveSubscores.face_inconsistency ?? (subscores as any).faceConsistency ?? (isFake ? 85 : 8);
-  const lipSyncMismatchScore = liveSubscores.lipsync_mismatch ?? (subscores as any).lipSyncMismatch ?? (isFake ? 88 : 6);
-  const audioIrregularitiesScore = liveSubscores.audio_irregularities ?? (subscores as any).audioIrregularities ?? (isFake ? 82 : 5);
-  const frameTransitionScore = liveSubscores.frame_transition ?? (subscores as any).frameTransitionAnomalies ?? (isFake ? 79 : 7);
+  const liveSubscores = (typeof targetReport.sub_scores === 'object' && targetReport.sub_scores) ? targetReport.sub_scores : {};
+  const faceInconsistencyScore = Number(liveSubscores.face_inconsistency ?? (subscores as any).faceConsistency ?? (isFake ? 85 : 8));
+  const lipSyncMismatchScore = Number(liveSubscores.lipsync_mismatch ?? (subscores as any).lipSyncMismatch ?? (isFake ? 88 : 6));
+  const audioIrregularitiesScore = Number(liveSubscores.audio_irregularities ?? (subscores as any).audioIrregularities ?? (isFake ? 82 : 5));
+  const frameTransitionScore = Number(liveSubscores.frame_transition ?? (subscores as any).frameTransitionAnomalies ?? (isFake ? 79 : 7));
+
+  const safeSignalLogs = Array.isArray(targetReport.signal_logs) ? targetReport.signal_logs : [];
 
   const confidencePercentage = Math.max(targetReport.riskScore, 100 - targetReport.riskScore);
 
@@ -952,7 +983,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                   SUMMARY ASSESSMENT RESEARCH REPORT
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
-                  {targetReport.summary_text || targetReport.verdict}
+                  {summaryTextDisplay}
                 </p>
               </div>
 

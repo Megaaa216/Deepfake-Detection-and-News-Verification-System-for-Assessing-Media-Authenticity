@@ -398,6 +398,8 @@ export default function VerifyView({
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
+    console.log("🔥 FULL BACKEND RESPONSE:", response.data);
+
     // Save the output array directly into our analytics layout state
     setAnalysisResult(response.data);
     return response.data;
@@ -422,6 +424,7 @@ export default function VerifyView({
           url: rawUrlString
         });
         console.log('Video link detection API successful response:', response.data);
+        console.log("🔥 FULL BACKEND RESPONSE:", response.data);
         fetchedData = response.data;
         setAnalysisResult(response.data);
       } catch (err: any) {
@@ -462,6 +465,13 @@ export default function VerifyView({
       if (score < 20) status = 'likely_authentic';
       else if (score < 60) status = 'suspicious';
 
+      const geminiData = backendData.gemini_audit || backendData.analysis_summary || backendData.verdict;
+      const summaryText = (typeof geminiData === 'object' && geminiData?.summary_text) 
+        ? geminiData.summary_text 
+        : (typeof backendData.summary_text === 'string' ? backendData.summary_text : (typeof backendData.verdict === 'string' ? backendData.verdict : ''));
+      const subScores = (typeof geminiData === 'object' && geminiData?.sub_scores) ? geminiData.sub_scores : (backendData.sub_scores || null);
+      const signalLogs = (typeof geminiData === 'object' && geminiData?.signal_logs) ? geminiData.signal_logs : (backendData.signal_logs || null);
+
       simulatedRecord = {
         id: backendData.id || `check-${Date.now()}`,
         type: backendData.type || (activeSubTab as VerificationType),
@@ -469,14 +479,16 @@ export default function VerifyView({
         date: backendData.date || new Date().toISOString().replace('T', ' ').substring(0, 16),
         riskScore: score,
         status: status,
-        verdict: backendData.summary_text || backendData.verdict || 'Analysis completed by active backend pipeline.',
+        verdict: (typeof summaryText === 'string' && summaryText) ? summaryText : (typeof backendData.verdict === 'string' ? backendData.verdict : 'Analysis completed by active backend pipeline.'),
         recommendation: backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.',
         platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),
         reasons: backendData.reasons || getDynamicReasons(activeSubTab, score),
         flagged_frames: backendData.flagged_frames || backendData.flaggedFrames,
-        summary_text: backendData.summary_text,
-        sub_scores: backendData.sub_scores,
-        signal_logs: backendData.signal_logs
+        summary_text: summaryText || backendData.summary_text,
+        sub_scores: subScores,
+        signal_logs: signalLogs,
+        gemini_audit: backendData.gemini_audit || (typeof geminiData === 'object' ? geminiData : null),
+        analysis_summary: backendData.analysis_summary
       };
     } else {
       if (intakeMethod === 'url') {
