@@ -23,6 +23,20 @@ export interface FlaggedFrame {
   image_url?: string;
 }
 
+export interface SignalLog {
+  title: string;
+  status: 'PASSED' | 'FLAGGED';
+  quote: string;
+}
+
+export interface SubScores {
+  face_inconsistency?: number;
+  lipsync_mismatch?: number;
+  audio_irregularities?: number;
+  frame_transition?: number;
+  [key: string]: number | undefined;
+}
+
 export interface VerificationResult {
   id: string;
   type: VerificationType;
@@ -40,6 +54,9 @@ export interface VerificationResult {
   unavailable?: boolean; // If content cannot be accessed technically or legally
   unavailabilityReason?: string; // e.g., "Private content", "Restricted content", "Unsupported platform"
   flagged_frames?: FlaggedFrame[];
+  summary_text?: string;
+  sub_scores?: SubScores;
+  signal_logs?: SignalLog[];
 }
 
 export interface Stats {

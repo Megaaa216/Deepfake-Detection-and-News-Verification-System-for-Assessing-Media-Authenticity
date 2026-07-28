@@ -209,6 +209,10 @@ class DeepfakeDetectorManager:
 
       print(f"[AI Service] 100% Model Inference Successful. Result={result.upper()}, confidence={confidence:.4f}, max_cluster_score={max_cluster_score:.4f}")
 
+      summary_text = gemini_audit.get("summary_text") if isinstance(gemini_audit, dict) else str(gemini_audit or "")
+      sub_scores = gemini_audit.get("sub_scores") if isinstance(gemini_audit, dict) else {}
+      signal_logs = gemini_audit.get("signal_logs") if isinstance(gemini_audit, dict) else []
+
       return {
         "result": result,
         "confidence": round(confidence, 4),
@@ -217,7 +221,10 @@ class DeepfakeDetectorManager:
           "temporal_model": round(max_cluster_score, 4)
         },
         "flagged_frames": flagged_frames,
-        "gemini_audit": gemini_audit
+        "gemini_audit": gemini_audit,
+        "summary_text": summary_text,
+        "sub_scores": sub_scores,
+        "signal_logs": signal_logs
       }
 
     except Exception as e:

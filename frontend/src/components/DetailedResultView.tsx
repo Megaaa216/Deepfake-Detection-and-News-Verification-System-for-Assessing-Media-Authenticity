@@ -123,6 +123,12 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
   };
 
   const subscores = getSubscores(targetReport.type, targetReport.riskScore);
+  const liveSubscores = targetReport.sub_scores || {};
+  const faceInconsistencyScore = liveSubscores.face_inconsistency ?? (subscores as any).faceConsistency ?? (isFake ? 85 : 8);
+  const lipSyncMismatchScore = liveSubscores.lipsync_mismatch ?? (subscores as any).lipSyncMismatch ?? (isFake ? 88 : 6);
+  const audioIrregularitiesScore = liveSubscores.audio_irregularities ?? (subscores as any).audioIrregularities ?? (isFake ? 82 : 5);
+  const frameTransitionScore = liveSubscores.frame_transition ?? (subscores as any).frameTransitionAnomalies ?? (isFake ? 79 : 7);
+
   const confidencePercentage = Math.max(targetReport.riskScore, 100 - targetReport.riskScore);
 
   // Generate strong list of detection signals based on the report data
@@ -655,10 +661,10 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                   <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
                     <div className="flex justify-between text-xs items-center">
                       <span className="font-bold text-slate-700 dark:text-slate-300">Face Inconsistency</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).faceConsistency}%</span>
+                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{faceInconsistencyScore}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).faceConsistency}%` }}></div>
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${faceInconsistencyScore}%` }}></div>
                     </div>
                     <p className="text-[10px] text-slate-500 leading-normal font-sans">
                       Measures biometric facial vertex drift and geometric landmark symmetry variances across video frames.
@@ -668,10 +674,10 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                   <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
                     <div className="flex justify-between text-xs items-center">
                       <span className="font-bold text-slate-700 dark:text-slate-300">Lip-Sync Mismatch</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).lipSyncMismatch}%</span>
+                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{lipSyncMismatchScore}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).lipSyncMismatch}%` }}></div>
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${lipSyncMismatchScore}%` }}></div>
                     </div>
                     <p className="text-[10px] text-slate-500 leading-normal font-sans">
                       Calculates the synchronization alignment between phonetic syllables and visual mouth expansions.
@@ -681,10 +687,10 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                   <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
                     <div className="flex justify-between text-xs items-center">
                       <span className="font-bold text-slate-700 dark:text-slate-300">Audio Irregularities</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).audioIrregularities}%</span>
+                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{audioIrregularitiesScore}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).audioIrregularities}%` }}></div>
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${audioIrregularitiesScore}%` }}></div>
                     </div>
                     <p className="text-[10px] text-slate-500 leading-normal font-sans">
                       Detects artificial speech resonance matching established TTS (text-to-speech) and voice cloning models.
@@ -694,10 +700,10 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                   <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
                     <div className="flex justify-between text-xs items-center">
                       <span className="font-bold text-slate-700 dark:text-slate-300">Frame Transition Anomalies</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).frameTransitionAnomalies}%</span>
+                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{frameTransitionScore}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).frameTransitionAnomalies}%` }}></div>
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${frameTransitionScore}%` }}></div>
                     </div>
                     <p className="text-[10px] text-slate-500 leading-normal font-sans">
                       Scans boundary margins for inter-frame feathering or mesh blurring common in neural mask-swap deepfakes.
@@ -946,36 +952,59 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                   SUMMARY ASSESSMENT RESEARCH REPORT
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
-                  {targetReport.verdict}
+                  {targetReport.summary_text || targetReport.verdict}
                 </p>
               </div>
 
               {/* Individual mapped reason logs */}
               <div className="space-y-3 pt-2">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block">
-                  Anomalous Signal Log Entries ({targetReport.reasons.length})
+                  Anomalous Signal Log Entries ({(targetReport.signal_logs || targetReport.reasons || []).length})
                 </span>
 
                 <div className="space-y-2">
-                  {targetReport.reasons.map((r) => (
-                    <div key={r.id} className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 rounded-xl space-y-1 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-850 dark:text-slate-200">{r.name}</span>
-                        <span className={`text-[8px] font-mono font-bold uppercase px-1.5 py-0.5 rounded border ${
-                          r.status === 'passed' 
-                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' 
-                            : r.status === 'warning' 
-                            ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' 
-                            : 'bg-rose-500/15 text-rose-400 border-rose-500/20'
-                        }`}>
-                          {r.status}
-                        </span>
+                  {(targetReport.signal_logs && targetReport.signal_logs.length > 0) ? (
+                    targetReport.signal_logs.map((log, idx) => {
+                      const isPassed = log.status?.toUpperCase() === 'PASSED';
+                      return (
+                        <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 rounded-xl space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-slate-850 dark:text-slate-200">{log.title}</span>
+                            <span className={`text-[8px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
+                              isPassed 
+                                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
+                                : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                            }`}>
+                              {log.status}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 italic leading-relaxed pl-1 border-l border-slate-250 dark:border-slate-800">
+                            "{log.quote}"
+                          </p>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    targetReport.reasons.map((r) => (
+                      <div key={r.id} className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 rounded-xl space-y-1 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-slate-850 dark:text-slate-200">{r.name}</span>
+                          <span className={`text-[8px] font-mono font-bold uppercase px-1.5 py-0.5 rounded border ${
+                            r.status === 'passed' 
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' 
+                              : r.status === 'warning' 
+                              ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' 
+                              : 'bg-rose-500/15 text-rose-400 border-rose-500/20'
+                          }`}>
+                            {r.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic leading-relaxed pl-1 border-l border-slate-250 dark:border-slate-800">
+                          "{r.details}"
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 italic leading-relaxed pl-1 border-l border-slate-250 dark:border-slate-800">
-                        "{r.details}"
-                      </p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>

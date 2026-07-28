@@ -469,11 +469,14 @@ export default function VerifyView({
         date: backendData.date || new Date().toISOString().replace('T', ' ').substring(0, 16),
         riskScore: score,
         status: status,
-        verdict: backendData.verdict || 'Analysis completed by active backend pipeline.',
+        verdict: backendData.summary_text || backendData.verdict || 'Analysis completed by active backend pipeline.',
         recommendation: backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.',
         platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),
         reasons: backendData.reasons || getDynamicReasons(activeSubTab, score),
-        flagged_frames: backendData.flagged_frames || backendData.flaggedFrames
+        flagged_frames: backendData.flagged_frames || backendData.flaggedFrames,
+        summary_text: backendData.summary_text,
+        sub_scores: backendData.sub_scores,
+        signal_logs: backendData.signal_logs
       };
     } else {
       if (intakeMethod === 'url') {
