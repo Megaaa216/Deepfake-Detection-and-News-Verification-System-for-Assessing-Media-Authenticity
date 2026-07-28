@@ -69,9 +69,11 @@ class DeepfakeDetectorManager:
         torch.save(self.hybrid_model.state_dict(), model_path)
         state_dict = self.hybrid_model.state_dict()
 
+    self.temperature = float(os.getenv("DETECTOR_TEMPERATURE", "2.2"))
     self.hybrid_model.load_state_dict(state_dict)
     self.hybrid_model.to(self.device)
     self.hybrid_model.eval()
+    print(f"[DETECTOR] Logit Temperature Scaling enabled (T = {self.temperature:.1f})")
     print("[AI Service] ResNeXt50+LSTM Hybrid Model weights loaded successfully! (eval mode active)")
 
   def _download_weights_file(self, target_path: str) -> None:
@@ -183,10 +185,9 @@ class DeepfakeDetectorManager:
           all_logits[0, :, 0] -= lap_bias
 
         # -----------------------------------------------------------------
-        # 🌡️ 1. TEMPERATURE SCALING (T = 1.5)
+        # 🌡️ 1. LOGIT TEMPERATURE SCALING (T = self.temperature)
         # -----------------------------------------------------------------
-        temperature = 1.5
-        scaled_logits = all_logits / temperature
+        scaled_logits = all_logits / self.temperature
         all_probs = torch.softmax(scaled_logits, dim=2) # Shape: (batch_size, seq_len, 2)
         
         # Extract fake probability (index 1) for each frame in the sequence
@@ -195,8 +196,8 @@ class DeepfakeDetectorManager:
         # Print raw logits and sample frame probabilities for backend log inspection
         last_logits = all_logits[0, -1].tolist()
         last_diff = last_logits[1] - last_logits[0]
-        print(f"[AI Service] Raw logits before T-scaling (last frame): {[round(l, 4) for l in last_logits]} (logit_diff={last_diff:.4f})")
-        print(f"[AI Service] Frame probabilities with T=1.5 (first 16 sample): {[round(s, 4) for s in frame_scores[:16]]}")
+        print(f"[AI Service] Raw logits before T={self.temperature:.1f} scaling (last frame): {[round(l, 4) for l in last_logits]} (logit_diff={last_diff:.4f})")
+        print(f"[AI Service] Frame probabilities with T={self.temperature:.1f} (first 16 sample): {[round(s, 4) for s in frame_scores[:16]]}")
 
         # -----------------------------------------------------------------
         # 📊 2. TRIMMED MEAN SCORE AGGREGATION
