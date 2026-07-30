@@ -160,6 +160,9 @@ def run_benchmark():
         "gemini_summary": data.get("summary_text", "")
       })
 
+      # Pacing delay to avoid Gemini REST API 429 rate limit
+      time.sleep(4.0)
+
     except Exception as e:
       print(f"      ❌ Exception occurred during evaluation: {e}")
 

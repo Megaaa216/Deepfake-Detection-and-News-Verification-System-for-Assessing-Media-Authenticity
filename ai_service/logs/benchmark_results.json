@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-07-30 07:42:42",
+  "timestamp": "2026-07-30 07:55:39",
   "summary": {
     "total_samples": 6,
-    "accuracy_pct": 33.33,
-    "false_positive_rate_pct": 100.0,
+    "accuracy_pct": 66.67,
+    "false_positive_rate_pct": 50.0,
     "false_negative_rate_pct": 0.0,
-    "precision_pct": 33.33,
+    "precision_pct": 50.0,
     "recall_pct": 100.0,
-    "f1_score_pct": 50.0,
+    "f1_score_pct": 66.67,
     "confusion_matrix": {
       "TP": 2,
-      "TN": 0,
-      "FP": 4,
+      "TN": 2,
+      "FP": 2,
       "FN": 0
     },
     "gemini_overrides": {
@@ -27,13 +27,13 @@
       "expected_label": "AUTHENTIC",
       "predicted_label": "DEEPFAKE",
       "is_correct": false,
-      "risk_score": 60.7,
-      "raw_face_score": 0.6068,
-      "temporal_cluster_score": 0.3997,
+      "risk_score": 65.4,
+      "raw_face_score": 0.654,
+      "temporal_cluster_score": 0.3697,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 10.1,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 60.7%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 8.61,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 65.4%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "auth-02",
@@ -41,41 +41,41 @@
       "expected_label": "AUTHENTIC",
       "predicted_label": "DEEPFAKE",
       "is_correct": false,
-      "risk_score": 59.3,
-      "raw_face_score": 0.5932,
-      "temporal_cluster_score": 0.5932,
+      "risk_score": 63.3,
+      "raw_face_score": 0.6329,
+      "temporal_cluster_score": 0.6329,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 8.99,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 59.3%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 11.3,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 63.3%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "auth-03",
       "name": "Ted Talk Keynote (Fast Head Gestures & Stage Glare)",
       "expected_label": "AUTHENTIC",
-      "predicted_label": "DEEPFAKE",
-      "is_correct": false,
-      "risk_score": 47.1,
-      "raw_face_score": 0.4705,
-      "temporal_cluster_score": 0.4705,
+      "predicted_label": "AUTHENTIC",
+      "is_correct": true,
+      "risk_score": 45.7,
+      "raw_face_score": 0.4574,
+      "temporal_cluster_score": 0.4574,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 10.64,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 47.1%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 9.85,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 45.7%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "auth-04",
       "name": "Live Broadcast Anchor (Studio Lighting)",
       "expected_label": "AUTHENTIC",
-      "predicted_label": "DEEPFAKE",
-      "is_correct": false,
-      "risk_score": 49.9,
-      "raw_face_score": 0.499,
-      "temporal_cluster_score": 0.499,
+      "predicted_label": "AUTHENTIC",
+      "is_correct": true,
+      "risk_score": 49.6,
+      "raw_face_score": 0.4963,
+      "temporal_cluster_score": 0.4963,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 9.21,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 49.9%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 8.78,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 49.6%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "fake-01",
@@ -83,13 +83,13 @@
       "expected_label": "DEEPFAKE",
       "predicted_label": "DEEPFAKE",
       "is_correct": true,
-      "risk_score": 60.3,
-      "raw_face_score": 0.6034,
-      "temporal_cluster_score": 0.439,
+      "risk_score": 64.9,
+      "raw_face_score": 0.6492,
+      "temporal_cluster_score": 0.4285,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 9.14,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 60.3%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 7.73,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 64.9%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "fake-02",
@@ -97,13 +97,13 @@
       "expected_label": "DEEPFAKE",
       "predicted_label": "DEEPFAKE",
       "is_correct": true,
-      "risk_score": 78.1,
-      "raw_face_score": 0.7809,
-      "temporal_cluster_score": 0.7235,
+      "risk_score": 86.6,
+      "raw_face_score": 0.8657,
+      "temporal_cluster_score": 0.7953,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 7.85,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 78.1%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 9.31,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 86.6%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     }
   ]
 }

@@ -61,36 +61,43 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
   masked_key = f"...{api_key[-4:]}" if len(api_key) >= 4 else "INVALID"
   print(f"[Gemini Auditor] Sending request to Gemini API with key ending in: {masked_key}")
 
+  max_retries = 3
+  backoff_delays = [2.0, 4.0, 8.0]
+
   for idx, model_name in enumerate(PRIMARY_MODELS):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-    try:
-      response = requests.post(
-        url, 
-        json=payload, 
-        headers={"Content-Type": "application/json"},
-        timeout=15
-      )
+    
+    for attempt in range(max_retries):
+      try:
+        response = requests.post(
+          url, 
+          json=payload, 
+          headers={"Content-Type": "application/json"},
+          timeout=20
+        )
 
-      if response.status_code == 429:
-        next_model_name = PRIMARY_MODELS[idx + 1] if idx + 1 < len(PRIMARY_MODELS) else "local synthesis"
-        print(f"[Gemini Warning] Model {model_name} rate-limited (429). Retrying with {next_model_name}...")
-        last_error = f"429 Rate Limited ({model_name})"
+        if response.status_code == 429:
+          wait_sec = backoff_delays[min(attempt, len(backoff_delays) - 1)]
+          print(f"[Gemini Warning] Model {model_name} rate-limited (429) on attempt {attempt + 1}/{max_retries}. Backoff sleeping for {wait_sec}s...")
+          time.sleep(wait_sec)
+          last_error = f"429 Rate Limited ({model_name})"
+          continue
+
+        response.raise_for_status()
+        result_json = response.json()
+        raw_text = result_json["candidates"][0]["content"]["parts"][0]["text"]
+        parsed = json.loads(raw_text)
+        print(f"[Gemini Success] Gemini API response received successfully from model '{model_name}'!")
+        return parsed
+      except Exception as err:
+        last_error = err
+        wait_sec = backoff_delays[min(attempt, len(backoff_delays) - 1)]
+        print(f"[Gemini Warning] Model {model_name} error ({err}) on attempt {attempt + 1}/{max_retries}. Backoff sleeping for {wait_sec}s...")
+        time.sleep(wait_sec)
         continue
 
-      response.raise_for_status()
-      result_json = response.json()
-      raw_text = result_json["candidates"][0]["content"]["parts"][0]["text"]
-      parsed = json.loads(raw_text)
-      print(f"[Gemini Success] Gemini API response received successfully from model '{model_name}'!")
-      return parsed
-    except Exception as err:
-      last_error = err
-      next_model_name = PRIMARY_MODELS[idx + 1] if idx + 1 < len(PRIMARY_MODELS) else "local synthesis"
-      print(f"[Gemini Warning] Model {model_name} request error ({err}). Retrying with {next_model_name}...")
-      continue
-
-  print(f"[Gemini Warning] Gemini API call failed or rate-limited across all models. Falling back to local synthesis rules. (Last error: {last_error})")
-  raise RuntimeError(f"Gemini REST API request failed across models: {last_error}")
+  print("[Gemini Warning] Gemini API quota exceeded or models unavailable across retries, using raw model score.")
+  raise RuntimeError(f"Gemini API quota exceeded across models: {last_error}")
 
 
 class GeminiForensicAuditor:
@@ -107,7 +114,7 @@ class GeminiForensicAuditor:
     """
     Passes top high-anomaly face crops to Gemini REST API and receives structured JSON object.
     """
-    is_fake = classification_res.lower() in ["fake", "suspicious", "likely_deepfake"] or (score >= 0.45)
+    is_fake = classification_res.lower() in ["fake", "suspicious", "likely_deepfake"] or (score >= 0.20)
     
     # Rule-based fallback payload conforming to strict user rules
     fallback_payload: Dict[str, Any] = {
