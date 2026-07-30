@@ -1,23 +1,23 @@
 {
-  "timestamp": "2026-07-30 08:22:47",
+  "timestamp": "2026-07-30 10:32:32",
   "summary": {
-    "total_samples": 6,
-    "accuracy_pct": 83.33,
-    "false_positive_rate_pct": 0.0,
-    "false_negative_rate_pct": 50.0,
-    "precision_pct": 100.0,
-    "recall_pct": 50.0,
-    "f1_score_pct": 66.67,
+    "total_samples": 5,
+    "accuracy_pct": 80.0,
+    "false_positive_rate_pct": 33.33,
+    "false_negative_rate_pct": 0.0,
+    "precision_pct": 66.67,
+    "recall_pct": 100.0,
+    "f1_score_pct": 80.0,
     "confusion_matrix": {
-      "TP": 1,
-      "TN": 4,
-      "FP": 0,
-      "FN": 1
+      "TP": 2,
+      "TN": 2,
+      "FP": 1,
+      "FN": 0
     },
     "gemini_overrides": {
-      "total": 3,
-      "correct": 2,
-      "bad": 1
+      "total": 0,
+      "correct": 0,
+      "bad": 0
     }
   },
   "sample_results": [
@@ -25,29 +25,15 @@
       "sample_id": "auth-01",
       "name": "Chevy Acoustic Cover (Backlighting/Singing)",
       "expected_label": "AUTHENTIC",
-      "predicted_label": "AUTHENTIC",
-      "is_correct": true,
-      "risk_score": 28.0,
-      "raw_face_score": 0.28,
+      "predicted_label": "DEEPFAKE",
+      "is_correct": false,
+      "risk_score": 65.4,
+      "raw_face_score": 0.654,
       "temporal_cluster_score": 0.3697,
-      "gemini_override_applied": true,
-      "gemini_override_reason": "compression_and_lighting_artifacts",
-      "latency_seconds": 69.66,
-      "gemini_summary": "Video sequence evaluated as Authentic with a recalibrated risk index of 28.0%. Non-synthetic H.264 macroblock compression noise and stage lighting highlights identified."
-    },
-    {
-      "sample_id": "auth-02",
-      "name": "Markiplier Let's Play (2016 Low Bitrate Webcam)",
-      "expected_label": "AUTHENTIC",
-      "predicted_label": "AUTHENTIC",
-      "is_correct": true,
-      "risk_score": 28.0,
-      "raw_face_score": 0.28,
-      "temporal_cluster_score": 0.6329,
-      "gemini_override_applied": true,
-      "gemini_override_reason": "compression_and_lighting_artifacts",
-      "latency_seconds": 71.04,
-      "gemini_summary": "Video sequence evaluated as Authentic with a recalibrated risk index of 28.0%. Non-synthetic H.264 macroblock compression noise and stage lighting highlights identified."
+      "gemini_override_applied": false,
+      "gemini_override_reason": "none",
+      "latency_seconds": 56.94,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 65.4%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "auth-03",
@@ -60,8 +46,8 @@
       "temporal_cluster_score": 0.4574,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 71.79,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 45.7%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 59.35,
+      "gemini_summary": "Video sequence evaluated as Authentic with a recalibrated risk index of 45.7%. Non-synthetic H.264 macroblock compression noise and stage lighting highlights identified."
     },
     {
       "sample_id": "auth-04",
@@ -74,22 +60,22 @@
       "temporal_cluster_score": 0.4963,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 70.67,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 49.6%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 60.45,
+      "gemini_summary": "Video sequence evaluated as Authentic with a recalibrated risk index of 49.6%. Non-synthetic H.264 macroblock compression noise and stage lighting highlights identified."
     },
     {
       "sample_id": "fake-01",
       "name": "DeepFaceLab Face-Swap Specimen (High Anomaly)",
       "expected_label": "DEEPFAKE",
-      "predicted_label": "AUTHENTIC",
-      "is_correct": false,
-      "risk_score": 28.0,
-      "raw_face_score": 0.28,
+      "predicted_label": "DEEPFAKE",
+      "is_correct": true,
+      "risk_score": 64.9,
+      "raw_face_score": 0.6492,
       "temporal_cluster_score": 0.4285,
-      "gemini_override_applied": true,
-      "gemini_override_reason": "compression_and_lighting_artifacts",
-      "latency_seconds": 69.59,
-      "gemini_summary": "Video sequence evaluated as Authentic with a recalibrated risk index of 28.0%. Non-synthetic H.264 macroblock compression noise and stage lighting highlights identified."
+      "gemini_override_applied": false,
+      "gemini_override_reason": "none",
+      "latency_seconds": 55.12,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 64.9%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "fake-02",
@@ -102,7 +88,7 @@
       "temporal_cluster_score": 0.7953,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 68.83,
+      "latency_seconds": 54.04,
       "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 86.6%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     }
   ]

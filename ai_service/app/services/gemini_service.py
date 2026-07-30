@@ -13,8 +13,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 PRIMARY_MODELS = [
   "gemini-2.0-flash",
   "gemini-2.0-flash-lite",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-pro"
+  "gemini-1.5-flash"
 ]
 
 def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -28,9 +27,9 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
 
   parts: List[Dict[str, Any]] = []
 
-  # Attach face crop images as base64 inline data parts if provided
+  # Attach face crop images as base64 inline data parts if provided (optimized payload 6-8 frames)
   if image_paths:
-    for path in image_paths[:3]:
+    for path in image_paths[:6]:
       if os.path.exists(path):
         try:
           with open(path, "rb") as f:
@@ -74,7 +73,7 @@ def query_gemini_analysis(prompt_text: str, image_paths: Optional[List[str]] = N
           url, 
           json=payload, 
           headers={"Content-Type": "application/json"},
-          timeout=20
+          timeout=15
         )
 
         if response.status_code == 429:
@@ -115,12 +114,13 @@ class GeminiForensicAuditor:
     """
     Passes top high-anomaly face crops to Gemini REST API and receives structured JSON object.
     """
-    is_fake = classification_res.lower() in ["fake", "suspicious", "likely_deepfake"] or (score >= 0.20)
+    is_fake = classification_res.lower() in ["fake", "suspicious", "likely_deepfake"] or (score >= 0.55)
+    is_authentic_candidate = classification_res.lower() in ["real", "authentic", "likely_authentic"] or (score < 0.55)
     
-    # Check if candidate score is in the 0.55 - 0.70 false positive susceptibility range
-    is_fp_range = (0.55 <= score <= 0.70)
+    # False positive susceptibility range check (0.55 <= score <= 0.70)
+    is_fp_range = (0.55 <= score <= 0.70) and is_authentic_candidate
 
-    # Rule-based fallback payload conforming to strict user rules
+    # Rule-based fallback payload
     fallback_payload: Dict[str, Any] = {
       "is_false_positive": is_fp_range,
       "confidence_in_verdict": 0.85 if is_fp_range else 0.50,
@@ -162,12 +162,11 @@ class GeminiForensicAuditor:
 
     prompt_text = (
       f"You are a Senior Digital Forensics Auditor evaluating potential deepfake video frame samples.\n\n"
-      f"The secondary ResNeXt model flagged this video with a raw risk score of {score * 100:.1f}%. "
-      f"Your job is to verify whether this score is justified by genuine AI manipulation or triggered by non-synthetic video artifacts.\n\n"
-      f"EXPLICITLY CHECK FOR NON-SYNTHETIC ARTIFACTS:\n"
-      f"- Compression & Bitrate: H.264 macroblocking, low video resolution, web camera downscaling.\n"
-      f"- Environmental Lighting: Dynamic stage backlighting, strong specular highlights, lens glare across eyes.\n"
-      f"- Natural Expressions: Fast head turns, wide vocal/mouth articulation during singing or speech.\n\n"
+      f"The primary model flagged this video sequence with a risk score of {score * 100:.1f}%.\n"
+      f"Your task is to verify whether this risk score is justified by genuine AI manipulation or triggered by non-synthetic video artifacts.\n\n"
+      f"CRITICAL FORENSIC RULES:\n"
+      f"1. Check for Non-Synthetic Artifacts: H.264 macroblocking, low video resolution, web camera downscaling, dynamic stage backlighting, strong specular highlights, lens glare across eyes, fast head turns, wide mouth movement during singing/speech.\n"
+      f"2. Check for Structural Synthesis Anomalies: Do NOT classify a video as a false positive if you observe structural facial inconsistencies, such as boundary blending seams around the jaw/cheeks, unnatural skin texture smoothing across moving features, or temporal eye flickering. If these structural swap artifacts are present, is_false_positive MUST BE false, regardless of any background H.264 macroblocking.\n\n"
       f"Return a structured JSON object matching EXACTLY this schema:\n"
       f"{{\n"
       f'  "is_false_positive": boolean,\n'
@@ -196,9 +195,9 @@ class GeminiForensicAuditor:
     try:
       parsed = query_gemini_analysis(prompt_text, frame_paths)
       if isinstance(parsed, dict) and "summary_text" in parsed:
-        is_fp = parsed.get("is_false_positive") is True or is_fp_range
+        is_fp = parsed.get("is_false_positive") is True
         conf = float(parsed.get("confidence_in_verdict", 0.85))
-        recal_raw = float(parsed.get("recalibrated_score", parsed.get("adjusted_score", 0.28)))
+        recal_raw = float(parsed.get("recalibrated_score", parsed.get("adjusted_score", score)))
         fp_cause = str(parsed.get("false_positive_cause", "compression_artifacts" if is_fp else "none"))
 
         if is_fp and conf > 0.70:
@@ -211,6 +210,7 @@ class GeminiForensicAuditor:
           parsed["recalibrated_score"] = bounded_recal_score
           parsed["adjusted_score"] = bounded_recal_score
         else:
+          parsed["is_false_positive"] = False
           parsed["override_applied"] = False
           parsed["recalibrated_score"] = float(score)
           parsed["adjusted_score"] = float(score)
