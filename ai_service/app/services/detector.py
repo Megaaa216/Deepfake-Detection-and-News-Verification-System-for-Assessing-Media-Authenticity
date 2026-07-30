@@ -272,12 +272,12 @@ class DeepfakeDetectorManager:
         if gemini_audit.get("override_applied") is True or (gemini_audit.get("is_false_positive") is True and "recalibrated_score" in gemini_audit):
           try:
             recalibrated_score = float(gemini_audit.get("recalibrated_score", gemini_audit.get("adjusted_score", final_score)))
-            print(f"[AI Service] ⚖️ Gemini Arbiter OVERRODE false positive! Recalibrated score from {final_score:.4f} -> {recalibrated_score:.4f}")
             final_score = recalibrated_score
             is_fake = (final_score >= 0.55)
             result = "fake" if is_fake else "real"
             confidence = final_score if is_fake else (1.0 - final_score)
-          except (ValueError, TypeError) as arbiter_err:
+            print(f"[AI Service] [GEMINI OVERRIDE] Gemini Arbiter false positive override! Recalibrated score from {final_score:.4f} -> {recalibrated_score:.4f}")
+          except Exception as arbiter_err:
             print(f"[AI Service Warning] Failed to parse recalibrated_score from Gemini audit: {arbiter_err}")
 
       print(f"[AI Service] 100% Model Inference Successful. Result={result.upper()}, confidence={confidence:.4f}, max_cluster_score={max_cluster_score:.4f}")

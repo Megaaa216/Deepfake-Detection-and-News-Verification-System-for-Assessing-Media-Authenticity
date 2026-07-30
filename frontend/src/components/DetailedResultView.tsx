@@ -66,41 +66,56 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Status mapping
-  const isAuth = targetReport.status === 'likely_authentic';
-  const isSusp = targetReport.status === 'suspicious';
-  const isFake = targetReport.status === 'likely_deepfake';
+  // Status mapping based on risk score thresholds
+  const riskScoreNum = Number(targetReport.riskScore || 0);
+  const isAuth = riskScoreNum < 35;
+  const isBorderline = riskScoreNum >= 35 && riskScoreNum <= 54;
+  const isFake = riskScoreNum >= 55;
   const isNews = targetReport.type === 'news_link';
 
-  // Professional labels conforming perfectly to instructions
-  let finalVerdictLabel = 'Unknown Status';
-  let riskLevelLabel = 'Unknown Risk';
-  let riskColorClass = 'text-slate-400';
-  let riskBgClass = 'bg-slate-950/40 border-slate-850';
-  let riskBorderColor = 'border-slate-800';
-  let riskBadgeColor = 'bg-slate-900 text-slate-400 border-slate-800';
+  // Qualitative System Certainty calculation
+  const getSystemCertainty = (score: number): string => {
+    const margin = Math.abs(score - 50);
+    if (margin >= 25) return 'HIGH';      // Score <= 25% or >= 75%
+    if (margin >= 10) return 'MODERATE';  // Score 26%-40% or 60%-74%
+    return 'LOW';                         // Score 41%-59%
+  };
+
+  const systemCertainty = getSystemCertainty(riskScoreNum);
+
+  // Professional labels conforming strictly to user specifications
+  let finalVerdictLabel = 'Likely Authentic';
+  let riskLevelLabel = 'Low Risk';
+  let riskColorClass = 'text-emerald-400';
+  let riskBgClass = 'bg-emerald-950/40 border-emerald-900/60';
+  let riskBorderColor = 'border-emerald-900/60';
+  let riskBadgeColor = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+  let statusIndicatorText = '🟢 VERDICT: LIKELY AUTHENTIC';
 
   if (isAuth) {
-    finalVerdictLabel = 'Likely authentic';
+    finalVerdictLabel = 'Likely Authentic';
     riskLevelLabel = 'Low Risk';
     riskColorClass = 'text-emerald-400';
     riskBgClass = 'bg-emerald-950/40 border-emerald-900/60';
     riskBorderColor = 'border-emerald-900/60';
     riskBadgeColor = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-  } else if (isSusp) {
-    finalVerdictLabel = 'Suspicious';
+    statusIndicatorText = '🟢 VERDICT: LIKELY AUTHENTIC';
+  } else if (isBorderline) {
+    finalVerdictLabel = 'Review Needed / Borderline';
     riskLevelLabel = 'Medium Risk';
     riskColorClass = 'text-amber-400';
     riskBgClass = 'bg-amber-950/40 border-amber-850/60';
     riskBorderColor = 'border-amber-850/60';
     riskBadgeColor = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-  } else if (isFake) {
-    finalVerdictLabel = isNews ? 'High risk of misinformation' : 'Likely manipulated';
+    statusIndicatorText = '🟡 VERDICT: REVIEW NEEDED';
+  } else {
+    finalVerdictLabel = isNews ? 'High Risk of Misinformation' : 'Likely Manipulated';
     riskLevelLabel = 'High Risk';
     riskColorClass = 'text-rose-400';
     riskBgClass = 'bg-rose-950/40 border-rose-900/60';
     riskBorderColor = 'border-rose-900/60';
     riskBadgeColor = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+    statusIndicatorText = '🔴 VERDICT: LIKELY MANIPULATED';
   }
 
   // Calculate dynamic subscores based on overall riskScore to represent a realistic, interconnected check
@@ -356,12 +371,12 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
             
             <div className="mt-4 pt-4 border-t border-slate-800 w-full flex items-center justify-around">
               <div>
-                <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">CONFIDENCE</span>
-                <span className="text-xl font-mono font-bold text-slate-200 mt-0.5 block">{confidencePercentage}%</span>
+                <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">SYSTEM CERTAINTY</span>
+                <span className="text-xl font-mono font-bold text-slate-200 mt-0.5 block">{systemCertainty}</span>
               </div>
               <div className="h-8 border-r border-slate-800"></div>
               <div>
-                <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">ANOMALY INDEX</span>
+                <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">MANIPULATION RISK</span>
                 <span className="text-xl font-mono font-bold text-slate-200 mt-0.5 block">{targetReport.riskScore}%</span>
               </div>
             </div>
@@ -369,20 +384,20 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
         </div>
       </div>
 
-      {/* 3. Interactive Risk Level & Confidence Gauge */}
+      {/* 3. Interactive Risk Level & System Certainty Gauge */}
       <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-4">
         <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
           <Activity className="h-4 w-4 text-blue-500" />
-          <span>DYNAMIC ANOMALY & CONFIDENCE SPECTRUM</span>
+          <span>MANIPULATION RISK & SYSTEM CERTAINTY SPECTRUM</span>
         </h3>
 
         <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl space-y-4">
           <div className="flex justify-between items-center text-xs font-mono">
-            <span className="text-slate-500 font-semibold">Risk Index: {targetReport.riskScore}% Anomaly Certainty</span>
+            <span className="text-slate-500 font-semibold">Manipulation Risk: {targetReport.riskScore}% (Certainty: {systemCertainty})</span>
             <span className={`font-bold uppercase ${
-              isAuth ? 'text-emerald-500' : isSusp ? 'text-amber-500' : 'text-rose-500'
+              isAuth ? 'text-emerald-500' : isBorderline ? 'text-amber-500' : 'text-rose-500'
             }`}>
-              {isAuth ? '🟢 Low Risk Profile' : isSusp ? '🟡 Elevated Suspicion' : '🔴 Critical Hazard Profile'}
+              {statusIndicatorText}
             </span>
           </div>
 
@@ -397,7 +412,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                 let bgClass = 'bg-slate-200 dark:bg-slate-800/80';
                 if (isActive) {
                   if (blockMax <= 30) bgClass = 'bg-emerald-500 shadow-sm shadow-emerald-500/20';
-                  else if (blockMax <= 70) bgClass = 'bg-amber-500 shadow-sm shadow-amber-500/20';
+                  else if (blockMax <= 50) bgClass = 'bg-amber-500 shadow-sm shadow-amber-500/20';
                   else bgClass = 'bg-rose-500 shadow-sm shadow-rose-500/20';
                 }
 
@@ -410,10 +425,10 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                 );
               })}
             </div>
-            <div className="flex justify-between text-[9px] text-slate-400 font-mono font-bold uppercase">
-              <span>Likely Authentic (0-25%)</span>
-              <span>Suspicious (26-60%)</span>
-              <span>Likely Manipulated (61-100%)</span>
+            <div className="flex justify-between text-[9px] font-mono font-bold uppercase">
+              <span className="text-emerald-500">Likely Authentic (0-34%)</span>
+              <span className="text-amber-500">Review Needed / Borderline (35-54%)</span>
+              <span className="text-rose-500">Likely Manipulated (55-100%)</span>
             </div>
           </div>
         </div>
