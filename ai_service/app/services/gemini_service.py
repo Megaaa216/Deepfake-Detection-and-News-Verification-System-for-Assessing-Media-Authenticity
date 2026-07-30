@@ -107,7 +107,7 @@ class GeminiForensicAuditor:
     """
     Passes top high-anomaly face crops to Gemini REST API and receives structured JSON object.
     """
-    is_fake = classification_res.lower() in ["fake", "suspicious", "likely_deepfake"]
+    is_fake = classification_res.lower() in ["fake", "suspicious", "likely_deepfake"] or (score >= 0.45)
     
     # Rule-based fallback payload conforming to strict user rules
     fallback_payload: Dict[str, Any] = {

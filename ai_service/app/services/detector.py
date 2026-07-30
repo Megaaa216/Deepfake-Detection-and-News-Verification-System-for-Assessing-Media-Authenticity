@@ -69,7 +69,7 @@ class DeepfakeDetectorManager:
         torch.save(self.hybrid_model.state_dict(), model_path)
         state_dict = self.hybrid_model.state_dict()
 
-    self.temperature = float(os.getenv("DETECTOR_TEMPERATURE", "2.2"))
+    self.temperature = float(os.getenv("DETECTOR_TEMPERATURE", "1.5"))
     self.hybrid_model.load_state_dict(state_dict)
     self.hybrid_model.to(self.device)
     self.hybrid_model.eval()
@@ -236,9 +236,9 @@ class DeepfakeDetectorManager:
           final_score = candidate_score
       
       # -----------------------------------------------------------------
-      # 🎯 5. DECISION BOUNDARY CALIBRATION (Threshold = 0.35 OR Cluster > 0.38)
+      # 🎯 5. DECISION BOUNDARY CALIBRATION (Threshold = 0.55 / 55%)
       # -----------------------------------------------------------------
-      is_fake = (final_score >= 0.35) or (max_cluster_score > 0.38)
+      is_fake = (final_score >= 0.55)
       result = "fake" if is_fake else "real"
       confidence = final_score if is_fake else (1.0 - final_score)
 
@@ -259,7 +259,7 @@ class DeepfakeDetectorManager:
       # Take a slice of top 16 items
       flagged_frames = flagged_frames[:16]
 
-      # 🤖 SECONDARY FORENSIC ARBITER AUDIT WITH GEMINI
+      # 🤖 SECONDARY FORENSIC ARBITER AUDIT WITH GEMINI (Trigger for raw score >= 0.45)
       processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
       top_3_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:3]]
       
@@ -274,7 +274,7 @@ class DeepfakeDetectorManager:
             recalibrated_score = float(gemini_audit.get("recalibrated_score", gemini_audit.get("adjusted_score", final_score)))
             print(f"[AI Service] ⚖️ Gemini Arbiter OVERRODE false positive! Recalibrated score from {final_score:.4f} -> {recalibrated_score:.4f}")
             final_score = recalibrated_score
-            is_fake = (final_score >= 0.35)
+            is_fake = (final_score >= 0.55)
             result = "fake" if is_fake else "real"
             confidence = final_score if is_fake else (1.0 - final_score)
           except (ValueError, TypeError) as arbiter_err:
