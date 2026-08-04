@@ -222,7 +222,14 @@ class DeepfakeDetectorManager:
 
         # Overall sequence prediction candidate score
         last_frame_score = float(all_probs[0, -1, 1].item())
-        candidate_score = max(trimmed_mean_score, max_cluster_score, last_frame_score)
+        
+        # When overall sequence average (trimmed mean) is low (< 0.40), the baseline video is authentic.
+        # Single-frame end spikes or isolated 8-frame webcam macroblock compression clusters are weighted gracefully:
+        if trimmed_mean_score < 0.40:
+          candidate_score = 0.65 * trimmed_mean_score + 0.35 * max_cluster_score
+          print(f"[AI Service] Authentic baseline sequence (Trimmed Mean {trimmed_mean_score:.4f} < 0.40). Soft-calibrated score: {candidate_score:.4f}")
+        else:
+          candidate_score = max(trimmed_mean_score, max_cluster_score, last_frame_score)
         
         # -----------------------------------------------------------------
         # 🎯 4. SCORE CALIBRATION SANITY CHECK (HIGH TEMPORAL VARIANCE DAMPING)
@@ -261,10 +268,10 @@ class DeepfakeDetectorManager:
 
       # 🤖 SECONDARY FORENSIC ARBITER AUDIT WITH GEMINI (Trigger for raw score >= 0.20)
       processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static_frames"))
-      top_3_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:3]]
+      top_6_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:6]]
       
       from app.services.gemini_service import gemini_auditor
-      gemini_audit = gemini_auditor.audit_frames(top_3_paths, result, final_score) if final_score >= 0.20 else None
+      gemini_audit = gemini_auditor.audit_frames(top_6_paths, result, final_score) if final_score >= 0.20 else None
       if gemini_audit and isinstance(gemini_audit, dict):
         print(f"[AI Service] Gemini Secondary Forensic Arbiter visual audit generated successfully!")
         
