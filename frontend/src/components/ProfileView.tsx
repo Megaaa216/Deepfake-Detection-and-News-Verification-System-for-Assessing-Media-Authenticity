@@ -54,7 +54,7 @@ export default function ProfileView({ user, onUpdateUser, historyList, onViewRep
 
   // Compute stats based on true history list
   const totalChecks = historyList.length;
-  const deepfakeChecks = historyList.filter(h => h.type === 'image' || h.type === 'video').length;
+  const deepfakeChecks = historyList.filter(h => h.type === 'video').length;
   const newsChecks = historyList.filter(h => h.type === 'news_link').length;
 
   const handleSaveProfile = (e: React.FormEvent) => {

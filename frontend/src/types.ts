@@ -2,7 +2,7 @@
  * TypeScript definitions for the Deepfake Detection and News Verification System.
  */
 
-export type VerificationType = 'image' | 'video' | 'news_link';
+export type VerificationType = 'video' | 'news_link';
 
 export type VerificationStatus = 'likely_authentic' | 'suspicious' | 'likely_deepfake';
 

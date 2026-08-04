@@ -3,7 +3,7 @@ import { VerificationResult, ActivityTrend, Stats } from './types';
 export const INITIAL_HISTORY: VerificationResult[] = [
   {
     id: 'check-101',
-    type: 'image',
+    type: 'video',
     targetName: 'https://www.instagram.com/p/C6xD_u0ys8Q/defense_minister.jpg',
     date: '2026-06-12 14:32',
     riskScore: 8,
@@ -82,7 +82,7 @@ export const INITIAL_HISTORY: VerificationResult[] = [
   },
   {
     id: 'check-105',
-    type: 'image',
+    type: 'video',
     targetName: 'https://www.reddit.com/r/pics/comments/senator_briefing/senator_handshake.png',
     date: '2026-06-09 15:44',
     riskScore: 61,
@@ -165,47 +165,6 @@ export const WEEKLY_ACTIVITY: ActivityTrend[] = [
 ];
 
 export const MOCK_SCENARIOS = {
-  image: [
-    {
-      targetName: 'military_parade_assembly.jpg',
-      riskScore: 11,
-      status: 'likely_authentic',
-      verdict: 'The image displays authentic physical properties, uniform sensory signature, and unmanipulated geometric bounds.',
-      recommendation: 'Low concern. Pixel properties conform perfectly to the sensor array size, showing standard photojournalism output with intact metadata structural lines.',
-      reasons: [
-        { id: 'sc-i1', name: 'No Generative Pattern Identifiers', status: 'passed', details: 'Neural network probe signals returned clean results. Zero indicators of GAN, Stable Diffusion, or Midjourney structures.' },
-        { id: 'sc-i2', name: 'Lighting Vector Mapping', status: 'passed', details: 'Primary light ray models match standard outdoor solar azimuth angles for the reported timestamp and location coordinates.' },
-        { id: 'sc-i3', name: 'Consistent Noise Matrix', status: 'passed', details: 'Statistical noise distribution is uniform throughout the image. No signs of paint overlays, digital smoothing, or feather edits.' }
-      ],
-      size: '5.1 MB'
-    },
-    {
-      targetName: 'world_summit_unplanned_clash.png',
-      riskScore: 84,
-      status: 'likely_deepfake',
-      verdict: 'Target image contains significant localized high-frequency visual discontinuities in face-to-neck blend interfaces.',
-      recommendation: 'Critical concern. This image contains fabricated elements. Do not distribute. The faces on the participants were synthetically swapped.',
-      reasons: [
-        { id: 'sc-i4', name: 'Mismatched Eye Specular Reflections', status: 'failed', details: 'Luminance reflection points in the eye pupils have non-corresponding angles, confirming artificial portrait generation.' },
-        { id: 'sc-i5', name: 'Digital Face Swap Overlap Edge', status: 'failed', details: 'Sub-pixel contour evaluation detects a continuous boundary margin of reduced noise density wrapping the outer facial perimeter.' },
-        { id: 'sc-i6', name: 'EXIF Metadata Absence', status: 'warning', details: 'All device, focal, and temporal EXIF header directories were fully stripped, which is standard in web generator script channels.' }
-      ],
-      size: '2.8 MB'
-    },
-    {
-      targetName: 'protest_crowd_emergency_evac.webp',
-      riskScore: 57,
-      status: 'suspicious',
-      verdict: 'This photo contains signs of copy-paste duplicate patterns, suggesting a crowd size enhancement edit.',
-      recommendation: 'Suspicious. Check reports from alternative witnesses. Portions of the crowd density seem synthetically multiplied and duplicated.',
-      reasons: [
-        { id: 'sc-i7', name: 'Duplicate Block Spotting', status: 'failed', details: 'Advanced pattern comparison detected four identical sub-pixel clusters of people in different areas of the same picture.' },
-        { id: 'sc-i8', name: 'Mismatched Focus Depth', status: 'warning', details: 'Individual features in the far background show crisp spatial high-end edges while mid-ground assets are normally lens-blurred.' },
-        { id: 'sc-i9', name: 'Compressed Block Noise Ratio', status: 'passed', details: 'Overall file compression matches modern web scaling algorithms which does not explicitly indicate an adversarial attack.' }
-      ],
-      size: '1.2 MB'
-    }
-  ],
   video: [
     {
       targetName: 'president_security_briefing_raw.mp4',

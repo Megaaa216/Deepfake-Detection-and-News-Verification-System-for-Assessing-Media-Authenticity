@@ -42,7 +42,6 @@ export default function AdminDashboardView({ historyList, onViewResult, onExport
 
   // Split by content type
   const textAnalyses = historyList.filter(h => h.type === 'news_link').length;
-  const imageAnalyses = historyList.filter(h => h.type === 'image').length;
   const videoAnalyses = historyList.filter(h => h.type === 'video').length;
 
   // Split by result alerts and availability
@@ -161,14 +160,7 @@ export default function AdminDashboardView({ historyList, onViewResult, onExport
             </div>
           </div>
 
-          {/* IMAGE ANALYSES */}
-          <div className="bg-white border border-slate-150 p-4 rounded-xl shadow-sm space-y-1 flex flex-col justify-between">
-            <span className="text-[9px] font-mono tracking-wider text-slate-400 font-bold block uppercase leading-tight">Image Scans</span>
-            <div>
-              <span className="text-2xl font-black font-display text-slate-905">{imageAnalyses}</span>
-              <span className="text-[9px] font-mono text-slate-400 block">Filters</span>
-            </div>
-          </div>
+
 
           {/* VIDEO ANALYSES */}
           <div className="bg-white border border-slate-150 p-4 rounded-xl shadow-sm space-y-1 flex flex-col justify-between">

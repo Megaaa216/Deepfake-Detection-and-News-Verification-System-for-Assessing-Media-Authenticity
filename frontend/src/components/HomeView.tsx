@@ -1,7 +1,7 @@
 import { ShieldAlert, Globe, Radio, Cpu, Sparkles, AlertTriangle, ArrowRight, CheckCircle } from 'lucide-react';
 
 interface HomeViewProps {
-  onNavigateToVerify: (subTab: 'image' | 'video' | 'news_link') => void;
+  onNavigateToVerify: (subTab: 'video' | 'news_link') => void;
   onNavigateToTab: (tab: string) => void;
 }
 
@@ -21,18 +21,18 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           </div>
           
           <h1 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-none text-white">
-            Detect Deepfakes, AI Images, <br/>
+            Detect Video Deepfakes <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-sky-350">
               and Suspicious News.
             </span>
           </h1>
 
           <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
-            TrustLens analyzes public content from social media platforms, checks for manipulation signals, and returns a risk-based credibility assessment. The system evaluates video deepfake consistency, image manipulation and AI generation traces, and news text credibility.
+            TrustLens analyzes public content from social media platforms, checks for manipulation signals, and returns a risk-based credibility assessment. The system evaluates video deepfake consistency and news text credibility.
           </p>
 
           <p className="text-xs text-blue-400 font-mono tracking-wider">
-            PUBLIC CONTENT VERIFICATION • VIDEO, IMAGE, AND NEWS ANALYSIS • RISK-BASED CREDIBILITY SCORING
+            PUBLIC CONTENT VERIFICATION • VIDEO AND NEWS ANALYSIS • RISK-BASED CREDIBILITY SCORING
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
@@ -65,7 +65,7 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           </div>
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Scope of Capability</span>
-            <span className="text-blue-400 block">Videos, Images, & News Text</span>
+            <span className="text-blue-400 block">Videos & News Text</span>
           </div>
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Assessment Confidence</span>
@@ -81,14 +81,14 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
       <div className="space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
-            Tri-Tier Verification Protocol
+            Dual-Tier Verification Protocol
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Every analysis queries multi-spectral neural classifiers, parses public social media text for suspicious language indicators, and references accredited journalistic indexes.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Card 1: Video Analysis focus */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between ring-1 ring-blue-500/5 dark:ring-blue-400/5">
             <div className="space-y-4">
@@ -134,29 +134,6 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
             >
               <span>Validate textual claims</span>
-              <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </div>
-
-          {/* Card 3: Graphic / Image analysis */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-3 rounded-xl w-fit">
-                <ShieldAlert className="h-6 w-6 stroke-[1.5]" />
-              </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white">Image Analysis</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                Detects manual editing traces, composite pixel anomalies, and AI generation signals. Scans specular light vectors, JPEG quantization discrepancies, and sensor noise variations.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                onNavigateToVerify('image');
-                onNavigateToTab('verify');
-              }}
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
-            >
-              <span>Deconstruct images</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>

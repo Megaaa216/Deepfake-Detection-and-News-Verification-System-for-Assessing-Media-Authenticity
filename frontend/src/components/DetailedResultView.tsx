@@ -208,15 +208,6 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
         list.push({ name: 'Acoustic Wavelet Uniformity', impact: 'Speech frequencies match natural biological voice boxes.', severity: 'low' });
         list.push({ name: 'Structural Mesh Adherence', impact: 'Landmark vertices locked cleanly with bone structure.', severity: 'low' });
       }
-    } else if (targetReport.type === 'image') {
-      if (targetReport.riskScore > 50) {
-        list.push({ name: 'CFA Grid Interpolation Check', impact: 'Repeating patterns typical of generative AI diffusion grids.', severity: 'high' });
-        list.push({ name: 'Specular Reflection Vector Divergence', impact: 'Pupil highlight vectors misaligned with ceiling illumination sources.', severity: 'high' });
-        list.push({ name: 'Localized Sharpness Feathering', impact: 'Blur and airbrush borders identified along hand and shoulder crops.', severity: 'medium' });
-      } else {
-        list.push({ name: 'Continuous Background Pixel Noise', impact: 'Hardware camera sensor fingerprint verified universally.', severity: 'low' });
-        list.push({ name: 'Specular Highlight Alignment', impact: 'Reflective elements scale organically across the environment.', severity: 'low' });
-      }
     } else {
       if (targetReport.riskScore > 50) {
         list.push({ name: 'Hyperbolic Sentence Framing', impact: 'Excessive Clickbait modifiers designed to stimulate emotional shock.', severity: 'high' });
@@ -352,7 +343,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
               </span>
               <span className="text-slate-500 font-mono text-[10px]">|</span>
               <span className="text-slate-400 font-mono text-[10px] uppercase">
-                Content: {targetReport.type === 'video' ? 'Video asset' : targetReport.type === 'image' ? 'Image asset' : 'Text / News Link'}
+                Content: {targetReport.type === 'video' ? 'Video asset' : 'Text / News Link'}
               </span>
             </div>
 
@@ -581,61 +572,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
               )
             )}
 
-            {targetReport.type === 'image' && (
-              <div className="space-y-4" id="image-evidence-preview">
-                <span className="text-[10px] font-mono text-slate-400 block uppercase font-bold tracking-wider">Spatial Pixel Mesh & Specular Light Coordinates</span>
-                
-                <div className="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-950 h-64 flex items-center justify-center">
-                  {/* Grid overlay */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
-                  
-                  {/* High tech camera reticle */}
-                  <svg className="w-full h-full text-blue-500/10 stroke-[0.5] fill-none absolute inset-0">
-                    <line x1="50%" y1="0" x2="50%" y2="100%" className="stroke-blue-500/20 stroke-1" />
-                    <line x1="0" y1="50%" x2="100%" y2="50%" className="stroke-blue-500/20 stroke-1" />
-                    <rect x="20%" y="15%" width="60%" height="70%" rx="8" className="stroke-blue-500/25 stroke-1" />
-                    
-                    {isFake && (
-                      <>
-                        {/* Highlights suspicious regions with coordinates */}
-                        <rect x="42%" y="28%" width="16%" height="20%" rx="4" className="stroke-rose-500 stroke-[1.5] animate-pulse" />
-                        <line x1="42%" y1="28%" x2="42%" y2="20%" className="stroke-rose-500 stroke-1" />
-                        <line x1="42%" y1="28%" x2="35%" y2="28%" className="stroke-rose-500 stroke-1" />
 
-                        {/* Secondary artifact target */}
-                        <circle cx="68%" cy="54%" r="14" className="stroke-rose-500 stroke-dashed stroke-1" />
-                        <line x1="68%" y1="54%" x2="74%" y2="54%" className="stroke-rose-500 stroke-1" />
-                      </>
-                    )}
-                  </svg>
-
-                  {/* High Tech coordinates indicator */}
-                  <div className="absolute bottom-4 left-4 font-mono text-[9px] bg-slate-900/95 border border-slate-800 p-2.5 rounded text-white space-y-1 z-15 shadow-md">
-                    <div className="flex items-center space-x-1 text-blue-400 font-bold">
-                      <Scan className="h-3 w-3" />
-                      <span>CHROMINANCE LAYER COMPILATION</span>
-                    </div>
-                    <span className="block text-slate-450">Specimen file: {targetReport.targetName}</span>
-                    <span className="block text-slate-500">Dimensions: 1024px x 1024px | JPG Codec</span>
-                  </div>
-
-                  {isFake ? (
-                    <div className="absolute top-4 right-4 bg-rose-950/90 border border-rose-900/80 p-2.5 rounded text-rose-400 text-[9px] font-mono space-y-1 max-w-[240px] z-15 shadow-md">
-                      <span className="block font-bold">⚠️ MANIPULATION REGIONS ISOLATED</span>
-                      <p className="text-[8px] text-slate-300 leading-normal">
-                        • Artifact at [X: 435, Y: 290]: CFA Bayer grid interpolation anomaly (repeating patterns).<br/>
-                        • Artifact at [X: 696, Y: 553]: Specular pupil reflection mismatch of -45 degrees.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="absolute top-4 right-4 bg-emerald-950/90 border border-emerald-900/80 p-2.5 rounded text-emerald-400 text-[9px] font-mono space-y-1 z-15 shadow-md">
-                      <span className="block font-bold">🟢 SPECTRAL AUDIT PASSED</span>
-                      <span className="block text-slate-350 text-[8px]">Flat sensor noise distribution map. No composite brush traces detected.</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {targetReport.type === 'news_link' && (
               <div className="space-y-4" id="text-evidence-preview">
@@ -706,190 +643,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
             )}
           </div>
 
-          {/* B. Detection Signal Breakdown Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="space-y-1">
-              <span className="text-[10px] text-blue-500 dark:text-blue-400 font-mono uppercase font-bold tracking-wider">INDIVIDUAL CLASSIFICATION WEIGHTS</span>
-              <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                <BarChart2 className="h-5 w-5 text-blue-600" />
-                <span>Detection Signal Breakdown</span>
-              </h2>
-            </div>
-            
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
-              Every media or news check maps specific signals against neural classifiers and linguistic indices. The scores below indicate the individual anomaly probabilities found:
-            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              {targetReport.type === 'video' && (
-                <>
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Face Inconsistency</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{faceInconsistencyScore}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${faceInconsistencyScore}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Measures biometric facial vertex drift and geometric landmark symmetry variances across video frames.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Lip-Sync Mismatch</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{lipSyncMismatchScore}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${lipSyncMismatchScore}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Calculates the synchronization alignment between phonetic syllables and visual mouth expansions.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Audio Irregularities</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{audioIrregularitiesScore}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${audioIrregularitiesScore}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Detects artificial speech resonance matching established TTS (text-to-speech) and voice cloning models.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Frame Transition Anomalies</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{frameTransitionScore}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${frameTransitionScore}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Scans boundary margins for inter-frame feathering or mesh blurring common in neural mask-swap deepfakes.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {targetReport.type === 'image' && (
-                <>
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">AI Generation Indicators</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).aiGenerationIndicators}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).aiGenerationIndicators}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Detects GAN/Diffusion noise patterns and structural cell duplications unique to synthetic AI models.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Editing Traces</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).editingTraces}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).editingTraces}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Examines local JPEG compression variations, airbrush blur gradients, and manual clone stamp footprints.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Metadata Inconsistencies</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).metadataInconsistencies}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).metadataInconsistencies}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Analyzes EXIF image headers, camera serial numbers, and software footprint traces for tampering signals.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Facial Artifacts</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).facialArtifacts}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).facialArtifacts}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Checks for asymmetrical pupil reflections, deformed ear anatomies, and inorganic hair contours.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {targetReport.type === 'news_link' && (
-                <>
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Source Reliability</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).sourceReliability}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).sourceReliability}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Reconciles the publisher domain against certified registries of global news bureaus and fact-checking tables.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Emotional Language</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).emotionalLanguage}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).emotionalLanguage}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Measures the concentration of outrage-inducing, shocking adjectives and alarms designed to stimulate click viral rates.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Headline Manipulation</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).headlineManipulation}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).headlineManipulation}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Quantifies grammatical divergence where high-intensity headline claims contradict the actual quoted article body.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
-                    <div className="flex justify-between text-xs items-center">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Content Consistency</span>
-                      <span className="font-mono text-slate-500 font-bold bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded">{(subscores as any).contentConsistency}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(subscores as any).contentConsistency}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                      Checks independent regional reports and wire services to verify if the parsed claims are universally co-reported.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
 
           {/* C. Analysis Timeline Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">

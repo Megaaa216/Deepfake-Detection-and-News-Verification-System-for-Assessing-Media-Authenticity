@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   Globe, AlertTriangle, CheckCircle2, XCircle, Search, Sparkles, 
   RefreshCw, BarChart2, ShieldCheck, ChevronRight, HelpCircle, 
-  FileText, Image, Video, ShieldAlert, BadgeInfo, CheckCircle, 
+  FileText, Video, ShieldAlert, BadgeInfo, CheckCircle, 
   Lock, ArrowRight, Layers, Settings, UploadCloud,
   Fingerprint, Compass, Activity, Sliders, Binary, Scan
 } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function VerifyView({
   const [isAnalyzingText, setIsAnalyzingText] = useState(false);
 
   // Input states
-  const [inputUrl, setInputUrl] = useState('https://www.tiktok.com/@finance_trends/video/732890184');
+  const [inputUrl, setInputUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState<{ name: string; size: string } | null>(null);
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [fileDragOver, setFileDragOver] = useState(false);
@@ -625,27 +625,6 @@ export default function VerifyView({
           details: isHigh ? 'Voice spectrum exhibits static high-frequency flatlines, indicating generative text-to-speech rendering.' : 'Natural pauses, physical breathing intervals, and laryngeal vocal harmonics authenticated.' 
         }
       ];
-    } else if (type === 'image') {
-      return [
-        { 
-          id: 'i-r1', 
-          name: 'Color Filter Array Interpolation', 
-          status: isHigh ? 'failed' : 'passed', 
-          details: isHigh ? 'CFA Bayer matrix pattern exhibits repeating grid anomalies, a characteristic footprint of composite editing.' : 'CFA pixel patterns demonstrate natural, uniform spatial noise distributions.' 
-        },
-        { 
-          id: 'i-r2', 
-          name: 'Specular Vector Geometry', 
-          status: isHigh ? 'failed' : 'passed', 
-          details: isHigh ? 'Pupil highlight reflections conflict directly with ambient background illumination coordinates.' : 'Reflective eye specularity corresponds accurately to surrounding scene light sources.' 
-        },
-        { 
-          id: 'i-r3', 
-          name: 'High-Frequency Compression Check', 
-          status: isHigh ? 'warning' : 'passed', 
-          details: isHigh ? 'JPEG quantization maps exhibit non-uniform compression tiers between central subjects and background.' : 'Compression quantization values remain constant and unified across all coordinates.' 
-        }
-      ];
     } else {
       return [
         { 
@@ -799,7 +778,7 @@ export default function VerifyView({
                 <label className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
                   Select Evidence Type
                 </label>
-                <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
+                <div className="grid grid-cols-2 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
                   <button
                     type="button"
                     onClick={() => {
@@ -814,21 +793,6 @@ export default function VerifyView({
                   >
                     <Video className="h-4 w-4" />
                     <span className="text-[10px]">Video</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSubTab('image');
-                      setResult(null);
-                    }}
-                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      activeSubTab === 'image'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <Image className="h-4 w-4" />
-                    <span className="text-[10px]">Image</span>
                   </button>
                   <button
                     type="button"
@@ -887,39 +851,18 @@ export default function VerifyView({
                     <label htmlFor="url-input" className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
                       Destination Social Media Link
                     </label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                          <Globe className="h-4 w-4" />
-                        </div>
-                        <input
-                          id="url-input"
-                          type="url"
-                          value={inputUrl}
-                          onChange={(e) => setInputUrl(e.target.value)}
-                          placeholder="Paste link from TikTok, Youtube, FB, X, Reddit..."
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
-                        />
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Globe className="h-4 w-4" />
                       </div>
-                      <button
-                        type="button"
-                        disabled={isAnalyzing || !inputUrl.trim()}
-                        onClick={handleStartAnalysis}
-                        className={`px-5 py-2.5 rounded-xl text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer ${
-                          !inputUrl.trim()
-                            ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none border border-slate-400/10'
-                            : isAnalyzing
-                            ? 'bg-blue-800'
-                            : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
-                        }`}
-                      >
-                        {isAnalyzing ? (
-                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-3.5 w-3.5 text-blue-300" />
-                        )}
-                        <span>{isAnalyzing ? 'Analyzing...' : 'Analyze Link'}</span>
-                      </button>
+                      <input
+                        id="url-input"
+                        type="url"
+                        value={inputUrl}
+                        onChange={(e) => setInputUrl(e.target.value)}
+                        placeholder="Enter video or article URL..."
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
+                      />
                     </div>
                   </div>
 
@@ -972,7 +915,7 @@ export default function VerifyView({
                       type="file" 
                       ref={fileInputRef} 
                       className="hidden" 
-                      accept={activeSubTab === 'image' ? 'image/*' : activeSubTab === 'video' ? 'video/*' : '*/*'}
+                      accept="video/*"
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           const fileObj = e.target.files[0];
@@ -989,14 +932,14 @@ export default function VerifyView({
                       {selectedFile ? 'Swap Mounted Specimen' : 'Select or Drag Forensic File'}
                     </span>
                     <span className="block text-[10px] text-slate-400 mt-1 max-w-xs mx-auto">
-                      Supports high-resolution {activeSubTab === 'image' ? 'PNG, WebP, JPG' : 'MP4, MOV, MKV'}
+                      Supports high-resolution MP4, MOV, MKV
                     </span>
                   </div>
 
                   {selectedFile && (
                     <div className="bg-slate-950 p-3 rounded-xl border border-slate-900 flex items-center justify-between text-[11px] font-mono text-white">
                       <div className="flex items-center space-x-2 shrink min-w-0">
-                        {activeSubTab === 'image' ? <Image className="h-4 w-4 text-blue-400 shrink-0" /> : <Video className="h-4 w-4 text-blue-400 shrink-0" />}
+                        <Video className="h-4 w-4 text-blue-400 shrink-0" />
                         <span className="truncate font-bold text-slate-300 block max-w-[160px]">{selectedFile.name}</span>
                       </div>
                       <button
@@ -1017,54 +960,6 @@ export default function VerifyView({
                 <p>
                   <strong>PUBLIC INTEGRITY RULE:</strong> Analyzes public social media feeds and local sandboxed uploads only. Our scrapers bypass private firewalls.
                 </p>
-              </div>
-
-              {/* QUICK DEMO PRESETS */}
-              <div className="space-y-2 pt-2 border-t border-slate-150 dark:border-slate-800">
-                <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
-                  Select Pre-Mounted Demo Cases:
-                </span>
-                
-                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                  {intakeMethod === 'url' ? (
-                    SOCIAL_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => selectPresetUrl(preset)}
-                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
-                          inputUrl === preset.url
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
-                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center w-full">
-                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">[{preset.platform}] Link</span>
-                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.type}</span>
-                        </div>
-                        <span className="text-[10px] truncate block text-slate-400 mt-0.5">{preset.url}</span>
-                      </button>
-                    ))
-                  ) : (
-                    FILE_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => selectFilePreset(preset)}
-                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
-                          selectedFile?.name === preset.name
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
-                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center w-full font-mono">
-                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">{preset.name}</span>
-                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.size}</span>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
               </div>
 
               {/* TRIGGER ANALYSIS BUTTON */}
@@ -1093,8 +988,6 @@ export default function VerifyView({
                         ? 'Analyze Link' 
                         : activeSubTab === 'video'
                         ? 'Analyze Video'
-                        : activeSubTab === 'image'
-                        ? 'Analyze Image'
                         : 'Analyze News'
                       }
                     </span>
@@ -1951,7 +1844,7 @@ export default function VerifyView({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Video checking */}
           <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-5 rounded-2xl space-y-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
@@ -1960,17 +1853,6 @@ export default function VerifyView({
             <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono">Video Forensics</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
               Calculates face consistency, tracks sub-pixel lip-sync alignment anomalies, filters dynamic lighting angle differences, and detects acoustic cloned voice traces compared to organic physiological pauses.
-            </p>
-          </div>
-
-          {/* Card 2: Image checking */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-5 rounded-2xl space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
-              <Image className="h-5 w-5" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-mono">Image Forensic Sweep</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Scans Color Filter Array (CFA) interpolation inconsistencies, specular pupil light direction vectoring conflicts, localized blur edges, and camera header metadata altered by graphical rendering libraries.
             </p>
           </div>
 

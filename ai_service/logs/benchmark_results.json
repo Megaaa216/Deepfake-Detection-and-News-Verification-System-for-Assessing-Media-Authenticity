@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-04 08:44:50",
+  "timestamp": "2026-08-04 09:32:42",
   "summary": {
     "total_samples": 8,
     "accuracy_pct": 100.0,
@@ -32,7 +32,7 @@
       "temporal_cluster_score": 0.6518,
       "gemini_override_applied": true,
       "gemini_override_reason": "compression_artifacts",
-      "latency_seconds": 20.85,
+      "latency_seconds": 15.35,
       "gemini_summary": "Video sequence recalibrated to Authentic (28.0% risk index). High model score triggered by H.264 macroblock compression noise and stage backlighting."
     },
     {
@@ -46,7 +46,7 @@
       "temporal_cluster_score": 0.5873,
       "gemini_override_applied": true,
       "gemini_override_reason": "compression_artifacts",
-      "latency_seconds": 19.36,
+      "latency_seconds": 21.44,
       "gemini_summary": "Video sequence recalibrated to Authentic (28.0% risk index). High model score triggered by H.264 macroblock compression noise and stage backlighting."
     },
     {
@@ -60,7 +60,7 @@
       "temporal_cluster_score": 0.4541,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 24.87,
+      "latency_seconds": 23.39,
       "gemini_summary": "Video sequence evaluated as Authentic with a composite anomaly index of 45.4%. Facial geometry exhibits structural mesh alignment, accompanied by specular vector coherence and biological breathing cadence."
     },
     {
@@ -74,7 +74,7 @@
       "temporal_cluster_score": 0.4885,
       "gemini_override_applied": true,
       "gemini_override_reason": "compression_artifacts",
-      "latency_seconds": 23.97,
+      "latency_seconds": 17.04,
       "gemini_summary": "Video sequence recalibrated to Authentic (28.0% risk index). High model score triggered by H.264 macroblock compression noise and stage backlighting."
     },
     {
@@ -88,7 +88,7 @@
       "temporal_cluster_score": 0.4272,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 14.01,
+      "latency_seconds": 15.66,
       "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 65.3%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
@@ -102,7 +102,7 @@
       "temporal_cluster_score": 0.8183,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 12.76,
+      "latency_seconds": 13.42,
       "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 87.5%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
@@ -116,7 +116,7 @@
       "temporal_cluster_score": 0.3307,
       "gemini_override_applied": true,
       "gemini_override_reason": "none",
-      "latency_seconds": 15.35,
+      "latency_seconds": 14.02,
       "gemini_summary": "Video sequence recalibrated to Deepfake (78.0% risk index). Visual inspection identified generative face swap alignment and neural speech synthesis."
     },
     {
@@ -130,7 +130,7 @@
       "temporal_cluster_score": 0.2989,
       "gemini_override_applied": true,
       "gemini_override_reason": "none",
-      "latency_seconds": 16.21,
+      "latency_seconds": 14.13,
       "gemini_summary": "Video sequence recalibrated to Deepfake (78.0% risk index). Visual inspection identified generative face swap alignment and neural speech synthesis."
     }
   ]

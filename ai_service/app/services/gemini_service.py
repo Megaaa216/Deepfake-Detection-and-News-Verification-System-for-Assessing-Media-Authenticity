@@ -115,7 +115,8 @@ class GeminiForensicAuditor:
     classification_res: str, 
     score: float, 
     max_cluster_score: float = 0.0, 
-    trimmed_mean_score: float = 0.0
+    trimmed_mean_score: float = 0.0,
+    **kwargs: Any
   ) -> Dict[str, Any]:
     """
     Passes top high-anomaly face crops to Gemini REST API and receives structured JSON object.

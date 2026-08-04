@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Globe, Cpu, FileCheck, Shield, ChevronRight, HelpCircle, 
-  ArrowRight, Search, FileText, Image, Video, ShieldAlert,
+  ArrowRight, Search, FileText, Video, ShieldAlert,
   MessageSquare, Anchor, Database, Layers, CheckCircle
 } from 'lucide-react';
 
@@ -10,8 +10,8 @@ export default function MethodsView() {
     { num: '01', title: 'User Pastes Link', desc: 'Securely copies public social media URL into scanner.' },
     { num: '02', title: 'Link Validation', desc: 'System confirms syntax and verifies connection status.' },
     { num: '03', title: 'Platform ID', desc: 'Detects platform profiles (Facebook, YouTube, TikTok, X, Reddit, etc.)' },
-    { num: '04', title: 'Public Extraction', desc: 'Extracts public captions, image blobs, or clip segments.' },
-    { num: '05', title: 'AI Model Analysis', desc: 'Parallel execution of Text, Image, and Deepfake neural classifiers.' },
+    { num: '04', title: 'Public Extraction', desc: 'Extracts public captions or clip segments.' },
+    { num: '05', title: 'AI Model Analysis', desc: 'Parallel execution of Text and Deepfake Video neural classifiers.' },
     { num: '06', title: 'Credibility Score', desc: 'Applies weighted matrix algorithms to compute final Risk.' },
     { num: '07', title: 'Save to History', desc: 'Logs outcomes securely to analyst verification history.' },
   ];
@@ -42,19 +42,6 @@ export default function MethodsView() {
         { label: 'Semantic Core Matching', text: 'Measures alignment of context claims against primary citation records to identify spin.' },
         { label: 'Emotion & Title Auditing', text: 'Highlights sensational click-catching adjectival density ("SHOCKING", "BANNED") and rhetoric triggers.' }
       ]
-    },
-    {
-      id: 'mod-img',
-      title: '🖼️ Image Detection Module',
-      subtitle: 'FAI / GAN CLASSIFIERS & CONTOUR FRAUD ANALYSIS',
-      isFeatured: false,
-      description: 'Inspects shared graphics to highlight localized digital manipulations or neural generation.',
-      bulletTitle: 'Key Systems:',
-      bullets: [
-        { label: 'AI Generative Search', text: 'Flags texture patterns typical in GAN, Stable Diffusion, or Midjourney systems.' },
-        { label: 'Boundary Edge Occlusions', text: 'Detects airbrush overlays, Gaussian crop blurs, and localized noise variance.' },
-        { label: 'Focal Specular reflections', text: 'Validates reflection pupil angles relative to light-source vectors.' }
-      ]
     }
   ];
 
@@ -70,7 +57,7 @@ export default function MethodsView() {
           Forensic Processing & AI Pipeline
         </h2>
         <p className="text-sm text-slate-500 max-w-3xl leading-relaxed">
-          Learn how the TrustLens AI system scrapes raw social media URL handshakes, extracts public multimedia layers (Text, Graphics, Video streams), and subjects them to highly specialized deep neural classifiers.
+          Learn how the TrustLens AI system scrapes raw social media URL handshakes, extracts public multimedia layers (Text, Video streams), and subjects them to highly specialized deep neural classifiers.
         </p>
       </div>
 
@@ -107,14 +94,14 @@ export default function MethodsView() {
         </p>
       </div>
 
-      {/* Content Analysis Overview (Three AI Modules) */}
+      {/* Content Analysis Overview (Two AI Modules) */}
       <div className="space-y-6">
         <div className="space-y-1.5">
           <h3 className="text-xl font-display font-bold text-slate-900">
             Content Analysis Modules Overview
           </h3>
           <p className="text-xs text-slate-500">
-            The TrustLens Deep Engine incorporates three dedicated multi-spectral modules. Because deepfake audio-video synthesis is highly prevalent, the Video Detection Module remains prioritized.
+            The TrustLens Deep Engine incorporates two dedicated multi-spectral modules for video and text verification. Because deepfake audio-video synthesis is highly prevalent, the Video Detection Module remains prioritized.
           </p>
         </div>
 
@@ -183,11 +170,11 @@ export default function MethodsView() {
         <div className="space-y-2 max-w-2xl text-center md:text-left">
           <div className="inline-flex items-center space-x-1 text-blue-600">
             <CheckCircle className="h-4 w-4" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider">Linguistic & Photo Forensic Update</span>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider font-mono">Media Forensic Update</span>
           </div>
           <h4 className="text-base font-display font-semibold text-slate-900">Adaptive Signatures Engine</h4>
           <p className="text-xs text-slate-600 leading-relaxed">
-            As neural generators and deepfake software adapt, our model weights are automatically calibrated using updated GAN profiles, ensuring robust classification with minimized risk of false findings.
+            As neural generators and deepfake software adapt, our model weights are automatically calibrated using updated video GAN profiles, ensuring robust classification with minimized risk of false findings.
           </p>
         </div>
         <div className="shrink-0 flex flex-col items-center justify-center space-y-1 bg-slate-900 p-4 text-white rounded-xl border border-slate-800 w-full md:w-auto">

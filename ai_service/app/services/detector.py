@@ -264,10 +264,10 @@ class DeepfakeDetectorManager:
       top_6_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:6]]
       
       from app.services.gemini_service import gemini_auditor
-      gemini_audit = gemini_auditor.audit_frames(
-        top_6_paths, 
-        result, 
-        final_score, 
+      gemini_audit = gemini_auditor.audit_frames(  # type: ignore
+        frame_paths=top_6_paths, 
+        classification_res=result, 
+        score=final_score, 
         max_cluster_score=max_cluster_score, 
         trimmed_mean_score=trimmed_mean_score
       ) if final_score >= 0.20 else None

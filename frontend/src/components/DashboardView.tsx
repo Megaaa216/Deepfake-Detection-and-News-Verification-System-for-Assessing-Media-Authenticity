@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Search, ShieldAlert, CheckCircle2, AlertTriangle, 
   Trash2, Filter, Eye, RefreshCw, Layers, Calendar, ExternalLink,
-  Globe, PlayCircle, Image, FileText, CheckCircle
+  Globe, PlayCircle, FileText, CheckCircle
 } from 'lucide-react';
 import { VerificationResult, Stats } from '../types';
 
@@ -453,13 +453,10 @@ export default function DashboardView({
                       <td className="px-5 py-3.5 max-w-[240px]">
                         <div className="flex items-center space-x-3">
                           <div className={`p-1.5 rounded-lg shrink-0 ${
-                            item.type === 'image' 
-                              ? 'bg-blue-50 text-blue-600' 
-                              : item.type === 'video' 
+                            item.type === 'video' 
                               ? 'bg-purple-50 text-purple-600' 
                               : 'bg-emerald-50 text-emerald-600'
                           }`}>
-                            {item.type === 'image' && <Image className="h-4 w-4" />}
                             {item.type === 'video' && <PlayCircle className="h-4 w-4" />}
                             {item.type === 'news_link' && <ExternalLink className="h-4 w-4" />}
                           </div>

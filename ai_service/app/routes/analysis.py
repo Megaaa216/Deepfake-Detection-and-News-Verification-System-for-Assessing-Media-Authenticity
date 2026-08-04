@@ -10,9 +10,6 @@ async def upload_media(file: UploadFile = File(...)):
   and passes it to the ML/Deep Learning pipeline for analysis.
   """
   allowed_types = [
-    "image/jpeg", 
-    "image/jpg", 
-    "image/png", 
     "video/mp4", 
     "video/quicktime", 
     "video/x-matroska"
@@ -21,7 +18,7 @@ async def upload_media(file: UploadFile = File(...)):
   if file.content_type not in allowed_types:
     raise HTTPException(
       status_code=status.HTTP_400_BAD_REQUEST,
-      detail=f"Unsupported file type: {file.content_type}. Only images (JPEG, PNG) and videos (MP4, MOV, MKV) are supported."
+      detail=f"Unsupported file type: {file.content_type}. Only videos (MP4, MOV, MKV) are supported."
     )
 
   try:
