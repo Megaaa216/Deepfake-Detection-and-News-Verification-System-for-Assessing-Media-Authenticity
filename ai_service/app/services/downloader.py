@@ -60,14 +60,20 @@ def download_video_link(url: str, output_dir: str) -> str:
   
   print(f"[Downloader] Platform stream link detected. Initiating yt-dlp...")
   
-  # Configure yt-dlp to download lightweight formats (<480p) for high processing speed
+  # Configure yt-dlp to download lightweight progressive formats (<480p) for high processing speed without requiring ffmpeg
   ydl_opts = {
-    'format': 'worstvideo[height>=240][ext=mp4]/worst[ext=mp4]/best[ext=mp4]/best',
+    'format': 'best[ext=mp4]/bestvideo[ext=mp4]/worst[ext=mp4]/best',
     'outtmpl': os.path.join(output_dir, f"platform_{unique_id}_%(id)s.%(ext)s"),
-    'max_filesize': 50 * 1024 * 1024,  # 50MB file limit
+    'max_filesize': 100 * 1024 * 1024,  # 100MB file limit
     'quiet': True,
     'no_warnings': True,
     'noprogress': True,
+    'nocheckcertificate': True,
+    'http_headers': {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-us,en;q=0.5',
+    }
   }
   
   with yt_dlp.YoutubeDL(ydl_opts) as ydl:

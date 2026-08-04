@@ -37,6 +37,14 @@ export interface SubScores {
   [key: string]: number | undefined;
 }
 
+export interface ForensicCategories {
+  spatial_boundary_artifacts?: string;
+  temporal_consistency?: string;
+  lighting_and_shadow_geometry?: string;
+  audio_visual_indicators?: string;
+  [key: string]: string | undefined;
+}
+
 export interface VerificationResult {
   id: string;
   type: VerificationType;
@@ -57,6 +65,7 @@ export interface VerificationResult {
   summary_text?: string;
   sub_scores?: SubScores;
   signal_logs?: SignalLog[];
+  forensic_categories?: ForensicCategories;
   gemini_audit?: any;
   analysis_summary?: any;
 }

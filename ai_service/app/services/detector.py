@@ -222,14 +222,7 @@ class DeepfakeDetectorManager:
 
         # Overall sequence prediction candidate score
         last_frame_score = float(all_probs[0, -1, 1].item())
-        
-        # When overall sequence average (trimmed mean) is low (< 0.40), the baseline video is authentic.
-        # Single-frame end spikes or isolated 8-frame webcam macroblock compression clusters are weighted gracefully:
-        if trimmed_mean_score < 0.40:
-          candidate_score = 0.65 * trimmed_mean_score + 0.35 * max_cluster_score
-          print(f"[AI Service] Authentic baseline sequence (Trimmed Mean {trimmed_mean_score:.4f} < 0.40). Soft-calibrated score: {candidate_score:.4f}")
-        else:
-          candidate_score = max(trimmed_mean_score, max_cluster_score, last_frame_score)
+        candidate_score = max(trimmed_mean_score, max_cluster_score, last_frame_score)
         
         # -----------------------------------------------------------------
         # 🎯 4. SCORE CALIBRATION SANITY CHECK (HIGH TEMPORAL VARIANCE DAMPING)
@@ -271,19 +264,26 @@ class DeepfakeDetectorManager:
       top_6_paths = [os.path.join(processed_dir, f["frame_url"]) for f in flagged_frames[:6]]
       
       from app.services.gemini_service import gemini_auditor
-      gemini_audit = gemini_auditor.audit_frames(top_6_paths, result, final_score) if final_score >= 0.20 else None
+      gemini_audit = gemini_auditor.audit_frames(
+        top_6_paths, 
+        result, 
+        final_score, 
+        max_cluster_score=max_cluster_score, 
+        trimmed_mean_score=trimmed_mean_score
+      ) if final_score >= 0.20 else None
       if gemini_audit and isinstance(gemini_audit, dict):
         print(f"[AI Service] Gemini Secondary Forensic Arbiter visual audit generated successfully!")
         
-        # Check if Gemini arbiter flagged a false positive and applied an override
-        if gemini_audit.get("override_applied") is True or (gemini_audit.get("is_false_positive") is True and "recalibrated_score" in gemini_audit):
+        # Check if Gemini arbiter applied a score recalibration (for false positives or false negatives)
+        if gemini_audit.get("override_applied") is True or "recalibrated_score" in gemini_audit:
           try:
             recalibrated_score = float(gemini_audit.get("recalibrated_score", gemini_audit.get("adjusted_score", final_score)))
-            print(f"[AI Service] ⚖️ Gemini Arbiter OVERRODE false positive! Recalibrated score from {final_score:.4f} -> {recalibrated_score:.4f}")
-            final_score = recalibrated_score
-            is_fake = (final_score >= 0.55)
-            result = "fake" if is_fake else "real"
-            confidence = final_score if is_fake else (1.0 - final_score)
+            if abs(recalibrated_score - final_score) > 0.05:
+              print(f"[AI Service] [OVERRIDE] Gemini Arbiter RECALIBRATED score from {final_score:.4f} -> {recalibrated_score:.4f}")
+              final_score = recalibrated_score
+              is_fake = (final_score >= 0.55)
+              result = "fake" if is_fake else "real"
+              confidence = final_score if is_fake else (1.0 - final_score)
           except (ValueError, TypeError) as arbiter_err:
             print(f"[AI Service Warning] Failed to parse recalibrated_score from Gemini audit: {arbiter_err}")
 

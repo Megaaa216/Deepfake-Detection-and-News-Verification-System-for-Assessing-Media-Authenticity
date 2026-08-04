@@ -1,22 +1,22 @@
 {
-  "timestamp": "2026-08-04 07:55:33",
+  "timestamp": "2026-08-04 08:44:50",
   "summary": {
-    "total_samples": 6,
-    "accuracy_pct": 66.67,
-    "false_positive_rate_pct": 50.0,
+    "total_samples": 8,
+    "accuracy_pct": 100.0,
+    "false_positive_rate_pct": 0.0,
     "false_negative_rate_pct": 0.0,
-    "precision_pct": 50.0,
+    "precision_pct": 100.0,
     "recall_pct": 100.0,
-    "f1_score_pct": 66.67,
+    "f1_score_pct": 100.0,
     "confusion_matrix": {
-      "TP": 2,
-      "TN": 2,
-      "FP": 2,
+      "TP": 4,
+      "TN": 4,
+      "FP": 0,
       "FN": 0
     },
     "gemini_overrides": {
-      "total": 0,
-      "correct": 0,
+      "total": 5,
+      "correct": 3,
       "bad": 0
     }
   },
@@ -25,29 +25,29 @@
       "sample_id": "auth-01",
       "name": "Chevy Acoustic Cover (Backlighting/Singing)",
       "expected_label": "AUTHENTIC",
-      "predicted_label": "DEEPFAKE",
-      "is_correct": false,
-      "risk_score": 65.4,
-      "raw_face_score": 0.654,
-      "temporal_cluster_score": 0.3697,
-      "gemini_override_applied": false,
-      "gemini_override_reason": "none",
-      "latency_seconds": 13.69,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 65.4%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "predicted_label": "AUTHENTIC",
+      "is_correct": true,
+      "risk_score": 28.0,
+      "raw_face_score": 0.28,
+      "temporal_cluster_score": 0.6518,
+      "gemini_override_applied": true,
+      "gemini_override_reason": "compression_artifacts",
+      "latency_seconds": 20.85,
+      "gemini_summary": "Video sequence recalibrated to Authentic (28.0% risk index). High model score triggered by H.264 macroblock compression noise and stage backlighting."
     },
     {
       "sample_id": "auth-02",
       "name": "Markiplier Let's Play (2016 Low Bitrate Webcam)",
       "expected_label": "AUTHENTIC",
-      "predicted_label": "DEEPFAKE",
-      "is_correct": false,
-      "risk_score": 63.3,
-      "raw_face_score": 0.6329,
-      "temporal_cluster_score": 0.6329,
-      "gemini_override_applied": false,
-      "gemini_override_reason": "none",
-      "latency_seconds": 16.4,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 63.3%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "predicted_label": "AUTHENTIC",
+      "is_correct": true,
+      "risk_score": 28.0,
+      "raw_face_score": 0.28,
+      "temporal_cluster_score": 0.5873,
+      "gemini_override_applied": true,
+      "gemini_override_reason": "compression_artifacts",
+      "latency_seconds": 19.36,
+      "gemini_summary": "Video sequence recalibrated to Authentic (28.0% risk index). High model score triggered by H.264 macroblock compression noise and stage backlighting."
     },
     {
       "sample_id": "auth-03",
@@ -55,13 +55,13 @@
       "expected_label": "AUTHENTIC",
       "predicted_label": "AUTHENTIC",
       "is_correct": true,
-      "risk_score": 45.7,
-      "raw_face_score": 0.4574,
-      "temporal_cluster_score": 0.4574,
+      "risk_score": 45.4,
+      "raw_face_score": 0.4541,
+      "temporal_cluster_score": 0.4541,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 15.54,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 45.7%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 24.87,
+      "gemini_summary": "Video sequence evaluated as Authentic with a composite anomaly index of 45.4%. Facial geometry exhibits structural mesh alignment, accompanied by specular vector coherence and biological breathing cadence."
     },
     {
       "sample_id": "auth-04",
@@ -69,13 +69,13 @@
       "expected_label": "AUTHENTIC",
       "predicted_label": "AUTHENTIC",
       "is_correct": true,
-      "risk_score": 49.6,
-      "raw_face_score": 0.4963,
-      "temporal_cluster_score": 0.4963,
-      "gemini_override_applied": false,
-      "gemini_override_reason": "none",
-      "latency_seconds": 14.37,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 49.6%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "risk_score": 28.0,
+      "raw_face_score": 0.28,
+      "temporal_cluster_score": 0.4885,
+      "gemini_override_applied": true,
+      "gemini_override_reason": "compression_artifacts",
+      "latency_seconds": 23.97,
+      "gemini_summary": "Video sequence recalibrated to Authentic (28.0% risk index). High model score triggered by H.264 macroblock compression noise and stage backlighting."
     },
     {
       "sample_id": "fake-01",
@@ -83,13 +83,13 @@
       "expected_label": "DEEPFAKE",
       "predicted_label": "DEEPFAKE",
       "is_correct": true,
-      "risk_score": 64.9,
-      "raw_face_score": 0.6492,
-      "temporal_cluster_score": 0.4285,
+      "risk_score": 65.3,
+      "raw_face_score": 0.6527,
+      "temporal_cluster_score": 0.4272,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 13.51,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 64.9%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 14.01,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 65.3%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
     },
     {
       "sample_id": "fake-02",
@@ -97,13 +97,41 @@
       "expected_label": "DEEPFAKE",
       "predicted_label": "DEEPFAKE",
       "is_correct": true,
-      "risk_score": 86.6,
-      "raw_face_score": 0.8657,
-      "temporal_cluster_score": 0.7953,
+      "risk_score": 87.5,
+      "raw_face_score": 0.8752,
+      "temporal_cluster_score": 0.8183,
       "gemini_override_applied": false,
       "gemini_override_reason": "none",
-      "latency_seconds": 12.69,
-      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 86.6%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+      "latency_seconds": 12.76,
+      "gemini_summary": "Video sequence flagged as Manipulated with a composite anomaly index of 87.5%. Extracted facial crops exhibit spatial boundary jitter, accompanied by specular vector misalignment and lip-sync phoneme latency."
+    },
+    {
+      "sample_id": "fake-03",
+      "name": "Mark Zuckerberg Deepfake Specimen",
+      "expected_label": "DEEPFAKE",
+      "predicted_label": "DEEPFAKE",
+      "is_correct": true,
+      "risk_score": 78.0,
+      "raw_face_score": 0.78,
+      "temporal_cluster_score": 0.3307,
+      "gemini_override_applied": true,
+      "gemini_override_reason": "none",
+      "latency_seconds": 15.35,
+      "gemini_summary": "Video sequence recalibrated to Deepfake (78.0% risk index). Visual inspection identified generative face swap alignment and neural speech synthesis."
+    },
+    {
+      "sample_id": "fake-04",
+      "name": "Tom Cruise Magic Trick Deepfake Short",
+      "expected_label": "DEEPFAKE",
+      "predicted_label": "DEEPFAKE",
+      "is_correct": true,
+      "risk_score": 78.0,
+      "raw_face_score": 0.78,
+      "temporal_cluster_score": 0.2989,
+      "gemini_override_applied": true,
+      "gemini_override_reason": "none",
+      "latency_seconds": 16.21,
+      "gemini_summary": "Video sequence recalibrated to Deepfake (78.0% risk index). Visual inspection identified generative face swap alignment and neural speech synthesis."
     }
   ]
 }

@@ -57,6 +57,20 @@ BENCHMARK_DATASET = [
     "url": "https://youtu.be/oxXpB9pSETo",
     "expected_label": "DEEPFAKE",
     "notes": "Wav2Lip / AI avatar synthetic lip sync desynchronization."
+  },
+  {
+    "id": "fake-03",
+    "name": "Mark Zuckerberg Deepfake Specimen",
+    "url": "https://www.youtube.com/watch?v=cnUd0TpuoXI",
+    "expected_label": "DEEPFAKE",
+    "notes": "Synthetic voice synthesis & facial neural deepfake video."
+  },
+  {
+    "id": "fake-04",
+    "name": "Tom Cruise Magic Trick Deepfake Short",
+    "url": "https://www.youtube.com/shorts/oPbuyJqSQ2k",
+    "expected_label": "DEEPFAKE",
+    "notes": "Hyper-realistic generative DeepFaceLive / visual face swap short."
   }
 ]
 
