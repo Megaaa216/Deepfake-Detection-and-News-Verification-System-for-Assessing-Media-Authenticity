@@ -27,7 +27,8 @@ import os
 
 static_frames_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static_frames"))
 os.makedirs(static_frames_path, exist_ok=True)
-app.mount("/public/frames", StaticFiles(directory=static_frames_path), name="static_frames")
+app.mount("/public/frames", StaticFiles(directory=static_frames_path), name="public_frames")
+app.mount("/static/frames", StaticFiles(directory=static_frames_path), name="static_frames")
 
 from pydantic import BaseModel
 from app.services.detector import deepfake_detector

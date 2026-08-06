@@ -449,17 +449,31 @@ export default function DashboardView({
                   
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/75 transition-colors">
-                      {/* Name / Link with Icon */}
-                      <td className="px-5 py-3.5 max-w-[240px]">
+                      {/* Name / Link with Icon & Saved Keyframe Thumbnail */}
+                      <td className="px-5 py-3.5 max-w-[280px]">
                         <div className="flex items-center space-x-3">
-                          <div className={`p-1.5 rounded-lg shrink-0 ${
-                            item.type === 'video' 
-                              ? 'bg-purple-50 text-purple-600' 
-                              : 'bg-emerald-50 text-emerald-600'
-                          }`}>
-                            {item.type === 'video' && <PlayCircle className="h-4 w-4" />}
-                            {item.type === 'news_link' && <ExternalLink className="h-4 w-4" />}
-                          </div>
+                          {(() => {
+                            const rawThumb = item.thumbnail_url || item.preview_url || item.flagged_frames?.[0]?.image_url || item.flagged_frames?.[0]?.image_name;
+                            const thumbSrc = rawThumb ? (rawThumb.startsWith('http') || rawThumb.startsWith('data:') ? rawThumb : `http://127.0.0.1:8000${rawThumb.startsWith('/') ? '' : '/'}${rawThumb}`) : null;
+
+                            return thumbSrc ? (
+                              <img 
+                                src={thumbSrc} 
+                                alt="Preview Keyframe" 
+                                className="h-9 w-9 object-cover rounded-lg border border-slate-200 shrink-0 shadow-xs" 
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                              />
+                            ) : (
+                              <div className={`p-2 rounded-lg shrink-0 ${
+                                item.type === 'video' 
+                                  ? 'bg-purple-50 text-purple-600' 
+                                  : 'bg-emerald-50 text-emerald-600'
+                              }`}>
+                                {item.type === 'video' && <PlayCircle className="h-4 w-4" />}
+                                {item.type === 'news_link' && <ExternalLink className="h-4 w-4" />}
+                              </div>
+                            );
+                          })()}
                           <div className="truncate">
                             <span className="font-semibold block text-slate-900 truncate font-mono text-[11px]" title={item.targetName}>
                               {item.targetName}

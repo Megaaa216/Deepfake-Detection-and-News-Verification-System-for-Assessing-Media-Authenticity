@@ -496,6 +496,9 @@ export default function VerifyView({
       const subScores = (typeof geminiData === 'object' && geminiData?.sub_scores) ? geminiData.sub_scores : (backendData.sub_scores || null);
       const signalLogs = (typeof geminiData === 'object' && geminiData?.signal_logs) ? geminiData.signal_logs : (backendData.signal_logs || null);
 
+      const firstFrameImg = backendData.flagged_frames?.[0]?.image_url || backendData.flagged_frames?.[0]?.image_name;
+      const thumbUrl = backendData.thumbnail_url || backendData.preview_url || firstFrameImg || '';
+
       simulatedRecord = {
         id: backendData.id || `check-${Date.now()}`,
         type: backendData.type || (activeSubTab as VerificationType),
@@ -504,6 +507,8 @@ export default function VerifyView({
         riskScore: score,
         status: status,
         asset_type: backendData.asset_type,
+        thumbnail_url: thumbUrl,
+        preview_url: backendData.preview_url || thumbUrl,
         verdict: isNonFacial ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' : ((typeof summaryText === 'string' && summaryText) ? summaryText : 'Analysis completed by active backend pipeline.'),
         recommendation: isNonFacial ? 'No human faces detected in visual stream (e.g. landscape/object media). Deepfake scoring bypassed cleanly.' : (backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.'),
         platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),

@@ -69,6 +69,8 @@ export interface VerificationResult {
   gemini_audit?: any;
   analysis_summary?: any;
   asset_type?: string;
+  thumbnail_url?: string;
+  preview_url?: string;
 }
 
 export interface Stats {

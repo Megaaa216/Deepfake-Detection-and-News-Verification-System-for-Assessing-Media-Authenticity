@@ -304,11 +304,17 @@ class DeepfakeDetectorManager:
       sub_scores = gemini_audit.get("sub_scores") if isinstance(gemini_audit, dict) else {}
       signal_logs = gemini_audit.get("signal_logs") if isinstance(gemini_audit, dict) else []
 
+      keyframe_file = (flagged_frames[0]["frame_url"].split('/')[-1] if flagged_frames and "frame_url" in flagged_frames[0] else (saved_filenames[0] if saved_filenames else ""))
+      thumbnail_url = f"/static/frames/{keyframe_file}" if keyframe_file else ""
+      preview_url = f"/public/frames/{keyframe_file}" if keyframe_file else ""
+
       return {
         "result": result,
         "confidence": round(confidence, 4),
         "riskScore": round(final_score * 100, 1),
         "risk_score": round(final_score * 100, 1),
+        "thumbnail_url": thumbnail_url,
+        "preview_url": preview_url,
         "model_results": {
           "face_model": round(final_score, 4),
           "temporal_model": round(max_cluster_score, 4)

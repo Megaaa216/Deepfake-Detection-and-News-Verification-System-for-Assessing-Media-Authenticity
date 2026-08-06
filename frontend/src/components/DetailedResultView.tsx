@@ -488,7 +488,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
                               </div>
                             ) : (
                               <img 
-                                src={frame.image_url ? (frame.image_url.startsWith('http') ? frame.image_url : `http://localhost:5000${frame.image_url}`) : (frame.image_name.startsWith('http') ? frame.image_name : `http://localhost:5000/public/frames/${frame.image_name}`)} 
+                                src={frame.image_url ? (frame.image_url.startsWith('http') || frame.image_url.startsWith('data:') ? frame.image_url : `http://127.0.0.1:8000${frame.image_url.startsWith('/') ? '' : '/'}${frame.image_url}`) : (frame.image_name?.startsWith('http') || frame.image_name?.startsWith('data:') ? frame.image_name : `http://127.0.0.1:8000/public/frames/${frame.image_name}`)} 
                                 alt={`Cropped Face Frame ${frame.frame_id}`} 
                                 className="w-full h-full object-cover rounded border border-slate-700"
                                 onError={() => {
