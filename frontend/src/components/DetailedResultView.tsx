@@ -12,9 +12,18 @@ interface DetailedResultViewProps {
   resultId: string;
   historyList: VerificationResult[];
   onBackToHistory: () => void;
+  isFromHistory?: boolean;
+  hideEvidencePreview?: boolean;
 }
 
-export default function DetailedResultView({ resultId, historyList, onBackToHistory }: DetailedResultViewProps) {
+export default function DetailedResultView({ 
+  resultId, 
+  historyList, 
+  onBackToHistory,
+  isFromHistory = false,
+  hideEvidencePreview = false
+}: DetailedResultViewProps) {
+  const shouldHidePreview = isFromHistory || hideEvidencePreview;
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -422,198 +431,198 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
         {/* ============= LEFT COLUMN: Evidence Preview & Signal Breakdown ============= */}
         <div className="lg:col-span-8 space-y-8">
           
-          {/* A. Evidence Preview Section (revealing proof behind the results) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="space-y-1">
-              <span className="text-[10px] text-blue-500 dark:text-blue-400 font-mono uppercase font-bold tracking-wider">LAB EVIDENCE VISUALIZER</span>
-              <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                <Eye className="h-5 w-5 text-blue-500 shrink-0" />
-                <span>Forensic Evidence Preview</span>
-              </h2>
-            </div>
-            
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
-              Examines parsed visual elements, audio formants, or lexical syntax highlights collected from the public domain. This exposes the technical markers utilized in establishing the overall verdict.
-            </p>
-
-            {targetReport.type === 'video' && (
-              isAuth ? (
-                <div className="bg-emerald-950/20 border border-emerald-800/40 rounded-xl p-5 text-emerald-400 space-y-2 font-mono text-left" id="video-evidence-preview">
-                  <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-                    <span>AUTHENTIC MEDIA PROFILE VERIFIED</span>
-                  </div>
-                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
-                    Video evaluated as Authentic. No suspicious frame anomalies detected.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-5" id="video-evidence-preview">
-                  <span className="text-[10px] font-mono text-slate-400 block uppercase font-bold tracking-wider">Scanned Key Frame sequence & Lip-sync analysis</span>
-                  
-                  {/* Visual frame strip */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-900">
-                    {(analysisResult?.flagged_frames || [
-                      { frame_id: '048', image_name: 'frame_01.jpg', verdict: 'AUTHENTIC' as const, details: 'Specular reflections correct. Standard iris contours verified.' },
-                      { frame_id: '192', image_name: 'frame_02.jpg', verdict: 'AUTHENTIC' as const, details: 'Normal jaw mesh locking verified. Face boundaries intact.' },
-                      { frame_id: '336', image_name: 'frame_03.jpg', verdict: isFake ? 'FAKE' as const : 'AUTHENTIC' as const, details: isFake ? 'SUSPICIOUS: 140ms lip audio delay. Mesh vertex jitter.' : 'Passed temporal cohesion test. Speech matches lips.' },
-                      { frame_id: '528', image_name: 'frame_04.jpg', verdict: isFake ? 'FAKE' as const : 'AUTHENTIC' as const, details: isFake ? 'SUSPICIOUS: Frame interpolation anomalies near cheek boundaries.' : 'Boundary pixels coherent with primary camera sensor.' },
-                    ]).map((frame, index) => {
-                      const isFrameFake = frame.verdict === 'FAKE';
-                      const frameColor = isFrameFake ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500/40 text-emerald-400';
-                      const frameStatus = isFrameFake ? 'FAKE' : 'AUTHENTIC';
-                      
-                      return (
-                        <div key={index} className={`bg-slate-900 rounded border p-2 text-center space-y-2 relative overflow-hidden flex flex-col justify-between ${
-                          isFrameFake ? 'ring-1 ring-rose-500/20' : ''
-                        }`}>
-                          <div className="absolute top-1 right-1 text-[8px] font-mono bg-slate-950 px-1 text-slate-400 rounded z-10">
-                            Frame #{frame.frame_index !== undefined ? frame.frame_index : (frame.frame_id || index)} {frame.score !== undefined && `(${(frame.score <= 1.0 ? frame.score * 100 : frame.score).toFixed(1)}%)`}
-                          </div>
-                          
-                          {/* Cropped face image with standard face-mesh fallback */}
-                          <div className="relative h-28 w-full overflow-hidden rounded bg-slate-950 flex items-center justify-center border border-slate-800">
-                            {isFrameFake && (
-                              <div className="absolute top-1 left-1 z-10 bg-rose-950/80 border border-rose-500/30 px-1 text-[8px] font-mono font-bold text-rose-400 rounded tracking-widest">
-                                ANOMALY
-                              </div>
-                            )}
-                            
-                            {imageErrors[frame.frame_id] ? (
-                              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-2 text-center space-y-1 relative">
-                                <div className="absolute inset-0 bg-blue-500/5 animate-pulse"></div>
-                                <Scan className="h-6 w-6 text-blue-500 animate-pulse" />
-                                <span className="text-[8px] font-mono text-slate-400 uppercase tracking-wider">Syncing Frame...</span>
-                                <span className="text-[7px] font-mono text-slate-600">Writing file...</span>
-                              </div>
-                            ) : (
-                              <img 
-                                src={frame.image_url ? (frame.image_url.startsWith('http') || frame.image_url.startsWith('data:') ? frame.image_url : `http://127.0.0.1:8000${frame.image_url.startsWith('/') ? '' : '/'}${frame.image_url}`) : (frame.image_name?.startsWith('http') || frame.image_name?.startsWith('data:') ? frame.image_name : `http://127.0.0.1:8000/public/frames/${frame.image_name}`)} 
-                                alt={`Cropped Face Frame ${frame.frame_id}`} 
-                                className="w-full h-full object-cover rounded border border-slate-700"
-                                onError={() => {
-                                  setImageErrors(prev => ({ ...prev, [frame.frame_id]: true }));
-                                }}
-                              />
-                            )}
-                          </div>
-
-                          <div className="text-[9px] font-mono space-y-0.5">
-                            <span className="block text-slate-400 uppercase font-bold">FRAME #{frame.frame_id}</span>
-                            <span className="block text-[8px] text-slate-500 h-10 overflow-hidden leading-tight text-center px-1">
-                              {frame.details}
-                            </span>
-                            <span className={`block font-bold truncate mt-1 px-1 rounded border border-dashed text-[8px] ${frameColor}`}>
-                              {frameStatus} {frame.score !== undefined && `(${(frame.score <= 1.0 ? frame.score * 100 : frame.score).toFixed(0)}%)`}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Simulated Audio Waveform analysis block */}
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 font-mono text-[10px] space-y-3">
-                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
-                      <span className="text-slate-450 uppercase font-bold tracking-wider text-[9px]">Acoustic Spectrograph Decomposition</span>
-                      <span className="text-blue-400 font-bold uppercase text-[9px]">14-point Waveform Resonance Map</span>
-                    </div>
-                    <div className="h-12 flex items-end justify-between px-2 gap-1 bg-slate-900/60 rounded p-1 border border-slate-850">
-                      {[12, 45, 89, 65, 34, isFake ? 95 : 12, isFake ? 98 : 45, 78, 45, 23, 67, 12, 54, 88].map((val, idx) => (
-                        <div 
-                          key={idx} 
-                          style={{ height: `${val}%` }} 
-                          className={`w-full rounded-t-sm transition-all duration-300 ${
-                            isFake && idx >= 5 && idx <= 6 
-                              ? 'bg-rose-500 animate-pulse' 
-                              : 'bg-blue-600'
-                          }`} 
-                        />
-                      ))}
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between text-[8px] text-slate-500 font-mono gap-1">
-                      <span>Frequency Range: 0.2 Hz - 3.2k Hz</span>
-                      <span className={isFake ? 'text-rose-400 font-bold' : 'text-emerald-500 font-bold'}>
-                        {isFake 
-                          ? '⚠️ ALERT: Cloned speech footprint isolated (ElevenLabs V2 signature matches between 1.2k and 1.6k Hz).' 
-                          : '✓ PASSED: Dynamic acoustic waveform aligns perfectly with human physiological breathing intervals.'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )
-            )}
-
-
-
-            {targetReport.type === 'news_link' && (
-              <div className="space-y-4" id="text-evidence-preview">
-                <span className="text-[10px] font-mono text-slate-400 block uppercase font-bold tracking-wider">Semantic Linguistic Tagging & Keyword analysis</span>
-                
-                <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-150 dark:border-slate-850 space-y-4 font-sans">
-                  <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2 text-[10px] font-mono text-slate-400 font-bold">
-                    <span>EXTRACTED LINK PREVIEW CLAIMS</span>
-                    <span className="text-blue-500 uppercase tracking-widest text-[9px]">Linguistic Parsing Engine</span>
-                  </div>
-
-                  {isFake ? (
-                    <div className="space-y-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                      <p className="text-sm italic">
-                        "The centralized economy board has formulated <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-dashed border-rose-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5 cursor-help" title="Manipulative Language Marker: Exaggerated assertion without external sources.">miracle draft laws to seize private residential vehicle assets</span> within the next 48 hours, triggering a state of <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-dashed border-amber-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5 cursor-help" title="Emotional Language Trigger: Terms chosen to trigger outrage and anxiety.">massive national panic and emergency public mobilization</span> across capital cities."
-                      </p>
-                      
-                      <div className="grid gap-2 text-[10px] font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-850">
-                        <div className="flex items-start space-x-1.5 text-rose-500">
-                          <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-bold block uppercase">HIGH-INTENSITY EMOTIONAL TRIGGERS</span>
-                            <span className="text-slate-500 dark:text-slate-400 font-sans">"massive national panic", "emergency public mobilization" are highly biased words designed to accelerate viral distribution without fact verification.</span>
-                          </div>
-                        </div>
-                        <div className="flex items-start space-x-1.5 text-rose-500 pt-1.5 border-t border-slate-200 dark:border-slate-850">
-                          <ShieldX className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-bold block uppercase">UNSUPPORTED / UNVERIFIED MATERIAL CLAIMS</span>
-                            <span className="text-slate-500 dark:text-slate-400 font-sans">"seize private vehicle assets within 48 hours" lacks legal cross-citations. Central economic registries returned zero matches for this draft code.</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : isSusp ? (
-                    <div className="space-y-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                      <p className="text-sm italic">
-                        "Unscheduled handshakes took place inside the <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-dashed border-amber-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5" title="Suspicious local rumor: relies on unverified photographic angles.">senator closed briefing</span> yesterday morning. Staff claimed it was a standard courtesy, but independent bloggers allege <span className="bg-slate-200 dark:bg-slate-800 border border-dashed border-slate-400/60 px-1.5 py-0.5 rounded inline-block my-0.5" title="Uncorroborated Lobbyist Assertions">undisclosed corporate influence lobbying</span>."
-                      </p>
-                      
-                      <div className="grid gap-2 text-[10px] font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-850">
-                        <div className="flex items-start space-x-1.5 text-amber-500">
-                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-bold block uppercase">LOCALIZED RUMOR AND MISLEADING FRAME</span>
-                            <span className="text-slate-500 dark:text-slate-400 font-sans">Handshake context relies heavily on uncorroborated social media threads. Multi-bureau reporting is currently mixed and lacks primary transcripts.</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                      <p className="text-sm italic">
-                        "The European Central Committee released <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-dashed border-emerald-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5">official economic support brackets</span> for regional green transport initiatives. According to parliamentary transcripts, the program allocates €1.2B for rail electrification."
-                      </p>
-                      
-                      <div className="flex items-start space-x-1.5 text-emerald-500 text-[10px] font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-850">
-                        <CheckCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold block uppercase">NEUTRAL INFORMATIVE SYNTAX ARCHITECTURE</span>
-                          <span className="text-slate-550 dark:text-slate-400 font-sans">Grammar matches informative journalistic templates. All figures reconcile cleanly with official public parliamentary drafts.</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+          {/* A. Evidence Preview Section (revealing proof behind the results - hidden when viewing from history log) */}
+          {!shouldHidePreview && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="space-y-1">
+                <span className="text-[10px] text-blue-500 dark:text-blue-400 font-mono uppercase font-bold tracking-wider">LAB EVIDENCE VISUALIZER</span>
+                <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <Eye className="h-5 w-5 text-blue-500 shrink-0" />
+                  <span>Forensic Evidence Preview</span>
+                </h2>
               </div>
-            )}
-          </div>
+              
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
+                Examines parsed visual elements, audio formants, or lexical syntax highlights collected from the public domain. This exposes the technical markers utilized in establishing the overall verdict.
+              </p>
+
+              {targetReport.type === 'video' && (
+                isAuth ? (
+                  <div className="bg-emerald-950/20 border border-emerald-800/40 rounded-xl p-5 text-emerald-400 space-y-2 font-mono text-left" id="video-evidence-preview">
+                    <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                      <span>AUTHENTIC MEDIA PROFILE VERIFIED</span>
+                    </div>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                      Video evaluated as Authentic. No suspicious frame anomalies detected.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-5" id="video-evidence-preview">
+                    <span className="text-[10px] font-mono text-slate-400 block uppercase font-bold tracking-wider">Scanned Key Frame sequence & Lip-sync analysis</span>
+                    
+                    {/* Visual frame strip */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-900">
+                      {(analysisResult?.flagged_frames || [
+                        { frame_id: '048', image_name: 'frame_01.jpg', verdict: 'AUTHENTIC' as const, details: 'Specular reflections correct. Standard iris contours verified.' },
+                        { frame_id: '192', image_name: 'frame_02.jpg', verdict: 'AUTHENTIC' as const, details: 'Normal jaw mesh locking verified. Face boundaries intact.' },
+                        { frame_id: '336', image_name: 'frame_03.jpg', verdict: isFake ? 'FAKE' as const : 'AUTHENTIC' as const, details: isFake ? 'SUSPICIOUS: 140ms lip audio delay. Mesh vertex jitter.' : 'Passed temporal cohesion test. Speech matches lips.' },
+                        { frame_id: '528', image_name: 'frame_04.jpg', verdict: isFake ? 'FAKE' as const : 'AUTHENTIC' as const, details: isFake ? 'SUSPICIOUS: Frame interpolation anomalies near cheek boundaries.' : 'Boundary pixels coherent with primary camera sensor.' },
+                      ]).map((frame, index) => {
+                        const isFrameFake = frame.verdict === 'FAKE';
+                        const frameColor = isFrameFake ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500/40 text-emerald-400';
+                        const frameStatus = isFrameFake ? 'FAKE' : 'AUTHENTIC';
+                        
+                        return (
+                          <div key={index} className={`bg-slate-900 rounded border p-2 text-center space-y-2 relative overflow-hidden flex flex-col justify-between ${
+                            isFrameFake ? 'ring-1 ring-rose-500/20' : ''
+                          }`}>
+                            <div className="absolute top-1 right-1 text-[8px] font-mono bg-slate-950 px-1 text-slate-400 rounded z-10">
+                              Frame #{frame.frame_index !== undefined ? frame.frame_index : (frame.frame_id || index)} {frame.score !== undefined && `(${(frame.score <= 1.0 ? frame.score * 100 : frame.score).toFixed(1)}%)`}
+                            </div>
+                            
+                            {/* Cropped face image with standard face-mesh fallback */}
+                            <div className="relative h-28 w-full overflow-hidden rounded bg-slate-950 flex items-center justify-center border border-slate-800">
+                              {isFrameFake && (
+                                <div className="absolute top-1 left-1 z-10 bg-rose-950/80 border border-rose-500/30 px-1 text-[8px] font-mono font-bold text-rose-400 rounded tracking-widest">
+                                  ANOMALY
+                                </div>
+                              )}
+                              
+                              {imageErrors[frame.frame_id] ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-2 text-center space-y-1 relative">
+                                  <div className="absolute inset-0 bg-blue-500/5 animate-pulse"></div>
+                                  <Scan className="h-6 w-6 text-blue-500 animate-pulse" />
+                                  <span className="text-[8px] font-mono text-slate-400 uppercase tracking-wider">Syncing Frame...</span>
+                                  <span className="text-[7px] font-mono text-slate-600">Writing file...</span>
+                                </div>
+                              ) : (
+                                <img 
+                                  src={frame.image_url ? (frame.image_url.startsWith('http') || frame.image_url.startsWith('data:') ? frame.image_url : `http://127.0.0.1:8000${frame.image_url.startsWith('/') ? '' : '/'}${frame.image_url}`) : (frame.image_name?.startsWith('http') || frame.image_name?.startsWith('data:') ? frame.image_name : `http://127.0.0.1:8000/public/frames/${frame.image_name}`)} 
+                                  alt={`Cropped Face Frame ${frame.frame_id}`} 
+                                  className="w-full h-full object-cover rounded border border-slate-700"
+                                  onError={() => {
+                                    setImageErrors(prev => ({ ...prev, [frame.frame_id]: true }));
+                                  }}
+                                />
+                              )}
+                            </div>
+
+                            <div className="text-[9px] font-mono space-y-0.5">
+                              <span className="block text-slate-400 uppercase font-bold">FRAME #{frame.frame_id}</span>
+                              <span className="block text-[8px] text-slate-500 h-10 overflow-hidden leading-tight text-center px-1">
+                                {frame.details}
+                              </span>
+                              <span className={`block font-bold truncate mt-1 px-1 rounded border border-dashed text-[8px] ${frameColor}`}>
+                                {frameStatus} {frame.score !== undefined && `(${(frame.score <= 1.0 ? frame.score * 100 : frame.score).toFixed(0)}%)`}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Simulated Audio Waveform analysis block */}
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 font-mono text-[10px] space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+                        <span className="text-slate-450 uppercase font-bold tracking-wider text-[9px]">Acoustic Spectrograph Decomposition</span>
+                        <span className="text-blue-400 font-bold uppercase text-[9px]">14-point Waveform Resonance Map</span>
+                      </div>
+                      <div className="h-12 flex items-end justify-between px-2 gap-1 bg-slate-900/60 rounded p-1 border border-slate-850">
+                        {[12, 45, 89, 65, 34, isFake ? 95 : 12, isFake ? 98 : 45, 78, 45, 23, 67, 12, 54, 88].map((val, idx) => (
+                          <div 
+                            key={idx} 
+                            style={{ height: `${val}%` }} 
+                            className={`w-full rounded-t-sm transition-all duration-300 ${
+                              isFake && idx >= 5 && idx <= 6 
+                                ? 'bg-rose-500 animate-pulse' 
+                                : 'bg-blue-600'
+                            }`} 
+                          />
+                        ))}
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between text-[8px] text-slate-500 font-mono gap-1">
+                        <span>Frequency Range: 0.2 Hz - 3.2k Hz</span>
+                        <span className={isFake ? 'text-rose-400 font-bold' : 'text-emerald-500 font-bold'}>
+                          {isFake 
+                            ? '⚠️ ALERT: Cloned speech footprint isolated (ElevenLabs V2 signature matches between 1.2k and 1.6k Hz).' 
+                            : '✓ PASSED: Dynamic acoustic waveform aligns perfectly with human physiological breathing intervals.'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+
+              {targetReport.type === 'news_link' && (
+                <div className="space-y-4" id="text-evidence-preview">
+                  <span className="text-[10px] font-mono text-slate-400 block uppercase font-bold tracking-wider">Semantic Linguistic Tagging & Keyword analysis</span>
+                  
+                  <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-150 dark:border-slate-850 space-y-4 font-sans">
+                    <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2 text-[10px] font-mono text-slate-400 font-bold">
+                      <span>EXTRACTED LINK PREVIEW CLAIMS</span>
+                      <span className="text-blue-500 uppercase tracking-widest text-[9px]">Linguistic Parsing Engine</span>
+                    </div>
+
+                    {isFake ? (
+                      <div className="space-y-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                        <p className="text-sm italic">
+                          "The centralized economy board has formulated <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-dashed border-rose-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5 cursor-help" title="Manipulative Language Marker: Exaggerated assertion without external sources.">miracle draft laws to seize private residential vehicle assets</span> within the next 48 hours, triggering a state of <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-dashed border-amber-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5 cursor-help" title="Emotional Language Trigger: Terms chosen to trigger outrage and anxiety.">massive national panic and emergency public mobilization</span> across capital cities."
+                        </p>
+                        
+                        <div className="grid gap-2 text-[10px] font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-850">
+                          <div className="flex items-start space-x-1.5 text-rose-500">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold block uppercase">HIGH-INTENSITY EMOTIONAL TRIGGERS</span>
+                              <span className="text-slate-500 dark:text-slate-400 font-sans">"massive national panic", "emergency public mobilization" are highly biased words designed to accelerate viral distribution without fact verification.</span>
+                            </div>
+                          </div>
+                          <div className="flex items-start space-x-1.5 text-rose-500 pt-1.5 border-t border-slate-200 dark:border-slate-850">
+                            <ShieldX className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold block uppercase">UNSUPPORTED / UNVERIFIED MATERIAL CLAIMS</span>
+                              <span className="text-slate-500 dark:text-slate-400 font-sans">"seize private vehicle assets within 48 hours" lacks legal cross-citations. Central economic registries returned zero matches for this draft code.</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : isSusp ? (
+                      <div className="space-y-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                        <p className="text-sm italic">
+                          "Unscheduled handshakes took place inside the <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-dashed border-amber-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5" title="Suspicious local rumor: relies on unverified photographic angles.">senator closed briefing</span> yesterday morning. Staff claimed it was a standard courtesy, but independent bloggers allege <span className="bg-slate-200 dark:bg-slate-800 border border-dashed border-slate-400/60 px-1.5 py-0.5 rounded inline-block my-0.5" title="Uncorroborated Lobbyist Assertions">undisclosed corporate influence lobbying</span>."
+                        </p>
+                        
+                        <div className="grid gap-2 text-[10px] font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-850">
+                          <div className="flex items-start space-x-1.5 text-amber-500">
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold block uppercase">LOCALIZED RUMOR AND MISLEADING FRAME</span>
+                              <span className="text-slate-500 dark:text-slate-400 font-sans">Handshake context relies heavily on uncorroborated social media threads. Multi-bureau reporting is currently mixed and lacks primary transcripts.</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                        <p className="text-sm italic">
+                          "The European Central Committee released <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-dashed border-emerald-500/60 px-1.5 py-0.5 rounded font-semibold inline-block my-0.5">official economic support brackets</span> for regional green transport initiatives. According to parliamentary transcripts, the program allocates €1.2B for rail electrification."
+                        </p>
+                        
+                        <div className="flex items-start space-x-1.5 text-emerald-500 text-[10px] font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-850">
+                          <CheckCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold block uppercase">NEUTRAL INFORMATIVE SYNTAX ARCHITECTURE</span>
+                            <span className="text-slate-550 dark:text-slate-400 font-sans">Grammar matches informative journalistic templates. All figures reconcile cleanly with official public parliamentary drafts.</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
 
 

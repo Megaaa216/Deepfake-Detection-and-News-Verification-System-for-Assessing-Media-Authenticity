@@ -80,28 +80,10 @@ async def analyze_link(payload: LinkAnalysisRequest):
     return result
   except ValueError as val_err:
     print(f"[AI Service Ingestion Error] {val_err}")
-    return JSONResponse(
-      status_code=400,
-      content={
-        "success": False,
-        "detail": str(val_err),
-        "message": str(val_err),
-        "error_code": "INGESTION_FAILED",
-        "unavailable": True
-      }
-    )
+    raise HTTPException(status_code=400, detail=str(val_err))
   except Exception as e:
     print(f"[AI Service Error] analyze_link failed: {e}")
-    return JSONResponse(
-      status_code=400,
-      content={
-        "success": False,
-        "detail": f"Failed to ingest video stream: {str(e)}",
-        "message": f"Failed to ingest video stream: {str(e)}",
-        "error_code": "INGESTION_FAILED",
-        "unavailable": True
-      }
-    )
+    raise HTTPException(status_code=400, detail="Failed to download video stream: Platform firewall blocked extraction or link is invalid.")
   finally:
     # 3. Securely clean up local temporary file
     if local_path and os.path.exists(local_path):

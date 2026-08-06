@@ -30,6 +30,8 @@ export default function VerifyView({
 
   // Unified Workspace Switcher Tab State
   const [activeTab, setActiveTab] = useState<'media' | 'text'>('media');
+  const [textIntakeMode, setTextIntakeMode] = useState<'url' | 'manual'>('url');
+  const [articleUrlInput, setArticleUrlInput] = useState('');
   const [textInput, setTextInput] = useState('');
   const [textResult, setTextResult] = useState<any>(null);
   const [isAnalyzingText, setIsAnalyzingText] = useState(false);
@@ -427,17 +429,27 @@ export default function VerifyView({
         const response = await axios.post('http://localhost:5000/api/verify-media', {
           url: rawUrlString
         });
+        
+        if (response.data && response.data.success === false) {
+          setIsAnalyzing(false);
+          setResult(null);
+          const errMsg = response.data.detail || response.data.message || 'Failed to download video stream: Platform firewall blocked extraction or link is invalid.';
+          setErrorModalMsg(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+          return;
+        }
+
         console.log('Video link detection API successful response:', response.data);
         fetchedData = response.data;
         setAnalysisResult(response.data);
       } catch (err: any) {
         console.error('Video link detection API failed with error:', err);
         setIsAnalyzing(false);
+        setResult(null);
         const errMsg = err.response?.data?.detail 
           || err.response?.data?.message 
           || err.response?.data?.error 
           || err.message 
-          || 'Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.';
+          || 'Failed to download video stream: Platform firewall blocked extraction or link is invalid.';
         setErrorModalMsg(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
         return;
       }
@@ -445,10 +457,18 @@ export default function VerifyView({
       try {
         console.log('Initiating backend video upload API call for:', rawFile.name);
         fetchedData = await handleVideoUpload(rawFile);
+        if (fetchedData && fetchedData.success === false) {
+          setIsAnalyzing(false);
+          setResult(null);
+          const errMsg = fetchedData.detail || fetchedData.message || 'Failed to process video file upload.';
+          setErrorModalMsg(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+          return;
+        }
         setAnalysisResult(fetchedData);
       } catch (err: any) {
         console.error('Video upload API failed with error:', err);
         setIsAnalyzing(false);
+        setResult(null);
         const errMsg = err.response?.data?.detail 
           || err.response?.data?.message 
           || err.response?.data?.error 
@@ -721,11 +741,12 @@ export default function VerifyView({
   };
 
   const handleTextSubmit = async () => {
-    if (!textInput.trim()) return;
+    const payloadText = textIntakeMode === 'url' ? articleUrlInput.trim() : textInput.trim();
+    if (!payloadText) return;
     setIsAnalyzingText(true);
     try {
       const response = await axios.post('http://localhost:5000/api/verify-text', {
-        text: textInput.trim()
+        text: payloadText
       });
       setTextResult(response.data);
     } catch (err) {
@@ -803,42 +824,14 @@ export default function VerifyView({
             </div>
 
             <div className="p-5 space-y-5 flex-1">
-              {/* Media Content Type Selector */}
+              {/* Target Evidence Type Badge */}
               <div className="space-y-2">
                 <label className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
-                  Select Evidence Type
+                  Target Evidence Type
                 </label>
-                <div className="grid grid-cols-2 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSubTab('video');
-                      setResult(null);
-                    }}
-                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      activeSubTab === 'video'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <Video className="h-4 w-4" />
-                    <span className="text-[10px]">Video</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSubTab('news_link');
-                      setResult(null);
-                    }}
-                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      activeSubTab === 'news_link'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span className="text-[10px]">News / Text</span>
-                  </button>
+                <div className="flex items-center justify-center space-x-2 bg-blue-600/15 border border-blue-500/30 text-blue-600 dark:text-blue-400 py-2.5 px-4 rounded-xl shadow-xs">
+                  <Video className="h-4 w-4 shrink-0 text-blue-500" />
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider">Video Stream Analysis</span>
                 </div>
               </div>
 
@@ -1726,24 +1719,88 @@ export default function VerifyView({
                 Verify Article Claims & Bias
               </h2>
               <p className="text-xs text-slate-400 mb-4 leading-relaxed font-mono uppercase">
-                Paste the article paragraph, news report, or claim text below to run stylistic analysis and semantic consistency alignment against truth anchors.
+                Select public article URL extraction or manual text input below to evaluate stylistic bias, propaganda syntax, and semantic claim consistency.
               </p>
 
-              <textarea
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Enter raw news text content here (minimum 20 characters recommended for high accuracy)..."
-                rows={8}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl p-4 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-450 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none font-sans leading-relaxed"
-              />
+              {/* Dual Intake Mode Selector Tabs */}
+              <div className="flex border-b border-slate-100 dark:border-slate-800 text-xs mb-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTextIntakeMode('url');
+                    setTextResult(null);
+                  }}
+                  className={`flex-1 pb-2 font-mono text-center font-bold tracking-wide cursor-pointer transition-colors ${
+                    textIntakeMode === 'url'
+                      ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  }`}
+                >
+                  🌐 PUBLIC ARTICLE URL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTextIntakeMode('manual');
+                    setTextResult(null);
+                  }}
+                  className={`flex-1 pb-2 font-mono text-center font-bold tracking-wide cursor-pointer transition-colors ${
+                    textIntakeMode === 'manual'
+                      ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  }`}
+                >
+                  📝 MANUAL TEXT INPUT
+                </button>
+              </div>
+
+              {/* Dynamic Intake Modes */}
+              {textIntakeMode === 'url' ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+                      Enter News Article / Report Link
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <Globe className="h-4 w-4 text-blue-500" />
+                      </span>
+                      <input
+                        type="url"
+                        value={articleUrlInput}
+                        onChange={(e) => setArticleUrlInput(e.target.value)}
+                        placeholder="Enter video or article URL..."
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-10 pr-4 py-3 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-200 placeholder-slate-450 focus:outline-none transition-all shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-850 space-y-1">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">Automated Scraper Engine</span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
+                      Paste Reuters, Associated Press, BBC, or public news blog links to parse article text for stylistic bias and factual claim consensus.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder="Enter raw news text content here (minimum 20 characters recommended for high accuracy)..."
+                    rows={7}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl p-4 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-450 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none font-sans leading-relaxed"
+                  />
+                </div>
+              )}
 
               <div className="mt-4 flex justify-between items-center">
                 <span className="text-[10px] font-mono text-slate-500">
-                  {textInput.length} Characters
+                  {textIntakeMode === 'url' ? `${articleUrlInput.length} Characters` : `${textInput.length} Characters`}
                 </span>
                 <button
                   onClick={handleTextSubmit}
-                  disabled={isAnalyzingText || !textInput.trim()}
+                  disabled={isAnalyzingText || (textIntakeMode === 'url' ? !articleUrlInput.trim() : !textInput.trim())}
                   className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-mono font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer"
                 >
                   {isAnalyzingText ? (

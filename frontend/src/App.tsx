@@ -27,6 +27,7 @@ export default function App() {
 
   // Track dynamic result item ID for results detail representation
   const [selectedResultId, setSelectedResultId] = useState<string>('check-103');
+  const [isFromHistory, setIsFromHistory] = useState<boolean>(false);
 
   // Authenticated analyst state with profile properties
   const [user, setUser] = useState<{
@@ -99,7 +100,7 @@ export default function App() {
   }, []);
 
   // Update URL hash whenever active properties undergo client changes
-  const handleTabChange = (newTab: string, optionalParam?: string) => {
+  const handleTabChange = (newTab: string, optionalParam?: string, fromHistory: boolean = false) => {
     if (newTab === 'reports') {
       setActiveTab('home');
       window.location.hash = '#/home';
@@ -108,8 +109,12 @@ export default function App() {
     setActiveTab(newTab);
     if (newTab === 'results' && optionalParam) {
       setSelectedResultId(optionalParam);
+      setIsFromHistory(fromHistory);
       window.location.hash = `#/results/${optionalParam}`;
     } else {
+      if (newTab !== 'results') {
+        setIsFromHistory(false);
+      }
       window.location.hash = `#/${newTab}`;
     }
   };
@@ -341,7 +346,7 @@ export default function App() {
             stats={stats} 
             onDeleteHistoryItem={handleDeleteHistoryItem} 
             onResetHistoryList={handleResetHistory}
-            onViewReport={(item) => handleTabChange('results', item.id)}
+            onViewReport={(item) => handleTabChange('results', item.id, true)}
           />
         )}
 
@@ -408,7 +413,7 @@ export default function App() {
             user={user} 
             onUpdateUser={handleUpdateProfile} 
             historyList={historyList} 
-            onViewReport={(item) => handleTabChange('results', item.id)}
+            onViewReport={(item) => handleTabChange('results', item.id, true)}
           />
         )}
 
@@ -436,6 +441,7 @@ export default function App() {
             resultId={selectedResultId} 
             historyList={historyList} 
             onBackToHistory={() => handleTabChange('history')}
+            isFromHistory={isFromHistory}
           />
         )}
 
@@ -443,7 +449,7 @@ export default function App() {
         {activeTab === 'admin' && (
           <AdminDashboardView 
             historyList={historyList} 
-            onViewResult={(id) => handleTabChange('results', id)} 
+            onViewResult={(id) => handleTabChange('results', id, true)} 
             onExportReport={handleViewHistoricalReport}
           />
         )}
