@@ -495,161 +495,57 @@ export default function VerifyView({
   const finalizeAnalysis = (fetchedData?: any) => {
     setIsAnalyzing(false);
 
-    let simulatedRecord: VerificationResult;
     const backendData = fetchedData?.data || fetchedData;
 
-    if (backendData) {
-      const isNonFacial = backendData.asset_type === 'non_facial_media' || String(backendData.verdict).includes('NON-FACIAL ASSET');
-      const score = isNonFacial ? 0 : (typeof backendData.riskScore === 'number' ? backendData.riskScore : (typeof backendData.risk_score === 'number' ? backendData.risk_score : 85));
-      let status: VerificationStatus = isNonFacial ? 'likely_authentic' : 'likely_deepfake';
-      if (!isNonFacial) {
-        if (score < 20) status = 'likely_authentic';
-        else if (score < 60) status = 'suspicious';
-      }
-
-      const geminiData = backendData.gemini_audit || backendData.analysis_summary || backendData.verdict;
-      const summaryText = isNonFacial 
-        ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' 
-        : ((typeof geminiData === 'object' && geminiData?.summary_text) 
-          ? geminiData.summary_text 
-          : (typeof backendData.summary_text === 'string' ? backendData.summary_text : (typeof backendData.verdict === 'string' ? backendData.verdict : '')));
-      const subScores = (typeof geminiData === 'object' && geminiData?.sub_scores) ? geminiData.sub_scores : (backendData.sub_scores || null);
-      const signalLogs = (typeof geminiData === 'object' && geminiData?.signal_logs) ? geminiData.signal_logs : (backendData.signal_logs || null);
-
-      const firstFrameImg = backendData.flagged_frames?.[0]?.image_url || backendData.flagged_frames?.[0]?.image_name;
-      const thumbUrl = backendData.thumbnail_url || backendData.preview_url || firstFrameImg || '';
-
-      simulatedRecord = {
-        id: backendData.id || `check-${Date.now()}`,
-        type: backendData.type || (activeSubTab as VerificationType),
-        targetName: backendData.targetName || backendData.name || backendData.videoUrl || selectedFile?.name || inputUrl,
-        date: backendData.date || new Date().toISOString().replace('T', ' ').substring(0, 16),
-        riskScore: score,
-        status: status,
-        asset_type: backendData.asset_type,
-        thumbnail_url: thumbUrl,
-        preview_url: backendData.preview_url || thumbUrl,
-        verdict: isNonFacial ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' : ((typeof summaryText === 'string' && summaryText) ? summaryText : 'Analysis completed by active backend pipeline.'),
-        recommendation: isNonFacial ? 'No human faces detected in visual stream (e.g. landscape/object media). Deepfake scoring bypassed cleanly.' : (backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.'),
-        platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),
-        reasons: backendData.reasons || getDynamicReasons(activeSubTab, score),
-        flagged_frames: backendData.flagged_frames || backendData.flaggedFrames || [],
-        summary_text: summaryText || backendData.summary_text,
-        sub_scores: subScores,
-        signal_logs: signalLogs,
-        gemini_audit: backendData.gemini_audit || (typeof geminiData === 'object' ? geminiData : null),
-        analysis_summary: backendData.analysis_summary
-      };
-    } else {
-      if (intakeMethod === 'url') {
-        const match = SOCIAL_PRESETS.find(p => p.url.trim().toLowerCase() === inputUrl.trim().toLowerCase());
-        
-        if (match) {
-          simulatedRecord = {
-            id: `check-${Date.now()}`,
-            type: match.type as VerificationType,
-            targetName: match.url,
-            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            riskScore: match.riskScore,
-            status: match.status as any,
-            verdict: match.verdict,
-            recommendation: match.recommendation,
-            platform: match.platform,
-            reasons: match.reasons as VerificationReason[]
-          };
-        } else {
-          // Custom URL dynamic generation
-          const score = Math.floor(Math.random() * 85) + 10;
-          let status: VerificationStatus = 'likely_authentic';
-          let outcomeText = '';
-          let recommend = '';
-          
-          if (score < 20) {
-            status = 'likely_authentic';
-            outcomeText = 'Verification sweep completed for public URL. Structural metrics indicate a high probability of unmanipulated content, aligning perfectly with standard public feeds.';
-            recommend = 'Nominal credibility. The content follows standard journalistic frameworks and contains unaltered digital structures. Safe to share.';
-          } else if (score < 55) {
-            status = 'suspicious';
-            outcomeText = 'Elevated structural discrepancies flagged in target content. Visual features or text patterns indicate localized modification, sensational tone, or unverified claims.';
-            recommend = 'Exercise alert observation. The data exhibits language bias or light edits. Cross-reference statements with major independent networks before referencing.';
-          } else {
-            status = 'likely_deepfake';
-            outcomeText = 'Critical synthesis indicators detected. Forensic examination of the media layers demonstrates heavy neural modification, voice synthesis matching cloning APIs, or fully fabricated news syntax.';
-            recommend = 'Critical threat assessment. High risk of false dissemination. Multiple synthetic fingerprints identified. Strenuously avoid distribution.';
-          }
-
-          const plat = detectedPlatform?.name || 'Other';
-
-          simulatedRecord = {
-            id: `case-${Math.floor(Math.random()*90000)+10000}`,
-            type: activeSubTab,
-            targetName: inputUrl,
-            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            riskScore: score,
-            status: status,
-            verdict: outcomeText,
-            recommendation: recommend,
-            platform: plat,
-            reasons: getDynamicReasons(activeSubTab, score)
-          };
-        }
-      } else {
-        // Staged file
-        const match = FILE_PRESETS.find(f => f.name === selectedFile?.name);
-
-        if (match) {
-          simulatedRecord = {
-            id: `check-${Date.now()}`,
-            type: match.type as VerificationType,
-            targetName: match.name,
-            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            riskScore: match.riskScore,
-            status: match.status as any,
-            verdict: match.verdict,
-            recommendation: match.recommendation,
-            size: match.size,
-            platform: 'Uploaded Asset',
-            reasons: match.reasons as VerificationReason[]
-          };
-        } else {
-          const score = Math.floor(Math.random() * 80) + 15;
-          let status: VerificationStatus = 'likely_authentic';
-          let outcomeText = '';
-          let recommend = '';
-
-          if (score < 20) {
-            status = 'likely_authentic';
-            outcomeText = 'Forensic local asset sweep completed. File structure matches natural image/video compression standards with unedited noise fields.';
-            recommend = 'Safe asset verified. Hardware capture credentials verified. No malicious manipulation found.';
-          } else if (score < 60) {
-            status = 'suspicious';
-            outcomeText = 'Localized visual anomalies detected. Pixel density is non-uniform, suggesting potential localized touchups or graphic filters applied.';
-            recommend = 'Medium concern. Digital retouching signs found. Content should be backed by separate raw documentation.';
-          } else {
-            status = 'likely_deepfake';
-            outcomeText = 'Deep synthetic traces identified in local file. Neural face landmarks show irregular edge blending, and acoustic voiceprints match generative voice cloning libraries.';
-            recommend = 'High risk. Visual face-swap mesh overlay or synthetic voiceclone verified. Treat as artificial material.';
-          }
-
-          simulatedRecord = {
-            id: `case-${Math.floor(Math.random()*90000)+10000}`,
-            type: activeSubTab,
-            targetName: selectedFile?.name || 'custom_upload.mp4',
-            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            riskScore: score,
-            status: status,
-            verdict: outcomeText,
-            recommendation: recommend,
-            size: fileSizeStr || '4.2 MB',
-            platform: 'Uploaded Asset',
-            reasons: getDynamicReasons(activeSubTab, score)
-          };
-        }
-      }
+    if (!backendData || backendData.success === false) {
+      setResult(null);
+      return;
     }
 
-    setResult(simulatedRecord);
-    onAddHistoryItem(simulatedRecord);
+    const isNonFacial = backendData.asset_type === 'non_facial_media' || String(backendData.verdict).includes('NON-FACIAL ASSET');
+    const score = isNonFacial ? 0 : (typeof backendData.riskScore === 'number' ? backendData.riskScore : (typeof backendData.risk_score === 'number' ? backendData.risk_score : 85));
+    let status: VerificationStatus = isNonFacial ? 'likely_authentic' : 'likely_deepfake';
+    if (!isNonFacial) {
+      if (score < 20) status = 'likely_authentic';
+      else if (score < 60) status = 'suspicious';
+    }
+
+    const geminiData = backendData.gemini_audit || backendData.analysis_summary || backendData.verdict;
+    const summaryText = isNonFacial 
+      ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' 
+      : ((typeof geminiData === 'object' && geminiData?.summary_text) 
+        ? geminiData.summary_text 
+        : (typeof backendData.summary_text === 'string' ? backendData.summary_text : (typeof backendData.verdict === 'string' ? backendData.verdict : '')));
+    const subScores = (typeof geminiData === 'object' && geminiData?.sub_scores) ? geminiData.sub_scores : (backendData.sub_scores || null);
+    const signalLogs = (typeof geminiData === 'object' && geminiData?.signal_logs) ? geminiData.signal_logs : (backendData.signal_logs || null);
+
+    const firstFrameImg = backendData.flagged_frames?.[0]?.image_url || backendData.flagged_frames?.[0]?.image_name;
+    const thumbUrl = backendData.thumbnail_url || backendData.preview_url || firstFrameImg || '';
+
+    const record: VerificationResult = {
+      id: backendData.id || `check-${Date.now()}`,
+      type: backendData.type || (activeSubTab as VerificationType),
+      targetName: backendData.targetName || backendData.name || backendData.videoUrl || selectedFile?.name || inputUrl,
+      date: backendData.date || new Date().toISOString().replace('T', ' ').substring(0, 16),
+      riskScore: score,
+      status: status,
+      asset_type: backendData.asset_type,
+      thumbnail_url: thumbUrl,
+      preview_url: backendData.preview_url || thumbUrl,
+      verdict: isNonFacial ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' : ((typeof summaryText === 'string' && summaryText) ? summaryText : 'Analysis completed by active backend pipeline.'),
+      recommendation: isNonFacial ? 'No human faces detected in visual stream (e.g. landscape/object media). Deepfake scoring bypassed cleanly.' : (backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.'),
+      platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),
+      reasons: backendData.reasons || getDynamicReasons(activeSubTab, score),
+      flagged_frames: backendData.flagged_frames || backendData.flaggedFrames || [],
+      summary_text: summaryText || backendData.summary_text,
+      sub_scores: subScores,
+      signal_logs: signalLogs,
+      gemini_audit: backendData.gemini_audit || (typeof geminiData === 'object' ? geminiData : null),
+      analysis_summary: backendData.analysis_summary
+    };
+
+    setResult(record);
+    onAddHistoryItem(record);
   };
 
   const getDynamicReasons = (type: VerificationType, score: number): VerificationReason[] => {

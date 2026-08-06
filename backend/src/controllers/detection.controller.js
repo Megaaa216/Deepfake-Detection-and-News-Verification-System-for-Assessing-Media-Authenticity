@@ -131,29 +131,16 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
 
     return res.status(200).json(data);
   } catch (error) {
-    logger.error("Error communicating with Python AI microservice:", error);
-    logger.warn("Falling back to hardcoded mock predictions due to Python microservice connection failure");
+    logger.error("Error communicating with Python AI microservice for file upload:", error.message || error);
+    const errData = error.response?.data;
+    const msg = errData?.detail || errData?.message || error.message || "Failed to process video file upload.";
     
-    // Fallback: Populate realistic mock frames and dynamic summaries to prevent blank UI panels
-    const mockFlaggedFrames = [
-      { frame_id: "frame_1", image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
-      { frame_id: "frame_2", image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
-      { frame_id: "frame_3", image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
-      { frame_id: "frame_4", image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
-    ];
-    const mockSummary = await generateForensicSummary("fake", 0.85, 0.90, 0.78);
-
-    return res.status(200).json({
-      result: "fake",
-      confidence: 0.85,
-      model_results: {
-        face_model: 0.90,
-        temporal_model: 0.78
-      },
-      flagged_frames: mockFlaggedFrames,
-      verdict: mockSummary,
-      analysis_summary: mockSummary,
-      riskScore: 85
+    return res.status(400).json({
+      success: false,
+      error_code: "PROCESSING_FAILED",
+      message: msg,
+      detail: msg,
+      unavailable: true
     });
   }
 });
@@ -233,39 +220,14 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error("Error communicating with Python AI microservice for link:", error.message || error);
     const errData = error.response?.data;
-    if (error.response?.status === 400 || errData?.error_code === 'INGESTION_FAILED' || (typeof errData?.detail === 'string' && (errData.detail.includes('ingest') || errData.detail.includes('firewall') || errData.detail.includes('private')))) {
-      const msg = errData?.detail || errData?.message || "Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.";
-      return res.status(400).json({
-        success: false,
-        error_code: "INGESTION_FAILED",
-        message: msg,
-        detail: msg,
-        unavailable: true
-      });
-    }
-
-    logger.warn("Falling back to hardcoded mock predictions due to Python microservice connection failure");
+    const msg = errData?.detail || errData?.message || error.message || "Failed to download video stream: Platform firewall blocked extraction or link is invalid.";
     
-    // Fallback: Populate realistic mock frames and dynamic summaries to prevent blank UI panels
-    const mockFlaggedFrames = [
-      { frame_id: "frame_1", frame_index: 0, score: 0.95, image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
-      { frame_id: "frame_2", frame_index: 1, score: 0.88, image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
-      { frame_id: "frame_3", frame_index: 2, score: 0.72, image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
-      { frame_id: "frame_4", frame_index: 3, score: 0.15, image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", image_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
-    ];
-    const mockSummary = await generateForensicSummary("fake", 0.85, 0.90, 0.78);
-
-    return res.status(200).json({
-      result: "fake",
-      confidence: 0.85,
-      model_results: {
-        face_model: 0.90,
-        temporal_model: 0.78
-      },
-      flagged_frames: mockFlaggedFrames,
-      verdict: mockSummary,
-      analysis_summary: mockSummary,
-      riskScore: 85
+    return res.status(400).json({
+      success: false,
+      error_code: "INGESTION_FAILED",
+      message: msg,
+      detail: msg,
+      unavailable: true
     });
   }
 });
