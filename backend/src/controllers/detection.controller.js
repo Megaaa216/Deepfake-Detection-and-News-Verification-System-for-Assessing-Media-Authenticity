@@ -218,12 +218,32 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
       { title: "Acoustic Synthesis Scan", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "High-frequency neural text-to-speech vocoder harmonics isolated." : "Formants match biological human vocal tract resonance." }
     ];
 
-    data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
+    // Handle non-facial media assets explicitly
+    if (data.asset_type === 'non_facial_media' || data.verdict?.includes('NON-FACIAL ASSET')) {
+      data.riskScore = 0.0;
+      data.confidence = 0.0;
+      data.status = 'likely_authentic';
+      data.verdict = 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)';
+    } else {
+      data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
+    }
     data.flagged_frames = data.flagged_frames || [];
 
     return res.status(200).json(data);
   } catch (error) {
-    logger.error("Error communicating with Python AI microservice for link:", error);
+    logger.error("Error communicating with Python AI microservice for link:", error.message || error);
+    const errData = error.response?.data;
+    if (error.response?.status === 400 || errData?.error_code === 'INGESTION_FAILED' || (typeof errData?.detail === 'string' && (errData.detail.includes('ingest') || errData.detail.includes('firewall') || errData.detail.includes('private')))) {
+      const msg = errData?.detail || errData?.message || "Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.";
+      return res.status(400).json({
+        success: false,
+        error_code: "INGESTION_FAILED",
+        message: msg,
+        detail: msg,
+        unavailable: true
+      });
+    }
+
     logger.warn("Falling back to hardcoded mock predictions due to Python microservice connection failure");
     
     // Fallback: Populate realistic mock frames and dynamic summaries to prevent blank UI panels

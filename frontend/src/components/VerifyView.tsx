@@ -38,6 +38,9 @@ export default function VerifyView({
   const [inputUrl, setInputUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState<{ name: string; size: string } | null>(null);
   const [rawFile, setRawFile] = useState<File | null>(null);
+
+  // Error Modal State for Ingestion / Connection Errors
+  const [errorModalMsg, setErrorModalMsg] = useState<string | null>(null);
   const [fileDragOver, setFileDragOver] = useState(false);
   const [fileSizeStr, setFileSizeStr] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -409,6 +412,7 @@ export default function VerifyView({
     if (intakeMethod === 'url' && !inputUrl.trim()) return;
     if (intakeMethod === 'upload' && !selectedFile) return;
 
+    setErrorModalMsg(null);
     setIsAnalyzing(true);
     setAnalysisProgress(5);
     setAnalysisStepText('Establishing handshake connection to verification matrix...');
@@ -424,11 +428,18 @@ export default function VerifyView({
           url: rawUrlString
         });
         console.log('Video link detection API successful response:', response.data);
-        console.log("🔥 FULL BACKEND RESPONSE:", response.data);
         fetchedData = response.data;
         setAnalysisResult(response.data);
       } catch (err: any) {
         console.error('Video link detection API failed with error:', err);
+        setIsAnalyzing(false);
+        const errMsg = err.response?.data?.detail 
+          || err.response?.data?.message 
+          || err.response?.data?.error 
+          || err.message 
+          || 'Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.';
+        setErrorModalMsg(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+        return;
       }
     } else if (intakeMethod === 'upload' && rawFile) {
       try {
@@ -437,6 +448,14 @@ export default function VerifyView({
         setAnalysisResult(fetchedData);
       } catch (err: any) {
         console.error('Video upload API failed with error:', err);
+        setIsAnalyzing(false);
+        const errMsg = err.response?.data?.detail 
+          || err.response?.data?.message 
+          || err.response?.data?.error 
+          || err.message 
+          || 'Failed to process video file upload.';
+        setErrorModalMsg(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+        return;
       }
     }
 
@@ -460,15 +479,20 @@ export default function VerifyView({
     const backendData = fetchedData?.data || fetchedData;
 
     if (backendData) {
-      const score = typeof backendData.riskScore === 'number' ? backendData.riskScore : (typeof backendData.risk_score === 'number' ? backendData.risk_score : 85);
-      let status: VerificationStatus = 'likely_deepfake';
-      if (score < 20) status = 'likely_authentic';
-      else if (score < 60) status = 'suspicious';
+      const isNonFacial = backendData.asset_type === 'non_facial_media' || String(backendData.verdict).includes('NON-FACIAL ASSET');
+      const score = isNonFacial ? 0 : (typeof backendData.riskScore === 'number' ? backendData.riskScore : (typeof backendData.risk_score === 'number' ? backendData.risk_score : 85));
+      let status: VerificationStatus = isNonFacial ? 'likely_authentic' : 'likely_deepfake';
+      if (!isNonFacial) {
+        if (score < 20) status = 'likely_authentic';
+        else if (score < 60) status = 'suspicious';
+      }
 
       const geminiData = backendData.gemini_audit || backendData.analysis_summary || backendData.verdict;
-      const summaryText = (typeof geminiData === 'object' && geminiData?.summary_text) 
-        ? geminiData.summary_text 
-        : (typeof backendData.summary_text === 'string' ? backendData.summary_text : (typeof backendData.verdict === 'string' ? backendData.verdict : ''));
+      const summaryText = isNonFacial 
+        ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' 
+        : ((typeof geminiData === 'object' && geminiData?.summary_text) 
+          ? geminiData.summary_text 
+          : (typeof backendData.summary_text === 'string' ? backendData.summary_text : (typeof backendData.verdict === 'string' ? backendData.verdict : '')));
       const subScores = (typeof geminiData === 'object' && geminiData?.sub_scores) ? geminiData.sub_scores : (backendData.sub_scores || null);
       const signalLogs = (typeof geminiData === 'object' && geminiData?.signal_logs) ? geminiData.signal_logs : (backendData.signal_logs || null);
 
@@ -479,11 +503,12 @@ export default function VerifyView({
         date: backendData.date || new Date().toISOString().replace('T', ' ').substring(0, 16),
         riskScore: score,
         status: status,
-        verdict: (typeof summaryText === 'string' && summaryText) ? summaryText : (typeof backendData.verdict === 'string' ? backendData.verdict : 'Analysis completed by active backend pipeline.'),
-        recommendation: backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.',
+        asset_type: backendData.asset_type,
+        verdict: isNonFacial ? 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)' : ((typeof summaryText === 'string' && summaryText) ? summaryText : 'Analysis completed by active backend pipeline.'),
+        recommendation: isNonFacial ? 'No human faces detected in visual stream (e.g. landscape/object media). Deepfake scoring bypassed cleanly.' : (backendData.recommendation || 'Multiple synthetic anomaly signals detected in frame-by-frame structural parsing.'),
         platform: backendData.platform || (intakeMethod === 'url' ? (detectedPlatform?.name || 'Other') : 'Uploaded Asset'),
         reasons: backendData.reasons || getDynamicReasons(activeSubTab, score),
-        flagged_frames: backendData.flagged_frames || backendData.flaggedFrames,
+        flagged_frames: backendData.flagged_frames || backendData.flaggedFrames || [],
         summary_text: summaryText || backendData.summary_text,
         sub_scores: subScores,
         signal_logs: signalLogs,
@@ -1917,6 +1942,47 @@ export default function VerifyView({
 
         </div>
       </div>
+
+      {/* ERROR POPUP MODAL */}
+      {errorModalMsg && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-6 text-left relative animate-in fade-in duration-200">
+            <div className="flex items-center space-x-3 text-rose-600 dark:text-rose-400">
+              <div className="p-3 bg-rose-100 dark:bg-rose-950/50 rounded-xl shrink-0">
+                <AlertTriangle className="h-6 w-6 stroke-[2]" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white leading-snug">Video Extraction Failed</h3>
+                <span className="text-[10px] font-mono text-rose-500 uppercase tracking-wider font-bold">Ingestion / Security Error</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/50 rounded-xl space-y-1 text-xs">
+              <p className="font-semibold text-rose-900 dark:text-rose-200 leading-relaxed font-mono">
+                {errorModalMsg}
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
+              <p className="font-bold text-slate-800 dark:text-slate-200">Recommended Resolution Steps:</p>
+              <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                <li>Ensure the post is 100% public (private or restricted accounts block scraping).</li>
+                <li>Verify URL syntax (YouTube, TikTok, Facebook, X, or direct MP4/MOV links).</li>
+                <li>If platform firewalls block network link extraction, try uploading the raw file directly.</li>
+              </ul>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setErrorModalMsg(null)}
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+              >
+                Dismiss & Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

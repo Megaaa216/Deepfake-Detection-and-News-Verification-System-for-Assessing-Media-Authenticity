@@ -68,6 +68,7 @@ export interface VerificationResult {
   forensic_categories?: ForensicCategories;
   gemini_audit?: any;
   analysis_summary?: any;
+  asset_type?: string;
 }
 
 export interface Stats {

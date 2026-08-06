@@ -52,31 +52,35 @@ def download_video_link(url: str, output_dir: str) -> str:
   # Generate unique temp filename to prevent thread collision
   unique_id = str(uuid.uuid4())
   
-  if is_direct_link(url):
-    print(f"[Downloader] Direct video link detected. Streaming download directly...")
-    temp_filename = f"direct_{unique_id}.mp4"
-    temp_path = os.path.join(output_dir, temp_filename)
-    return download_direct_video(url, temp_path)
-  
-  print(f"[Downloader] Platform stream link detected. Initiating yt-dlp...")
-  
-  # Configure yt-dlp to download lightweight progressive formats (<480p) for high processing speed without requiring ffmpeg
-  ydl_opts = {
-    'format': 'best[ext=mp4]/bestvideo[ext=mp4]/worst[ext=mp4]/best',
-    'outtmpl': os.path.join(output_dir, f"platform_{unique_id}_%(id)s.%(ext)s"),
-    'max_filesize': 100 * 1024 * 1024,  # 100MB file limit
-    'quiet': True,
-    'no_warnings': True,
-    'noprogress': True,
-    'nocheckcertificate': True,
-    'http_headers': {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-us,en;q=0.5',
+  try:
+    if is_direct_link(url):
+      print(f"[Downloader] Direct video link detected. Streaming download directly...")
+      temp_filename = f"direct_{unique_id}.mp4"
+      temp_path = os.path.join(output_dir, temp_filename)
+      return download_direct_video(url, temp_path)
+    
+    print(f"[Downloader] Platform stream link detected. Initiating yt-dlp...")
+    
+    # Configure yt-dlp to download lightweight progressive formats (<480p)
+    ydl_opts = {
+      'format': 'best[ext=mp4]/bestvideo[ext=mp4]/worst[ext=mp4]/best',
+      'outtmpl': os.path.join(output_dir, f"platform_{unique_id}_%(id)s.%(ext)s"),
+      'max_filesize': 100 * 1024 * 1024,  # 100MB file limit
+      'quiet': True,
+      'no_warnings': True,
+      'noprogress': True,
+      'nocheckcertificate': True,
+      'http_headers': {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-us,en;q=0.5',
+      }
     }
-  }
-  
-  with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-    info = ydl.extract_info(url, download=True)
-    filename = ydl.prepare_filename(info)
-    return os.path.abspath(filename)
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+      info = ydl.extract_info(url, download=True)
+      filename = ydl.prepare_filename(info)
+      return os.path.abspath(filename)
+  except Exception as e:
+    print(f"[Downloader Error] Failed to download link '{url}': {e}")
+    raise ValueError(f"Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")

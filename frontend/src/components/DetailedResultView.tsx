@@ -80,7 +80,16 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
   let riskBorderColor = 'border-slate-800';
   let riskBadgeColor = 'bg-slate-900 text-slate-400 border-slate-800';
 
-  if (isAuth) {
+  const isNonFacial = targetReport.asset_type === 'non_facial_media' || String(targetReport.verdict).includes('NON-FACIAL ASSET');
+
+  if (isNonFacial) {
+    finalVerdictLabel = 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)';
+    riskLevelLabel = 'Zero Risk (0%)';
+    riskColorClass = 'text-teal-400';
+    riskBgClass = 'bg-teal-950/40 border-teal-900/60';
+    riskBorderColor = 'border-teal-900/60';
+    riskBadgeColor = 'bg-teal-500/15 text-teal-400 border-teal-500/30';
+  } else if (isAuth) {
     finalVerdictLabel = 'Likely authentic';
     riskLevelLabel = 'Low Risk';
     riskColorClass = 'text-emerald-400';

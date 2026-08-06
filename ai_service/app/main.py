@@ -77,8 +77,30 @@ async def analyze_link(payload: LinkAnalysisRequest):
     # 2. Run model inference on downloaded local file
     result = await deepfake_detector.analyze_video(local_path)
     return result
+  except ValueError as val_err:
+    print(f"[AI Service Ingestion Error] {val_err}")
+    return JSONResponse(
+      status_code=400,
+      content={
+        "success": False,
+        "detail": str(val_err),
+        "message": str(val_err),
+        "error_code": "INGESTION_FAILED",
+        "unavailable": True
+      }
+    )
   except Exception as e:
-    raise HTTPException(status_code=500, detail=str(e))
+    print(f"[AI Service Error] analyze_link failed: {e}")
+    return JSONResponse(
+      status_code=400,
+      content={
+        "success": False,
+        "detail": f"Failed to ingest video stream: {str(e)}",
+        "message": f"Failed to ingest video stream: {str(e)}",
+        "error_code": "INGESTION_FAILED",
+        "unavailable": True
+      }
+    )
   finally:
     # 3. Securely clean up local temporary file
     if local_path and os.path.exists(local_path):
