@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ArrowLeft, Download, ShieldAlert, CheckCircle2, AlertTriangle, 
-  FileText, Calendar, HardDrive, Timer, ExternalLink, RefreshCw, BarChart2,
+  FileText, Calendar, HardDrive, Timer, ExternalLink, RefreshCw,
   HelpCircle, ChevronRight, Lock, BadgeInfo, Cpu, Star, BadgeCheck,
   Eye, Scan, Play, AlertCircle, Sparkles, Clock, Compass, Activity, 
   AlignLeft, Info, FileSignature, CheckCircle, ShieldX, Layers, Video, Sun, Mic
@@ -103,36 +103,6 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
     riskBadgeColor = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
   }
 
-  // Calculate dynamic subscores based on overall riskScore to represent a realistic, interconnected check
-  const getSubscores = (type: string, score: number) => {
-    const isHigh = score > 50;
-    const isMed = score >= 20 && score <= 50;
-
-    if (type === 'video') {
-      return {
-        faceConsistency: isHigh ? 84 : isMed ? 48 : 9,
-        lipSyncMismatch: isHigh ? 89 : isMed ? 52 : 12,
-        audioIrregularities: isHigh ? 94 : isMed ? 45 : 6,
-        frameTransitionAnomalies: isHigh ? 81 : isMed ? 38 : 5,
-        manipulationScore: score
-      };
-    } else if (type === 'image') {
-      return {
-        aiGenerationIndicators: isHigh ? 86 : isMed ? 42 : 5,
-        editingTraces: isHigh ? 89 : isMed ? 55 : 12,
-        metadataInconsistencies: isHigh ? 78 : isMed ? 34 : 4,
-        facialArtifacts: isHigh ? 92 : isMed ? 49 : 8
-      };
-    } else {
-      return {
-        sourceReliability: isHigh ? 88 : isMed ? 54 : 10,
-        emotionalLanguage: isHigh ? 91 : isMed ? 48 : 7,
-        headlineManipulation: isHigh ? 84 : isMed ? 41 : 9,
-        contentConsistency: isHigh ? 87 : isMed ? 52 : 11
-      };
-    }
-  };
-
   const getSummaryText = (report: VerificationResult): string => {
     if (typeof report.summary_text === 'string' && report.summary_text) {
       return report.summary_text;
@@ -184,13 +154,6 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
   };
 
   const forensicCategories = getForensicCategories();
-
-  const subscores = getSubscores(targetReport.type, targetReport.riskScore);
-  const liveSubscores = (typeof targetReport.sub_scores === 'object' && targetReport.sub_scores) ? targetReport.sub_scores : {};
-  const faceInconsistencyScore = Number(liveSubscores.face_inconsistency ?? (subscores as any).faceConsistency ?? (isFake ? 85 : 8));
-  const lipSyncMismatchScore = Number(liveSubscores.lipsync_mismatch ?? (subscores as any).lipSyncMismatch ?? (isFake ? 88 : 6));
-  const audioIrregularitiesScore = Number(liveSubscores.audio_irregularities ?? (subscores as any).audioIrregularities ?? (isFake ? 82 : 5));
-  const frameTransitionScore = Number(liveSubscores.frame_transition ?? (subscores as any).frameTransitionAnomalies ?? (isFake ? 79 : 7));
 
   const safeSignalLogs = Array.isArray(targetReport.signal_logs) ? targetReport.signal_logs : [];
 
