@@ -120,13 +120,13 @@ export const INITIAL_HISTORY: VerificationResult[] = [
   {
     id: 'check-107',
     type: 'video',
-    targetName: 'https://www.instagram.com/p/private_restricted_story/',
+    targetName: 'https://www.tiktok.com/@private_restricted_user/video/732890184',
     date: '2026-06-07 10:14',
     riskScore: 0,
     status: 'likely_authentic',
     verdict: 'This content cannot be verified because it is restricted or private.',
-    recommendation: 'Access Restricted. The URL corresponds to a private or locked account on Instagram. To verify this asset, please download and upload the file manually.',
-    platform: 'Instagram',
+    recommendation: 'Access Restricted. The URL corresponds to a private or locked account. To verify this asset, please download and upload the file manually.',
+    platform: 'TikTok',
     unavailable: true,
     unavailabilityReason: 'Private content',
     reasons: []

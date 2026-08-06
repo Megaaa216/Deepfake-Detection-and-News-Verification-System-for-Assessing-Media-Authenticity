@@ -51,6 +51,10 @@ def download_video_link(url: str, output_dir: str) -> str:
   
   # Generate unique temp filename to prevent thread collision
   unique_id = str(uuid.uuid4())
+
+  url_lower = url.lower()
+  if "instagram.com" in url_lower or "instagr.am" in url_lower:
+    raise ValueError("Unsupported Platform: Instagram is not supported. Please use direct file upload.")
   
   try:
     if is_direct_link(url):
@@ -79,8 +83,15 @@ def download_video_link(url: str, output_dir: str) -> str:
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
       info = ydl.extract_info(url, download=True)
+      if not info:
+        raise ValueError("Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")
       filename = ydl.prepare_filename(info)
+      if not os.path.exists(filename):
+        files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.startswith(f"platform_{unique_id}")]
+        if files:
+          return os.path.abspath(files[0])
+        raise ValueError("Failed to ingest video stream: Downloaded file not found on disk.")
       return os.path.abspath(filename)
   except Exception as e:
     print(f"[Downloader Error] Failed to download link '{url}': {e}")
-    raise ValueError(f"Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")
+    raise ValueError("Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")

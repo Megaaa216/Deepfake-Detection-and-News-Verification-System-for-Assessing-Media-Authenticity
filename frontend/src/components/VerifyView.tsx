@@ -8,7 +8,6 @@ import {
   Fingerprint, Compass, Activity, Sliders, Binary, Scan
 } from 'lucide-react';
 import { VerificationResult, VerificationType, VerificationReason, VerificationStatus } from '../types';
-import { detectionService } from '../services/api';
 
 interface VerifyViewProps {
   activeSubTab: VerificationType;
@@ -105,176 +104,7 @@ export default function VerifyView({
     );
   }
 
-  // Preloaded investigative social media presets
-  const SOCIAL_PRESETS = [
-    {
-      id: 'p-1',
-      platform: 'TikTok',
-      url: 'https://www.tiktok.com/@finance_trends/video/732890184',
-      type: 'video',
-      status: 'likely_deepfake',
-      riskScore: 89,
-      verdict: 'The video stream published on TikTok contains localized face mesh warp and cloned audio. Face transplant algorithms detected.',
-      recommendation: 'Critical concern. Cloned voice signature matched under 140ms latency delay relative to visual phoneme-viseme muscle coordinates. Do not share.',
-      isMultiContent: true,
-      hasText: true,
-      hasImage: false,
-      hasVideo: true,
-      textPreview: '"Urgent economic warning from the Central Bank! Standard cash accounts locked within 48 hours." (Extracted from caption)',
-      videoDetails: 'Phonetic spectral delay (140ms). Localized GAN mesh mask detected around mouth and eyelids. Synthesis certainty 96.5%.',
-      reasons: [
-        { id: 'tok-r1', name: 'Temporal Edge Blending', status: 'failed', details: 'Flickering neural mask contours observed around the nose-bridge on transition keyframes.' },
-        { id: 'tok-r2', name: 'Acoustic Wave Cloning Check', status: 'failed', details: 'Voice resonance contains flat robotic frequency baselines matching synthetic API models.' },
-        { id: 'tok-r3', name: 'Specular Lighting Vector', status: 'warning', details: 'Pupil reflections behave statically and fail to track shifts in back-lighting.' }
-      ]
-    },
-    {
-      id: 'p-2',
-      platform: 'YouTube',
-      url: 'https://www.youtube.com/watch?v=mars_rover_alien_leak_footage',
-      type: 'video',
-      status: 'likely_deepfake',
-      riskScore: 95,
-      verdict: 'CGI mesh overlays and synthetically simulated terrain tracks detected on YouTube video stream.',
-      recommendation: 'Extremely high threat of dissemination. Frame hashes do not exist in official space agency raw database catalogs.',
-      isMultiContent: true,
-      hasText: true,
-      hasImage: true,
-      hasVideo: true,
-      textPreview: '"Uncensored leaked rover file from planetary operations. They tried to hide this!" (Extracted from YouTube title & description)',
-      imageDetails: 'Casted shadow vectors physically conflict with landscape geometry. Digital noise contains high-pass filter gradients.',
-      videoDetails: 'The dynamic asset coordinates drift off the physical ground plane mesh by 11.2 pixels on rotation.',
-      reasons: [
-        { id: 'yt-r1', name: '3D Mesh Alignment Check', status: 'failed', details: 'Coordinate tracking drift confirms dynamic assets were post-rendered onto real-world frames.' },
-        { id: 'yt-r2', name: 'Physical Light Falloff Check', status: 'failed', details: 'Pixel luminosity patterns fail standard quadratic physical distance decrease models.' }
-      ]
-    },
-    {
-      id: 'p-3',
-      platform: 'Facebook',
-      url: 'https://www.facebook.com/patriotnewsreport/posts/2918839218',
-      type: 'news_link',
-      status: 'suspicious',
-      riskScore: 71,
-      verdict: 'Linguistic clickbait signatures matched. Linked article uses high emotional manipulation tactics with empty citations.',
-      recommendation: 'Use skepticism prior to sharing or referencing. Secondary news sources do not contain any record of target claims.',
-      isMultiContent: true,
-      hasText: true,
-      hasImage: true,
-      hasVideo: false,
-      textPreview: '"BREAKING: Miracle draft laws formulated to seize private residential vehicle assets by August! National security panic."',
-      imageDetails: 'Background graphic shows standard digital copy-paste duplication overlays.',
-      reasons: [
-        { id: 'fb-r1', name: 'Objective Phrase Classification', status: 'failed', details: 'Classifier flags alarming concentration of sensationalist adjectives ("SHOCKING COVERS", "NATIONAL CRISIS").' },
-        { id: 'fb-r2', name: 'Authority Verification Registry', status: 'failed', details: 'Congressional logs show no legislation drafts matching the statements or terminology.' }
-      ]
-    },
-    {
-      id: 'p-4',
-      platform: 'X',
-      url: 'https://x.com/Reuters/status/180239105183',
-      type: 'news_link',
-      status: 'likely_authentic',
-      riskScore: 3,
-      verdict: 'Highly credible news article shared from verified Reuters profile. Clean citations, neutral syntax, and certified author registry.',
-      recommendation: 'Reliable material. Safe to consult, read, and share. Corresponds precisely with global security feeds.',
-      isMultiContent: true,
-      hasText: true,
-      hasImage: false,
-      hasVideo: false,
-      textPreview: '"European Central Committee releases official economic support brackets for regional green transport initiative."',
-      reasons: [
-        { id: 'x-r1', name: 'Journalistic Mutual Cohesion', status: 'passed', details: 'Co-reported by AP, Bloomberg, and AFP international bureaus with high semantic uniformity.' },
-        { id: 'x-r2', name: 'Linguistic Neutrality Index', status: 'passed', details: 'Scorers evaluate text as informative, direct, neutral standard journalism with zero clickbait metrics.' }
-      ]
-    },
-    {
-      id: 'p-5',
-      platform: 'Instagram',
-      url: 'https://www.instagram.com/p/C6xD_u0ys8Q/defense_minister.jpg',
-      type: 'image',
-      status: 'likely_authentic',
-      riskScore: 7,
-      verdict: 'Extracted post graphic from Instagram exhibits unmanipulated physical geometry and consistent focal noise metrics.',
-      recommendation: 'Low threat profile. Metadata and specular light parameters are completely aligned with original camera hardware configurations.',
-      isMultiContent: true,
-      hasText: false,
-      hasImage: true,
-      hasVideo: false,
-      imageDetails: 'Full spec camera-sensor noise pattern consistent on all channels. Specularity matching passed.',
-      reasons: [
-        { id: 'ig-r1', name: 'Bilateral Noise Uniformity', status: 'passed', details: 'Sensor background noise values are distributed flatly across the canvas with zero localized edits.' }
-      ]
-    },
-    {
-      id: 'p-6',
-      platform: 'Reddit',
-      url: 'https://www.reddit.com/r/pics/comments/senator_briefing/senator_handshake.png',
-      type: 'image',
-      status: 'suspicious',
-      riskScore: 61,
-      verdict: 'Detected manual overlay and airbrush blurring around handshake contact vectors on Reddit photo post.',
-      recommendation: 'Warning. Localized spatial discrepancies suggest potential digital photo illustration presented as actual event.',
-      isMultiContent: true,
-      hasText: true,
-      hasImage: true,
-      hasVideo: false,
-      textPreview: '"Unscheduled corporate tycoon handshake inside senator briefing. Photo taken by local staff."',
-      imageDetails: 'Handshake perimeter demonstrates significant gaussian blurring (1.4 radius) and light casting mismatches.',
-      reasons: [
-        { id: 'red-r1', name: 'Edge Discontinuity Evaluator', status: 'failed', details: 'Localized sharpness levels change abruptly, typical of manual crop feathering.' },
-        { id: 'red-r2', name: 'Vector Shadow Convergence', status: 'failed', details: 'Shadow direction under the participants contradicts the indoor ceiling spotlight coordinates.' }
-      ]
-    }
-  ];
-
-  // File verification presets
-  const FILE_PRESETS = [
-    {
-      id: 'f-1',
-      name: 'senator_briefing_leak.webp',
-      type: 'image',
-      size: '2.4 MB',
-      status: 'suspicious',
-      riskScore: 68,
-      verdict: 'Manual JPEG retouch and clone stamp overlay detected around the backdrop and hands. Color Filter Array (CFA) structures exhibit repeating anomalies.',
-      recommendation: 'Visual manipulation concern. High certainty of composite editing utilizing brush transparency filters. Do not utilize in primary publications.',
-      reasons: [
-        { id: 'f-r1', name: 'JPEG Compression Wave', status: 'failed', details: 'Quantization mismatch identified between central participants and surrounding seating background.' },
-        { id: 'f-r2', name: 'EXIF Integrity Check', status: 'warning', details: 'Contains anomalous header timestamps modified via Paint.NET libraries.' }
-      ]
-    },
-    {
-      id: 'f-2',
-      name: 'chief_officer_synthetic_voice.mp4',
-      type: 'video',
-      size: '18.1 MB',
-      status: 'likely_deepfake',
-      riskScore: 92,
-      verdict: 'Facial lip synchrony frequency lags by 120ms relative to vocal formant frequencies. Auditory signature reveals synthesized TTS spectral baselines.',
-      recommendation: 'Extremely high risk. AI-generated voice clone merged onto a public stock video frame rate sequence.',
-      reasons: [
-        { id: 'f-r3', name: 'Facial Landmark Tracking', status: 'failed', details: 'Sub-pixel spatial drift mapped relative to facial mesh layout, 67 vertex points exhibit jitter.' },
-        { id: 'f-r4', name: 'Acoustic Wavelet Match', status: 'failed', details: 'Spectral voiceprint exhibits dynamic compression patterns consistent with ElevenLabs V2 model.' }
-      ]
-    },
-    {
-      id: 'f-3',
-      name: 'unmanipulated_interview_raw.mp4',
-      type: 'video',
-      size: '25.0 MB',
-      status: 'likely_authentic',
-      riskScore: 2,
-      verdict: 'No facial mesh edits or acoustic anomalies identified. Organic voice features match natural physiological breathing frequencies.',
-      recommendation: 'Low concern profile. Safe, verified unmanipulated video content.',
-      reasons: [
-        { id: 'f-r5', name: 'Facial Landmark Tracking', status: 'passed', details: 'Zero keyframe drift. Pixel-edge brightness matches ceiling light angles perfectly.' },
-        { id: 'f-r6', name: 'Biological Voice Signature', status: 'passed', details: 'Natural pause breathing patterns and physiological laryngeal resonances authenticated.' }
-      ]
-    }
-  ];
-
-  // Run dynamic analysis and verification when URL changes (simulate extraction)
+  // Run dynamic analysis and verification when URL changes
   useEffect(() => {
     analyzeUrlStructure(inputUrl);
     setResult(null);
@@ -307,10 +137,6 @@ export default function VerifyView({
       platform = 'TikTok';
       pBadge = 'bg-slate-950 text-rose-450 border border-slate-800';
       pDetails = 'TikTok CDN content pipeline initialized.';
-    } else if (lower.includes('instagram.com')) {
-      platform = 'Instagram';
-      pBadge = 'bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-700 text-white';
-      pDetails = 'Instagram Graph Scraper active.';
     } else if (lower.includes('x.com') || lower.includes('twitter.com')) {
       platform = 'X';
       pBadge = 'bg-black text-slate-100 border border-slate-700';
@@ -364,24 +190,7 @@ export default function VerifyView({
     }
   };
 
-  const selectPresetUrl = (preset: typeof SOCIAL_PRESETS[number]) => {
-    setInputUrl(preset.url);
-    setActiveSubTab(preset.type as VerificationType);
-    setIntakeMethod('url');
-    setRawFile(null);
-    setResult(null);
-    setAnalysisResult(null);
-  };
 
-  const selectFilePreset = (preset: typeof FILE_PRESETS[number]) => {
-    setSelectedFile({ name: preset.name, size: preset.size });
-    setFileSizeStr(preset.size);
-    setActiveSubTab(preset.type as VerificationType);
-    setIntakeMethod('upload');
-    setRawFile(null);
-    setResult(null);
-    setAnalysisResult(null);
-  };
 
   // Mock stage analysis logs
   const verificationLogs = [
@@ -423,8 +232,18 @@ export default function VerifyView({
 
     // If URL is being analyzed, trigger the backend API request
     if (intakeMethod === 'url') {
+      const rawUrlString = inputUrl.trim().replace(/^blob:/, '');
+      const lowerUrl = rawUrlString.toLowerCase();
+
+      // Explicit Unsupported Platform Guard (Instagram & aliases)
+      if (lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am')) {
+        setIsAnalyzing(false);
+        setResult(null);
+        setErrorModalMsg("Unsupported Platform: Instagram is not supported. Please use direct file upload.");
+        return;
+      }
+
       try {
-        const rawUrlString = inputUrl.trim().replace(/^blob:/, '');
         console.log('Initiating backend video link detection API call for:', rawUrlString);
         const response = await axios.post('http://localhost:5000/api/verify-media', {
           url: rawUrlString
@@ -635,6 +454,8 @@ export default function VerifyView({
       };
     }
   };
+
+
 
   const handleTextSubmit = async () => {
     const payloadText = textIntakeMode === 'url' ? articleUrlInput.trim() : textInput.trim();

@@ -296,10 +296,6 @@ export default function VerifyView({
       platform = 'TikTok';
       pBadge = 'bg-slate-950 text-rose-450 border border-slate-800';
       pDetails = 'TikTok CDN content pipeline initialized.';
-    } else if (lower.includes('instagram.com')) {
-      platform = 'Instagram';
-      pBadge = 'bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-700 text-white';
-      pDetails = 'Instagram Graph Scraper active.';
     } else if (lower.includes('x.com') || lower.includes('twitter.com')) {
       platform = 'X';
       pBadge = 'bg-black text-slate-100 border border-slate-700';
@@ -409,8 +405,19 @@ export default function VerifyView({
 
     // If URL is being analyzed, trigger the backend API request
     if (intakeMethod === 'url') {
+      const rawUrlString = inputUrl.trim().replace(/^blob:/, '');
+      const lowerUrl = rawUrlString.toLowerCase();
+
+      // Explicit Unsupported Platform Guard (Instagram & aliases)
+      if (lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am')) {
+        setIsAnalyzing(false);
+        setResult(null);
+        setErrorModalMsg("Unsupported Platform: Instagram is not supported. Please use direct file upload.");
+        return;
+      }
+
       try {
-        console.log('Initiating backend video link detection API call for:', inputUrl.trim());
+        console.log('Initiating backend video link detection API call for:', rawUrlString);
         const response = await axios.post('http://localhost:5000/api/verify-url', {
           videoUrl: inputUrl.trim()
         });
