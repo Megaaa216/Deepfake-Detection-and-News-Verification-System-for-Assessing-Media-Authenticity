@@ -113,13 +113,13 @@ class DeepfakeDetectorManager:
     try:
       # Step 1: Preprocess video frames and crop faces
       print(f"[AI Service] Preprocessing video file: {video_path}")
-      sequence_tensor, saved_filenames, laplacian_vars = self.preprocessor.preprocess_video(
+      sequence_tensor, saved_filenames, laplacian_vars, has_face_list, faces_detected_count = self.preprocessor.preprocess_video(
         video_path, 
         sequence_length=128
       )
 
       # Face Detection Guard for Non-Face Assets (Landscapes, Space, Objects, Text)
-      if sequence_tensor is None or not saved_filenames or len(saved_filenames) == 0:
+      if sequence_tensor is None or not saved_filenames or len(saved_filenames) == 0 or faces_detected_count == 0:
         print("[AI Service Guard] Zero human facial targets detected in video stream (Non-facial media asset). Bypassing deepfake CNN/LSTM scoring.")
         return {
           "result": "real",
@@ -132,26 +132,14 @@ class DeepfakeDetectorManager:
           "summary_text": "Non-facial media sequence authenticated. Zero human facial targets identified across frame sequence. Deepfake visual scoring bypassed cleanly.",
           "analysis_summary": "Non-facial media sequence authenticated. Zero human facial targets identified across frame sequence. Deepfake visual scoring bypassed cleanly.",
           "sub_scores": {
-            "facial_consistency": 0,
-            "temporal_coherence": 0,
-            "lip_sync_accuracy": 0,
-            "lighting_reflection": 0,
             "face_inconsistency": 0,
             "lipsync_mismatch": 0,
             "audio_irregularities": 0,
             "frame_transition": 0
           },
           "signal_logs": [
-            "Zero human facial bounding box landmarks identified across 128 sampled frame coordinates.",
-            "Visual stream classified as inorganic / landscape / object / non-human media asset.",
-            "Deepfake neural facial swap scoring bypassed with 0% risk index."
+            { "title": "Facial Detection Pre-Check", "status": "PASSED", "quote": "Zero human facial targets identified across frame sequence. Non-facial asset verified." }
           ],
-          "forensic_categories": {
-            "spatial_boundary_artifacts": "Non-facial asset: No human facial boundary seams present in visual stream.",
-            "temporal_consistency": "Non-facial asset: Smooth environmental / landscape video frame transitions.",
-            "lighting_and_shadow_geometry": "Non-facial asset: Natural ambient lighting distribution across non-human scene elements.",
-            "audio_visual_indicators": "Non-facial asset: No synthesized human speech or lip desynchronization detected."
-          },
           "flagged_frames": []
         }
 
@@ -177,23 +165,7 @@ class DeepfakeDetectorManager:
         lstm_out, _ = self.hybrid_model.lstm(f_out) # Shape: (batch_size, seq_len, 4096)
         
         # Compute raw logits before temperature scaling and softmax
-        base_logits = self.hybrid_model.linearOut(self.hybrid_model.dp(lstm_out)) # Shape: (batch_size, seq_len, 2)
-        
-        # Incorporate frame spatial feature temporal deviation into raw logits
-        spatial_anomaly_bias = (feat_diff_norm - 0.5) * 2.5
-        all_logits = base_logits.clone()
-        all_logits[0, :, 1] += spatial_anomaly_bias[0]
-        all_logits[0, :, 0] -= spatial_anomaly_bias[0]
-
-        # 🔬 FREQUENCY DOMAIN / LAPLACIAN BLUR CHECK:
-        # Detect neural over-smoothing in face crops (typical in studio-rendered face swaps)
-        if laplacian_vars and len(laplacian_vars) == seq_len:
-          lap_arr = np.array(laplacian_vars, dtype=np.float32)
-          # Baseline variance for sharp natural faces is ~100+. Variance below 80 indicates neural smoothing
-          smoothing_metric = np.clip((80.0 - lap_arr) / 80.0, 0.0, 1.0)
-          lap_bias = torch.tensor(smoothing_metric, device=self.device, dtype=torch.float32) * 1.5
-          all_logits[0, :, 1] += lap_bias
-          all_logits[0, :, 0] -= lap_bias
+        all_logits = self.hybrid_model.linearOut(self.hybrid_model.dp(lstm_out)) # Shape: (batch_size, seq_len, 2)
 
         # -----------------------------------------------------------------
         # 🌡️ 1. LOGIT TEMPERATURE SCALING (T = self.temperature)
@@ -211,12 +183,12 @@ class DeepfakeDetectorManager:
         print(f"[AI Service] Frame probabilities with T={self.temperature:.1f} (first 16 sample): {[round(s, 4) for s in frame_scores[:16]]}")
 
         # -----------------------------------------------------------------
-        # 📊 2. TRIMMED MEAN SCORE AGGREGATION
+        # 📊 2. TRIMMED MEAN SCORE AGGREGATION (Middle 80% of frame scores)
         # -----------------------------------------------------------------
         trimmed_mean_score = _calculate_trimmed_mean(frame_scores, trim_ratio=0.10)
 
         # -----------------------------------------------------------------
-        # 🔍 3. 8-FRAME CONSECUTIVE CLUSTER INSPECTION (> 0.38)
+        # 🔍 3. 8-FRAME CONSECUTIVE CLUSTER INSPECTION
         # -----------------------------------------------------------------
         cluster_size = 8
         cluster_scores = []
@@ -228,40 +200,60 @@ class DeepfakeDetectorManager:
         else:
           max_cluster_score = max(frame_scores) if frame_scores else 0.0
 
-        print(f"[AI Service] Trimmed Mean score (middle 80%): {trimmed_mean_score:.4f}")
-        print(f"[AI Service] Max 8-frame cluster anomaly score: {max_cluster_score:.4f}")
-
-        # Overall sequence prediction candidate score
-        last_frame_score = float(all_probs[0, -1, 1].item())
-        candidate_score = max(trimmed_mean_score, max_cluster_score, last_frame_score)
-        
-        # -----------------------------------------------------------------
-        # 🎯 4. SCORE CALIBRATION SANITY CHECK (HIGH TEMPORAL VARIANCE DAMPING)
-        # -----------------------------------------------------------------
+        # Calculate frame-by-frame structural feature variance
         frame_variance = float(np.var(frame_scores)) if frame_scores else 0.0
         
-        if 0.65 <= candidate_score <= 0.85 and frame_variance > 0.045:
-          final_score = candidate_score * 0.80
-          print(f"[AI Service] Sanity Check Triggered: Ambiguous score ({candidate_score:.4f}) with high frame variance ({frame_variance:.4f}). Soft-damped by 0.80 -> {final_score:.4f}")
+        print(f"[AI Service] Trimmed Mean score (middle 80%): {trimmed_mean_score:.4f}")
+        print(f"[AI Service] Max 8-frame cluster anomaly score: {max_cluster_score:.4f}")
+        print(f"[AI Service] Frame-to-frame structural score variance: {frame_variance:.4f}")
+
+        # -----------------------------------------------------------------
+        # 🛡️ 4. COMPRESSION NOISE FILTERING & AUTHENTIC BASELINE CALIBRATION
+        # -----------------------------------------------------------------
+        # If strong persistent deepfake features are present across both cluster and sequence
+        if max_cluster_score > 0.75 and trimmed_mean_score > 0.50:
+          candidate_score = max(trimmed_mean_score, max_cluster_score * 0.90)
+        else:
+          candidate_score = trimmed_mean_score
+
+        # If frame-by-frame structural consistency is stable across sequence (low variance),
+        # or if no persistent deepfake cluster anomaly (> 0.70) exists, calibrate score to low authentic baseline (0% - 22%).
+        if candidate_score < 0.60 or (frame_variance < 0.02 and max_cluster_score < 0.70):
+          final_score = min(candidate_score * 0.40, 0.22)
+          print(f"[AI Service] Compression Noise Filter Active: Stable sequence (variance={frame_variance:.4f}). Calibrated to authentic baseline ({final_score:.4f})")
         else:
           final_score = candidate_score
       
       # -----------------------------------------------------------------
-      # 🎯 5. DECISION BOUNDARY CALIBRATION (Threshold = 0.55 / 55%)
       # -----------------------------------------------------------------
-      is_fake = (final_score >= 0.55)
-      result = "fake" if is_fake else "real"
-      confidence = final_score if is_fake else (1.0 - final_score)
+      # 🎯 5. DECISION BOUNDARY CALIBRATION & GRAY-ZONE BUFFER
+      # -----------------------------------------------------------------
+      # Require anomaly probability >= 0.70 (70%) before assigning high-risk/fake
+      if final_score >= 0.70:
+        result = "fake"
+        status = "likely_deepfake"
+        confidence = final_score
+      elif final_score >= 0.35:
+        result = "suspicious"
+        status = "suspicious"
+        confidence = final_score
+      else:
+        result = "real"
+        status = "likely_authentic"
+        confidence = 1.0 - final_score
 
       # Compile individual frame metadata
       flagged_frames = []
       for i, filename in enumerate(saved_filenames):
-        frame_score = frame_scores[i]
+        has_face = has_face_list[i] if i < len(has_face_list) else True
+        frame_score = frame_scores[i] if has_face else 0.0
         flagged_frames.append({
           "frame_index": i,
           "score": round(frame_score, 4),
+          "has_face": has_face,
           "image_url": f"/public/frames/{filename}",
-          "frame_url": filename  # Keep frame_url for controller compatibility
+          "frame_url": filename,
+          "details": f"Face anomaly score of {(frame_score * 100):.1f}% detected." if has_face else "No Face Detected (Non-Facial Asset)"
         })
 
       # Sort this list mathematically by score in descending order (highest scores first)
@@ -292,13 +284,22 @@ class DeepfakeDetectorManager:
             if abs(recalibrated_score - final_score) > 0.05:
               print(f"[AI Service] [OVERRIDE] Gemini Arbiter RECALIBRATED score from {final_score:.4f} -> {recalibrated_score:.4f}")
               final_score = recalibrated_score
-              is_fake = (final_score >= 0.55)
-              result = "fake" if is_fake else "real"
-              confidence = final_score if is_fake else (1.0 - final_score)
+              if final_score >= 0.70:
+                result = "fake"
+                status = "likely_deepfake"
+                confidence = final_score
+              elif final_score >= 0.35:
+                result = "suspicious"
+                status = "suspicious"
+                confidence = final_score
+              else:
+                result = "real"
+                status = "likely_authentic"
+                confidence = 1.0 - final_score
           except (ValueError, TypeError) as arbiter_err:
             print(f"[AI Service Warning] Failed to parse recalibrated_score from Gemini audit: {arbiter_err}")
 
-      print(f"[AI Service] 100% Model Inference Successful. Result={result.upper()}, confidence={confidence:.4f}, max_cluster_score={max_cluster_score:.4f}")
+      print(f"[AI Service] 100% Model Inference Successful. Result={result.upper()}, status={status}, confidence={confidence:.4f}")
 
       summary_text = gemini_audit.get("summary_text") if isinstance(gemini_audit, dict) else str(gemini_audit or "")
       sub_scores = gemini_audit.get("sub_scores") if isinstance(gemini_audit, dict) else {}
@@ -310,6 +311,7 @@ class DeepfakeDetectorManager:
 
       return {
         "result": result,
+        "status": status,
         "confidence": round(confidence, 4),
         "riskScore": round(final_score * 100, 1),
         "risk_score": round(final_score * 100, 1),

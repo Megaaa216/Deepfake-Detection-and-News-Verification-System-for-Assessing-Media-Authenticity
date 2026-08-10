@@ -86,22 +86,22 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
 
     // Map cropped face filenames to FlaggedFrame schema
     if (data.flagged_frames && Array.isArray(data.flagged_frames)) {
-      const protocol = req.protocol;
-      const host = req.get("host");
       data.flagged_frames = data.flagged_frames.map((frame, index) => {
-        const isFake = frame.score >= 0.35;
+        const noFace = frame.has_face === false || frame.score === 0 || (typeof frame.details === 'string' && frame.details.includes("No Face"));
+        const isFake = !noFace && frame.score >= 0.35;
         return {
           ...frame,
           frame_id: `frame_${index + 1}`,
           image_name: frame.frame_url,
-          verdict: isFake ? 'FAKE' : 'AUTHENTIC',
-          details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
+          verdict: noFace ? 'AUTHENTIC' : (isFake ? 'FAKE' : 'AUTHENTIC'),
+          details: noFace ? 'No Face Detected (Non-Facial Asset)' : (frame.details || `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`)
         };
       });
     }
 
     // Format Gemini forensic narrative and dynamic breakdown scores
-    const isFake = data.result === 'fake' || (data.confidence && data.confidence > 0.35);
+    const isFake = data.result === 'fake' || data.status === 'likely_deepfake' || (typeof data.riskScore === 'number' && data.riskScore >= 70);
+    const isSuspicious = data.status === 'suspicious' || (typeof data.riskScore === 'number' && data.riskScore >= 35 && data.riskScore < 70);
     const geminiObj = (typeof data.gemini_audit === 'object' && data.gemini_audit) ? data.gemini_audit : {};
     
     data.summary_text = data.summary_text || geminiObj.summary_text || (typeof data.gemini_audit === 'string' ? data.gemini_audit : null) || await generateForensicSummary(
@@ -114,19 +114,28 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
     data.analysis_summary = data.summary_text;
 
     data.sub_scores = data.sub_scores || geminiObj.sub_scores || {
-      face_inconsistency: isFake ? 85 : 8,
-      lipsync_mismatch: isFake ? 88 : 6,
-      audio_irregularities: isFake ? 82 : 5,
-      frame_transition: isFake ? 79 : 7
+      face_inconsistency: isFake ? 85 : isSuspicious ? 45 : 8,
+      lipsync_mismatch: isFake ? 88 : isSuspicious ? 42 : 6,
+      audio_irregularities: isFake ? 82 : isSuspicious ? 38 : 5,
+      frame_transition: isFake ? 79 : isSuspicious ? 40 : 7
     };
 
     data.signal_logs = data.signal_logs || geminiObj.signal_logs || [
-      { title: "Face Mesh Landmark Drifts", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "Coordinate vertex drift detected along jaw contours." : "Vertices locked cleanly to facial bone contours." },
-      { title: "Phoneme-Viseme Lip Synchrony", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "120ms latency discrepancy between spoken vowels and visual lip movements." : "Audio wave aligns in real-time with visual lip expansion." },
-      { title: "Acoustic Synthesis Scan", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "High-frequency neural text-to-speech vocoder harmonics isolated." : "Formants match biological human vocal tract resonance." }
+      { title: "Face Mesh Landmark Drifts", status: isFake ? "FLAGGED" : isSuspicious ? "WARNING" : "PASSED", quote: isFake ? "Coordinate vertex drift detected along jaw contours." : isSuspicious ? "Minor landmark variations detected consistent with compression." : "Vertices locked cleanly to facial bone contours." },
+      { title: "Phoneme-Viseme Lip Synchrony", status: isFake ? "FLAGGED" : isSuspicious ? "WARNING" : "PASSED", quote: isFake ? "120ms latency discrepancy between spoken vowels and visual lip movements." : isSuspicious ? "Slight lip synchronization latency within normal broadcast tolerances." : "Audio wave aligns in real-time with visual lip expansion." },
+      { title: "Acoustic Synthesis Scan", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "High-frequency neural text-to-speech vocoder harmonics isolated." : isSuspicious ? "Acoustic spectrum shows mild noise compression." : "Formants match biological human vocal tract resonance." }
     ];
 
-    data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
+    // Handle non-facial media assets explicitly
+    if (data.asset_type === 'non_facial_media' || data.verdict?.includes('NON-FACIAL ASSET')) {
+      data.riskScore = 0.0;
+      data.confidence = 0.0;
+      data.status = 'likely_authentic';
+      data.verdict = 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)';
+    } else {
+      data.status = data.status || (isFake ? 'likely_deepfake' : isSuspicious ? 'suspicious' : 'likely_authentic');
+      data.riskScore = typeof data.riskScore === 'number' ? data.riskScore : (typeof data.risk_score === 'number' ? data.risk_score : Math.round(data.confidence * 100));
+    }
     data.flagged_frames = data.flagged_frames || [];
 
     return res.status(200).json(data);
@@ -146,9 +155,9 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
 });
 
 exports.analyzeVideoLink = asyncHandler(async (req, res) => {
-  const { videoUrl } = req.body;
+  const videoUrl = req.body.videoUrl || req.body.url;
   if (!videoUrl) {
-    throw new ApiError(400, "videoUrl parameter is required");
+    throw new ApiError(400, "videoUrl or url parameter is required");
   }
 
   logger.info(`Received video link for analysis: ${videoUrl}`);
@@ -176,22 +185,22 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
 
     // Map cropped face filenames to FlaggedFrame schema
     if (data.flagged_frames && Array.isArray(data.flagged_frames)) {
-      const protocol = req.protocol;
-      const host = req.get("host");
       data.flagged_frames = data.flagged_frames.map((frame, index) => {
-        const isFake = frame.score >= 0.35;
+        const noFace = frame.has_face === false || frame.score === 0 || (typeof frame.details === 'string' && frame.details.includes("No Face"));
+        const isFake = !noFace && frame.score >= 0.35;
         return {
           ...frame,
           frame_id: `frame_${index + 1}`,
           image_name: frame.frame_url,
-          verdict: isFake ? 'FAKE' : 'AUTHENTIC',
-          details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
+          verdict: noFace ? 'AUTHENTIC' : (isFake ? 'FAKE' : 'AUTHENTIC'),
+          details: noFace ? 'No Face Detected (Non-Facial Asset)' : (frame.details || `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`)
         };
       });
     }
 
     // Format Gemini forensic narrative and dynamic breakdown scores
-    const isFake = data.result === 'fake' || (data.confidence && data.confidence > 0.35);
+    const isFake = data.result === 'fake' || data.status === 'likely_deepfake' || (typeof data.riskScore === 'number' && data.riskScore >= 70);
+    const isSuspicious = data.status === 'suspicious' || (typeof data.riskScore === 'number' && data.riskScore >= 35 && data.riskScore < 70);
     const geminiObj = (typeof data.gemini_audit === 'object' && data.gemini_audit) ? data.gemini_audit : {};
     
     data.summary_text = data.summary_text || geminiObj.summary_text || (typeof data.gemini_audit === 'string' ? data.gemini_audit : null) || await generateForensicSummary(
@@ -204,16 +213,16 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
     data.analysis_summary = data.summary_text;
 
     data.sub_scores = data.sub_scores || geminiObj.sub_scores || {
-      face_inconsistency: isFake ? 85 : 8,
-      lipsync_mismatch: isFake ? 88 : 6,
-      audio_irregularities: isFake ? 82 : 5,
-      frame_transition: isFake ? 79 : 7
+      face_inconsistency: isFake ? 85 : isSuspicious ? 45 : 8,
+      lipsync_mismatch: isFake ? 88 : isSuspicious ? 42 : 6,
+      audio_irregularities: isFake ? 82 : isSuspicious ? 38 : 5,
+      frame_transition: isFake ? 79 : isSuspicious ? 40 : 7
     };
 
     data.signal_logs = data.signal_logs || geminiObj.signal_logs || [
-      { title: "Face Mesh Landmark Drifts", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "Coordinate vertex drift detected along jaw contours." : "Vertices locked cleanly to facial bone contours." },
-      { title: "Phoneme-Viseme Lip Synchrony", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "120ms latency discrepancy between spoken vowels and visual lip movements." : "Audio wave aligns in real-time with visual lip expansion." },
-      { title: "Acoustic Synthesis Scan", status: isFake ? "FLAGGED" : "PASSED", quote: isFake ? "High-frequency neural text-to-speech vocoder harmonics isolated." : "Formants match biological human vocal tract resonance." }
+      { title: "Face Mesh Landmark Drifts", status: isFake ? "FLAGGED" : isSuspicious ? "WARNING" : "PASSED", quote: isFake ? "Coordinate vertex drift detected along jaw contours." : isSuspicious ? "Minor landmark variations detected consistent with compression." : "Vertices locked cleanly to facial bone contours." },
+      { title: "Phoneme-Viseme Lip Synchrony", status: isFake ? "FLAGGED" : isSuspicious ? "WARNING" : "PASSED", quote: isFake ? "120ms latency discrepancy between spoken vowels and visual lip movements." : isSuspicious ? "Slight lip synchronization latency within normal broadcast tolerances." : "Audio wave aligns in real-time with visual lip expansion." },
+      { title: "Acoustic Synthesis Scan", status: isFake ? "FLAGGED" : isSuspicious ? "WARNING" : "PASSED", quote: isFake ? "High-frequency neural text-to-speech vocoder harmonics isolated." : isSuspicious ? "Acoustic spectrum shows mild noise compression." : "Formants match biological human vocal tract resonance." }
     ];
 
     // Handle non-facial media assets explicitly
@@ -223,7 +232,8 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
       data.status = 'likely_authentic';
       data.verdict = 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)';
     } else {
-      data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
+      data.status = data.status || (isFake ? 'likely_deepfake' : isSuspicious ? 'suspicious' : 'likely_authentic');
+      data.riskScore = typeof data.riskScore === 'number' ? data.riskScore : (typeof data.risk_score === 'number' ? data.risk_score : Math.round(data.confidence * 100));
     }
     data.flagged_frames = data.flagged_frames || [];
 
@@ -323,6 +333,17 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
 
     logger.info(`Received verify-media link for analysis: ${url}`);
 
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes("instagram.com") || lowerUrl.includes("instagr.am")) {
+      return res.status(400).json({
+        success: false,
+        error_code: "UNSUPPORTED_PLATFORM",
+        message: "Unsupported Platform: Instagram is not supported. Please use direct file upload.",
+        detail: "Unsupported Platform: Instagram is not supported. Please use direct file upload.",
+        unavailable: true
+      });
+    }
+
     const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
     
     try {
@@ -334,59 +355,63 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
       logger.info(`Python AI microservice link analysis successful:`, data);
 
       if (data.flagged_frames && Array.isArray(data.flagged_frames)) {
-        const protocol = req.protocol;
-        const host = req.get("host");
         data.flagged_frames = data.flagged_frames.map((frame, index) => {
-          const isFake = frame.score >= 0.35;
+          const noFace = frame.has_face === false || frame.score === 0 || (typeof frame.details === 'string' && frame.details.includes("No Face"));
+          const isFake = !noFace && frame.score >= 0.35;
           return {
             ...frame,
             frame_id: `frame_${index + 1}`,
             image_name: frame.frame_url,
-            verdict: isFake ? 'FAKE' : 'AUTHENTIC',
-            details: `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`
+            verdict: noFace ? 'AUTHENTIC' : (isFake ? 'FAKE' : 'AUTHENTIC'),
+            details: noFace ? 'No Face Detected (Non-Facial Asset)' : (frame.details || `Face anomaly score of ${(frame.score * 100).toFixed(1)}% detected.`)
           };
         });
       }
 
-      // Prefer Gemini 2.5 Flash audit if available
-      if (data.gemini_audit) {
-        data.verdict = data.gemini_audit;
+      const isFake = data.result === 'fake' || data.status === 'likely_deepfake' || (typeof data.riskScore === 'number' && data.riskScore >= 70);
+      const isSuspicious = data.status === 'suspicious' || (typeof data.riskScore === 'number' && data.riskScore >= 35 && data.riskScore < 70);
+      const geminiObj = (typeof data.gemini_audit === 'object' && data.gemini_audit) ? data.gemini_audit : {};
+      
+      data.summary_text = data.summary_text || geminiObj.summary_text || (typeof data.gemini_audit === 'string' ? data.gemini_audit : null) || await generateForensicSummary(
+        data.result,
+        data.confidence,
+        data.model_results?.face_model,
+        data.model_results?.temporal_model
+      );
+      data.verdict = data.summary_text;
+      data.analysis_summary = data.summary_text;
+
+      data.sub_scores = data.sub_scores || geminiObj.sub_scores || {
+        face_inconsistency: isFake ? 85 : isSuspicious ? 45 : 8,
+        lipsync_mismatch: isFake ? 88 : isSuspicious ? 42 : 6,
+        audio_irregularities: isFake ? 82 : isSuspicious ? 38 : 5,
+        frame_transition: isFake ? 79 : isSuspicious ? 40 : 7
+      };
+
+      // Handle non-facial media assets explicitly
+      if (data.asset_type === 'non_facial_media' || data.verdict?.includes('NON-FACIAL ASSET')) {
+        data.riskScore = 0.0;
+        data.confidence = 0.0;
+        data.status = 'likely_authentic';
+        data.verdict = 'VERIFIED AUTHENTIC (NON-FACIAL ASSET)';
       } else {
-        data.verdict = await generateForensicSummary(
-          data.result,
-          data.confidence,
-          data.model_results.face_model,
-          data.model_results.temporal_model
-        );
+        data.status = data.status || (isFake ? 'likely_deepfake' : isSuspicious ? 'suspicious' : 'likely_authentic');
+        data.riskScore = typeof data.riskScore === 'number' ? data.riskScore : (typeof data.risk_score === 'number' ? data.risk_score : Math.round(data.confidence * 100));
       }
-      data.analysis_summary = data.verdict;
-      data.riskScore = Math.round(data.result === 'fake' ? data.confidence * 100 : (1.0 - data.confidence) * 100);
       data.flagged_frames = data.flagged_frames || [];
 
       return res.status(200).json(data);
     } catch (error) {
-      logger.error("Error communicating with Python AI microservice for link:", error);
-      logger.warn("Falling back to hardcoded mock predictions");
+      logger.error("Error communicating with Python AI microservice for verifyMedia link:", error.message || error);
+      const errData = error.response?.data;
+      const msg = errData?.detail || errData?.message || error.message || "Failed to analyze video stream.";
       
-      const mockFlaggedFrames = [
-        { frame_id: "frame_1", image_name: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Spatial face boundary pixel jitter identified." },
-        { frame_id: "frame_2", image_name: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Specular reflective vectors mismatch with background." },
-        { frame_id: "frame_3", image_name: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", verdict: "FAKE", details: "Mouth-viseme lip contraction synchronization latency." },
-        { frame_id: "frame_4", image_name: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", verdict: "AUTHENTIC", details: "Noise field distribution matching baseline standard." }
-      ];
-      const mockSummary = await generateForensicSummary("fake", 0.85, 0.90, 0.78);
-
-      return res.status(200).json({
-        result: "fake",
-        confidence: 0.85,
-        model_results: {
-          face_model: 0.90,
-          temporal_model: 0.78
-        },
-        flagged_frames: mockFlaggedFrames,
-        verdict: mockSummary,
-        analysis_summary: mockSummary,
-        riskScore: 85
+      return res.status(400).json({
+        success: false,
+        error_code: "INGESTION_FAILED",
+        message: msg,
+        detail: msg,
+        unavailable: true
       });
     }
   }

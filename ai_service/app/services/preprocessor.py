@@ -149,12 +149,15 @@ class VideoPreprocessor:
     fps = cap.get(cv2.CAP_PROP_FPS)
     duration_seconds = total_frames / fps if fps > 0 else 0
     
-    if duration_seconds > 0 and duration_seconds < 10:
-      actual_sequence_length = total_frames
-      print(f"[AI Service] Video duration is under 10s ({duration_seconds:.2f}s). Processing ALL {actual_sequence_length} frames.")
+    fast_mode = os.getenv("FAST_BENCHMARK_MODE", "false").lower() in ("true", "1")
+    if fast_mode:
+      actual_sequence_length = min(8, total_frames)
+      print(f"[AI Service Fast Benchmark] Accelerated mode active: Sampling {actual_sequence_length} keyframes.")
     else:
-      actual_sequence_length = sequence_length
-      print(f"[AI Service] Video duration is {duration_seconds:.2f}s. Processing uniform slice of {actual_sequence_length} frames.")
+      # Hard production cap: extract max 16 keyframes to guarantee fast analysis latency (<10s)
+      target_length = min(sequence_length, 16) if sequence_length > 0 else 16
+      actual_sequence_length = min(target_length, total_frames)
+      print(f"[AI Service Production Cap] Video duration is {duration_seconds:.2f}s ({total_frames} total frames). Extracting {actual_sequence_length} keyframes evenly spaced across stream.")
 
     # Select frame indices evenly spaced across duration
     frame_indices = np.linspace(
@@ -167,6 +170,7 @@ class VideoPreprocessor:
     processed_frames: List[np.ndarray] = []
     saved_filenames: List[str] = []
     laplacian_vars: List[float] = []
+    has_face_list: List[bool] = []
     faces_detected_count = 0
     
     # Track smoothed bounding box across consecutive frames to eliminate spatial coordinate jitter
@@ -195,6 +199,7 @@ class VideoPreprocessor:
         cv2.imwrite(os.path.join(processed_dir, frame_name), placeholder)
         saved_filenames.append(frame_name)
         laplacian_vars.append(0.0)
+        has_face_list.append(False)
         continue
 
       # Convert to grayscale for face detection on BGR raw frame
@@ -248,9 +253,11 @@ class VideoPreprocessor:
         # Extract primary face ROI with 15% margin padding
         cropped_face = self._crop_face(frame, smoothed_box, padding_ratio=0.15)
         faces_detected_count += 1
+        has_face_list.append(True)
       else:
         # Fallback if no valid face passed filters: center crop frame
         cropped_face = self._center_crop(frame)
+        has_face_list.append(False)
 
       # Immediately convert to RGB color space after cropping
       face_rgb = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
@@ -289,4 +296,4 @@ class VideoPreprocessor:
     detection_pct = (faces_detected_count / actual_sequence_length * 100) if actual_sequence_length > 0 else 0.0
     print(f"[Preprocessor] Valid faces detected in {faces_detected_count}/{actual_sequence_length} frames ({detection_pct:.1f}% detection rate)")
     print(f"Saved {len(saved_filenames)} face crop frames to static_frames/ (mean Laplacian variance: {np.mean(laplacian_vars):.2f})")
-    return sequence_tensor, saved_filenames, laplacian_vars
+    return sequence_tensor, saved_filenames, laplacian_vars, has_face_list, faces_detected_count
