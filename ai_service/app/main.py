@@ -78,6 +78,8 @@ async def analyze_link(payload: LinkAnalysisRequest):
     # 2. Run model inference on downloaded local file
     result = await deepfake_detector.analyze_video(local_path)
     return result
+  except HTTPException as http_err:
+    raise http_err
   except ValueError as val_err:
     print(f"[AI Service Ingestion Error] {val_err}")
     raise HTTPException(status_code=400, detail=str(val_err))

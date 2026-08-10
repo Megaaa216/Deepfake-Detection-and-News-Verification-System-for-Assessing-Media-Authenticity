@@ -131,21 +131,26 @@ def download_video_link(url: str, output_dir: str) -> str:
     print(f"[Downloader] Platform stream link detected. Initiating yt-dlp...")
     
     ydl_opts = {
-      'format': 'b[height<=480][ext=mp4]/b[height<=480]/b[height<=720]/best[ext=mp4]/best',
-      'format_sort': ['res:480', 'res:720', 'ext:mp4:m4a'],
+      'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
       'outtmpl': os.path.join(output_dir, f"platform_{unique_id}_%(id)s.%(ext)s"),
       'max_filesize': 100 * 1024 * 1024,  # 100MB file limit
-      'socket_timeout': 15,
-      'retries': 3,
-      'fragment_retries': 3,
+      'socket_timeout': 30,
+      'retries': 5,
+      'fragment_retries': 5,
       'quiet': True,
       'no_warnings': True,
       'noprogress': True,
       'nocheckcertificate': True,
+      'geo_bypass': True,
+      'extractor_args': {
+        'youtube': {
+          'player_client': ['android', 'web', 'tv']
+        }
+      },
       'http_headers': {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-us,en;q=0.5',
+        'Accept-Language': 'en-US,en;q=0.9',
       }
     }
     
@@ -154,12 +159,14 @@ def download_video_link(url: str, output_dir: str) -> str:
       if not info:
         raise ValueError("Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")
       filename = ydl.prepare_filename(info)
-      if not os.path.exists(filename):
-        files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.startswith(f"platform_{unique_id}")]
+      if not os.path.exists(filename) or os.path.getsize(filename) == 0:
+        files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.startswith(f"platform_{unique_id}") and os.path.getsize(os.path.join(output_dir, f)) > 0]
         if files:
           return os.path.abspath(files[0])
-        raise ValueError("Failed to ingest video stream: Downloaded file not found on disk.")
+        raise ValueError("Failed to ingest video stream: Downloaded file is empty or missing.")
       return os.path.abspath(filename)
   except Exception as e:
     print(f"[Downloader Error] Failed to download link '{url}': {e}")
+    if isinstance(e, ValueError):
+      raise e
     raise ValueError("Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")

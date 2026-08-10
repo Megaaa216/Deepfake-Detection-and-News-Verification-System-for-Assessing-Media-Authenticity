@@ -163,13 +163,10 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
   logger.info(`Received video link for analysis: ${videoUrl}`);
 
   const lowerUrl = videoUrl.toLowerCase();
-  if (lowerUrl.includes("instagram.com") || lowerUrl.includes("instagr.am")) {
+  if (lowerUrl.includes("tiktok.com") || lowerUrl.includes("instagram.com") || lowerUrl.includes("instagr.am")) {
     return res.status(400).json({
       success: false,
-      error_code: "UNSUPPORTED_PLATFORM",
-      message: "Unsupported Platform: Instagram is not supported. Please use direct file upload.",
-      detail: "Unsupported Platform: Instagram is not supported. Please use direct file upload.",
-      unavailable: true
+      message: "TikTok and Instagram are currently disabled. Please test using YouTube or Facebook links."
     });
   }
 
@@ -332,6 +329,14 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
     }
 
     logger.info(`Received verify-media link for analysis: ${url}`);
+
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes("tiktok.com") || lowerUrl.includes("instagram.com") || lowerUrl.includes("instagr.am")) {
+      return res.status(400).json({
+        success: false,
+        message: "TikTok and Instagram are currently disabled. Please test using YouTube or Facebook links."
+      });
+    }
 
     const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
     

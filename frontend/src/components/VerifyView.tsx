@@ -491,7 +491,7 @@ export default function VerifyView({
           <span>Forensic Intelligence Terminal • Active Core</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight text-slate-900 dark:text-white">
-          MEDIA INVESTIGATION WORKSPACE
+          Deepfake Video Detection System
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
           Subject suspected social media assets to multi-spectral neural classifiers. Select your target media type below, mount your evidence via direct URL extraction or raw file loading, and parse structural credibility anomalies.
@@ -502,7 +502,7 @@ export default function VerifyView({
       <div className="flex border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl max-w-md mb-6">
         <button
           onClick={() => setActiveTab('media')}
-          className={`flex-1 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
+          className={`w-full py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === 'media'
               ? 'bg-blue-600 text-white shadow-md'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-900/50'
@@ -510,6 +510,7 @@ export default function VerifyView({
         >
           🎥 Video Forensic Array
         </button>
+        {/*
         <button
           onClick={() => setActiveTab('text')}
           className={`flex-1 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
@@ -520,6 +521,7 @@ export default function VerifyView({
         >
           📰 Text Claim Analytics
         </button>
+        */}
       </div>
 
       {activeTab === 'media' && (

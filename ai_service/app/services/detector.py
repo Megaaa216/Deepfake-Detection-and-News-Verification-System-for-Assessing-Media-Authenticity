@@ -3,6 +3,7 @@ import numpy as np
 import random
 import os
 import urllib.request
+from fastapi import HTTPException
 from app.services.preprocessor import VideoPreprocessor
 from app.services.models import Model
 import torchvision.transforms.functional as TF
@@ -118,8 +119,13 @@ class DeepfakeDetectorManager:
         sequence_length=128
       )
 
+      # Frame Extraction Guard for Zero Frames
+      if sequence_tensor is None or not saved_filenames or len(saved_filenames) == 0:
+        print("[AI Service Guard] Zero frames extracted from video stream. Raising HTTP 400 error.")
+        raise HTTPException(status_code=400, detail="Video download or frame extraction failed.")
+
       # Face Detection Guard for Non-Face Assets (Landscapes, Space, Objects, Text)
-      if sequence_tensor is None or not saved_filenames or len(saved_filenames) == 0 or faces_detected_count == 0:
+      if faces_detected_count == 0:
         print("[AI Service Guard] Zero human facial targets detected in video stream (Non-facial media asset). Bypassing deepfake CNN/LSTM scoring.")
         return {
           "result": "real",

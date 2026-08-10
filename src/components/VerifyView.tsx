@@ -705,7 +705,7 @@ export default function VerifyView({
           <span>Forensic Intelligence Terminal • Active Core</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight text-slate-900 dark:text-white">
-          MEDIA INVESTIGATION WORKSPACE
+          Deepfake Video Detection System
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
           Subject suspected social media assets to multi-spectral neural classifiers. Select your target media type below, mount your evidence via direct URL extraction or raw file loading, and parse structural credibility anomalies.

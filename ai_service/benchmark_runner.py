@@ -12,24 +12,8 @@ os.environ["FAST_BENCHMARK_MODE"] = "true"
 EXPRESS_ENDPOINT = "http://localhost:5000/api/verify-url"
 AI_SERVICE_ENDPOINT = "http://127.0.0.1:8000/analyze-link"
 
-# Pre-loaded 8-target benchmark test matrix
+# Pre-loaded 4-target benchmark test matrix
 BENCHMARK_TARGETS = [
-    {
-        "label": "Real NASA Earth (FB)",
-        "url": "https://www.facebook.com/NASA/videos/ultra-high-definition-4k-view-of-planet-earth/10154050193306772/"
-    },
-    {
-        "label": "Fake Queen (FB)",
-        "url": "https://www.facebook.com/Channel4/videos/deepfake-queen-2020-alternative-christmas-message/243343943850219/"
-    },
-    {
-        "label": "Real BBC (TikTok)",
-        "url": "https://www.tiktok.com/@bbc/video/7185138923570547973"
-    },
-    {
-        "label": "Fake DeepTomCruise (TikTok)",
-        "url": "https://www.tiktok.com/@deeptomcruise/video/6932640712861224198"
-    },
     {
         "label": "Real NASA (YouTube)",
         "url": "https://www.youtube.com/watch?v=WeA7edXsU40"
@@ -39,12 +23,12 @@ BENCHMARK_TARGETS = [
         "url": "https://www.youtube.com/watch?v=IvY-Abd2FfM"
     },
     {
-        "label": "Real NatGeo (Instagram)",
-        "url": "https://www.instagram.com/reel/DLfFAEiiyOQ/"
+        "label": "Real NASA Earth (FB)",
+        "url": "https://www.facebook.com/NASA/videos/ultra-high-definition-4k-view-of-planet-earth/10154050193306772/"
     },
     {
-        "label": "Fake AI (Instagram)",
-        "url": "https://www.instagram.com/reel/DV2x8zgjc6f/"
+        "label": "Fake Queen (FB)",
+        "url": "https://www.facebook.com/Channel4/videos/deepfake-queen-2020-alternative-christmas-message/243343943850219/"
     }
 ]
 
