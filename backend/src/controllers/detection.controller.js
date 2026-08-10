@@ -333,17 +333,6 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
 
     logger.info(`Received verify-media link for analysis: ${url}`);
 
-    const lowerUrl = url.toLowerCase();
-    if (lowerUrl.includes("instagram.com") || lowerUrl.includes("instagr.am")) {
-      return res.status(400).json({
-        success: false,
-        error_code: "UNSUPPORTED_PLATFORM",
-        message: "Unsupported Platform: Instagram is not supported. Please use direct file upload.",
-        detail: "Unsupported Platform: Instagram is not supported. Please use direct file upload.",
-        unavailable: true
-      });
-    }
-
     const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
     
     try {

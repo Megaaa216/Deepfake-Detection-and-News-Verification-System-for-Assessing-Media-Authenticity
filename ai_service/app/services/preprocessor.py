@@ -51,27 +51,27 @@ class VideoPreprocessor:
     """
     x, y, w, h = bbox
     
-    # 1. Confidence threshold check (min 0.75)
-    if confidence < 0.75:
-      return False, f"Confidence {confidence:.2f} < min threshold 0.75"
+    # 1. Confidence threshold check (min 0.25)
+    if confidence < 0.25:
+      return False, f"Confidence {confidence:.2f} < min threshold 0.25"
       
-    # 2. Minimum Face Size check (min 80x80 AND >= 10% of frame height)
-    min_h = max(80, int(frame_h * 0.10))
-    if w < 80 or h < min_h:
-      return False, f"Size ({w}x{h}) below min 80x80 or 10% frame height ({min_h}px)"
+    # 2. Minimum Face Size check (min 40x40 AND >= 5% of frame height)
+    min_h = max(40, int(frame_h * 0.05))
+    if w < 40 or h < min_h:
+      return False, f"Size ({w}x{h}) below min 40x40 or 5% frame height ({min_h}px)"
       
-    # 3. Aspect Ratio Check (0.7 <= width / height <= 1.4)
+    # 3. Aspect Ratio Check (0.6 <= width / height <= 1.6)
     aspect_ratio = float(w) / float(h)
-    if aspect_ratio < 0.7 or aspect_ratio > 1.4:
-      return False, f"Aspect ratio {aspect_ratio:.2f} out of bounds [0.7, 1.4]"
+    if aspect_ratio < 0.6 or aspect_ratio > 1.6:
+      return False, f"Aspect ratio {aspect_ratio:.2f} out of bounds [0.6, 1.6]"
       
     # 4. Corner Exclusion Mask (Top-left & top-right logo/watermark zones)
-    in_top_left = (x + w <= frame_w * 0.25) and (y <= frame_h * 0.25)
-    in_top_right = (x >= frame_w * 0.75) and (y <= frame_h * 0.25)
+    in_top_left = (x + w <= frame_w * 0.20) and (y <= frame_h * 0.20)
+    in_top_right = (x >= frame_w * 0.80) and (y <= frame_h * 0.20)
     
-    if (in_top_left or in_top_right) and confidence <= 0.90:
+    if (in_top_left or in_top_right) and confidence <= 0.85:
       zone = "top-left" if in_top_left else "top-right"
-      return False, f"Located in extreme {zone} logo zone with confidence {confidence:.2f} <= 0.90"
+      return False, f"Located in extreme {zone} logo zone with confidence {confidence:.2f} <= 0.85"
       
     return True, "Valid face ROI"
 
@@ -209,9 +209,9 @@ class VideoPreprocessor:
       # Detect candidate faces using OpenCV Haar Cascade with confidence level weights
       rects, reject_levels, level_weights = self.face_cascade.detectMultiScale3(
         gray, 
-        scaleFactor=1.1, 
-        minNeighbors=4, 
-        minSize=(60, 60),
+        scaleFactor=1.08, 
+        minNeighbors=3, 
+        minSize=(40, 40),
         outputRejectLevels=True
       )
       

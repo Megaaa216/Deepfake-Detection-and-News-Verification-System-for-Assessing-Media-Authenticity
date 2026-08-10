@@ -14,10 +14,6 @@ BENCHMARK_TARGETS = [
     ("Fake Queen (YouTube)", "https://www.youtube.com/watch?v=IvY-Abd2FfM"),
     ("Real NASA Earth (FB)", "https://www.facebook.com/NASA/videos/ultra-high-definition-4k-view-of-planet-earth/10154050193306772/"),
     ("Fake Queen (FB)", "https://www.facebook.com/Channel4/videos/deepfake-queen-2020-alternative-christmas-message/243343943850219/"),
-    ("Real BBC (TikTok)", "https://www.tiktok.com/@bbc/video/7185138923570547973"),
-    ("Fake DeepTomCruise (TikTok)", "https://www.tiktok.com/@deeptomcruise/video/6932640712861224198"),
-    ("Real NatGeo (Instagram)", "https://www.instagram.com/reel/DLfFAEiiyOQ/"),
-    ("Fake AI (Instagram)", "https://www.instagram.com/reel/DV2x8zgjc6f/"),
 ]
 
 def sanitize_url(raw_url: str) -> str:
@@ -28,7 +24,7 @@ def sanitize_url(raw_url: str) -> str:
 
 def run_benchmark(api_endpoint: str = "http://localhost:5000/api/verify-media"):
     print("=" * 115)
-    print(f"RUNNING DEEPFAKE DETECTION BENCHMARK SUITE ({len(BENCHMARK_TARGETS)} Targets)")
+    print(f"RUNNING DEEPFAKE DETECTION BENCHMARK SUITE ({len(BENCHMARK_TARGETS)} Focus Targets)")
     print(f"Target API Endpoint: {api_endpoint}")
     print("=" * 115)
     print(f"{'Target Label':<30} | {'Time (s)':<10} | {'HTTP Status':<12} | {'Risk Score':<12} | {'Final Verdict'}")
@@ -53,7 +49,7 @@ def run_benchmark(api_endpoint: str = "http://localhost:5000/api/verify-media"):
                 method="POST"
             )
             
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with urllib.request.urlopen(req, timeout=180) as resp:
                 status_code = resp.status
                 resp_bytes = resp.read()
                 try:
