@@ -65,11 +65,15 @@ def download_video_link(url: str, output_dir: str) -> str:
     
     print(f"[Downloader] Platform stream link detected. Initiating yt-dlp...")
     
-    # Configure yt-dlp to download lightweight progressive formats (<480p)
+    # Configure yt-dlp to download lightweight formats strictly capped to <= 720p resolution
     ydl_opts = {
-      'format': 'best[ext=mp4]/bestvideo[ext=mp4]/worst[ext=mp4]/best',
+      'format': 'b[height<=720][ext=mp4]/b[height<=720]/bv*[height<=720][ext=mp4]+ba[ext=m4a]/best',
+      'format_sort': ['res:720', 'ext:mp4:m4a'],
       'outtmpl': os.path.join(output_dir, f"platform_{unique_id}_%(id)s.%(ext)s"),
       'max_filesize': 100 * 1024 * 1024,  # 100MB file limit
+      'socket_timeout': 30,
+      'retries': 3,
+      'fragment_retries': 3,
       'quiet': True,
       'no_warnings': True,
       'noprogress': True,
