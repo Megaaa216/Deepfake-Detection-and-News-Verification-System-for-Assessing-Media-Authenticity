@@ -64,7 +64,7 @@ def run_benchmark():
                 EXPRESS_ENDPOINT,
                 json={"videoUrl": target_url, "url": target_url},
                 headers={"Content-Type": "application/json"},
-                timeout=60
+                timeout=90
             )
             execution_time = round(time.time() - start_time, 2)
             status_code = response.status_code

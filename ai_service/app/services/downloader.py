@@ -131,12 +131,12 @@ def download_video_link(url: str, output_dir: str) -> str:
     print(f"[Downloader] Platform stream link detected. Initiating yt-dlp...")
     
     ydl_opts = {
-      'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
+      'format': 'b[height<=720][ext=mp4]/b[height<=480]/best[height<=720]/best',
       'outtmpl': os.path.join(output_dir, f"platform_{unique_id}_%(id)s.%(ext)s"),
       'max_filesize': 100 * 1024 * 1024,  # 100MB file limit
-      'socket_timeout': 30,
-      'retries': 5,
-      'fragment_retries': 5,
+      'socket_timeout': 15,
+      'retries': 3,
+      'fragment_retries': 3,
       'quiet': True,
       'no_warnings': True,
       'noprogress': True,
@@ -148,9 +148,7 @@ def download_video_link(url: str, output_dir: str) -> str:
         }
       },
       'http_headers': {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     }
     

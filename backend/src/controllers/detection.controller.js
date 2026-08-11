@@ -79,7 +79,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
   try {
     const response = await axios.post(`${pythonServiceUrl}/analyze`, {
       video_path: videoDiskPath
-    });
+    }, { timeout: 90000 });
 
     const data = response.data;
     logger.info(`Python AI microservice analysis successful:`, data);
@@ -175,7 +175,7 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
   try {
     const response = await axios.post(`${pythonServiceUrl}/analyze-link`, {
       video_url: videoUrl
-    });
+    }, { timeout: 90000 });
 
     const data = response.data;
     logger.info(`Python AI microservice link analysis successful:`, data);
@@ -260,7 +260,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
     try {
       const response = await axios.post(`${pythonServiceUrl}/analyze`, {
         video_path: videoDiskPath
-      });
+      }, { timeout: 90000 });
 
       const data = response.data;
       logger.info(`Python AI microservice analysis successful:`, data);
@@ -343,7 +343,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
     try {
       const response = await axios.post(`${pythonServiceUrl}/analyze-link`, {
         video_url: url
-      });
+      }, { timeout: 90000 });
 
       const data = response.data;
       logger.info(`Python AI microservice link analysis successful:`, data);
