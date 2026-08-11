@@ -731,57 +731,14 @@ export default function VerifyView({
             </div>
 
             <div className="p-5 space-y-5 flex-1">
-              {/* Media Content Type Selector */}
+              {/* Target Evidence Type Badge */}
               <div className="space-y-2">
                 <label className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
-                  Select Evidence Type
+                  Target Evidence Type
                 </label>
-                <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSubTab('video');
-                      setResult(null);
-                    }}
-                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      activeSubTab === 'video'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <Video className="h-4 w-4" />
-                    <span className="text-[10px]">Video</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSubTab('image');
-                      setResult(null);
-                    }}
-                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      activeSubTab === 'image'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <Image className="h-4 w-4" />
-                    <span className="text-[10px]">Image</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSubTab('news_link');
-                      setResult(null);
-                    }}
-                    className={`py-2 rounded-lg text-xs font-semibold tracking-wide transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      activeSubTab === 'news_link'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span className="text-[10px]">News / Text</span>
-                  </button>
+                <div className="flex items-center justify-center space-x-2 bg-blue-600/15 border border-blue-500/30 text-blue-600 dark:text-blue-400 py-2.5 px-4 rounded-xl shadow-xs">
+                  <Video className="h-4 w-4 shrink-0 text-blue-500" />
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider">Video Stream Analysis</span>
                 </div>
               </div>
 
@@ -834,7 +791,7 @@ export default function VerifyView({
                           type="url"
                           value={inputUrl}
                           onChange={(e) => setInputUrl(e.target.value)}
-                          placeholder="Paste link from TikTok, Youtube, FB, X, Reddit..."
+                          placeholder="https://www.youtube.com/watch?v=... or Facebook video URL"
                           className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
                         />
                       </div>

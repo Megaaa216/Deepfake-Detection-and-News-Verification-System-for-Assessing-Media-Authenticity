@@ -602,7 +602,7 @@ export default function VerifyView({
                         type="url"
                         value={inputUrl}
                         onChange={(e) => setInputUrl(e.target.value)}
-                        placeholder="Enter video or article URL..."
+                        placeholder="https://www.youtube.com/watch?v=... or Facebook video URL"
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
                       />
                     </div>
@@ -612,7 +612,7 @@ export default function VerifyView({
                   {inputUrl.trim() && (
                     <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 p-3 rounded-xl text-[11px] font-mono space-y-2">
                       <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <span>Connection Feedback</span>
+                        <span>Connection Feedback (YouTube & Facebook)</span>
                         <span>{accessState?.status}</span>
                       </div>
                       <div className="flex items-center space-x-2">

@@ -70,7 +70,7 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
                 TrustLens
               </span>
               <span className="text-[10px] font-mono tracking-wider uppercase block text-blue-400">
-                Media Authenticity System
+                Deepfake Video Detection System
               </span>
             </div>
           </div>
