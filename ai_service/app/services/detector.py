@@ -216,7 +216,7 @@ class DeepfakeDetectorManager:
         # -----------------------------------------------------------------
         # 🛡️ 4. MODEL SCORE CALIBRATION & DEBUG LOGGING
         # -----------------------------------------------------------------
-        print(f"[AI Service Debug] Extracted Face Count: {faces_detected_count}/{actual_sequence_length} frames with faces")
+        print(f"[AI Service Debug] Extracted Face Count: {faces_detected_count}/{len(saved_filenames)} frames with faces")
         print(f"[AI Service Debug] Raw Trimmed Mean Score: {trimmed_mean_score:.4f}")
         print(f"[AI Service Debug] Max 8-Frame Cluster Anomaly Score: {max_cluster_score:.4f}")
 

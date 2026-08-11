@@ -85,7 +85,7 @@ async def analyze_link(payload: LinkAnalysisRequest):
     raise HTTPException(status_code=400, detail=str(val_err))
   except Exception as e:
     print(f"[AI Service Error] analyze_link failed: {e}")
-    raise HTTPException(status_code=400, detail="Failed to download video stream: Platform firewall blocked extraction or link is invalid.")
+    raise HTTPException(status_code=400, detail="Link extraction blocked by platform firewall. Please download the .mp4 file directly and use Direct File Upload.")
   finally:
     # 3. Securely clean up local temporary file
     if local_path and os.path.exists(local_path):

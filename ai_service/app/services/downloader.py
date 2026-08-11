@@ -142,9 +142,10 @@ def download_video_link(url: str, output_dir: str) -> str:
       'noprogress': True,
       'nocheckcertificate': True,
       'geo_bypass': True,
+      'cookiesfrombrowser': ('chrome',),
       'extractor_args': {
         'youtube': {
-          'player_client': ['android', 'web', 'tv']
+          'player_client': ['android', 'web']
         }
       },
       'http_headers': {
@@ -152,19 +153,48 @@ def download_video_link(url: str, output_dir: str) -> str:
       }
     }
     
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-      info = ydl.extract_info(url, download=True)
-      if not info:
-        raise ValueError("Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")
-      filename = ydl.prepare_filename(info)
-      if not os.path.exists(filename) or os.path.getsize(filename) == 0:
-        files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.startswith(f"platform_{unique_id}") and os.path.getsize(os.path.join(output_dir, f)) > 0]
-        if files:
-          return os.path.abspath(files[0])
-        raise ValueError("Failed to ingest video stream: Downloaded file is empty or missing.")
-      return os.path.abspath(filename)
+    # 1. Environment-based Proxy Injection for VPS Deployment
+    proxy_url = os.getenv('PROXY_URL') or os.getenv('YTDLP_PROXY')
+    if proxy_url:
+      ydl_opts['proxy'] = proxy_url
+      print(f"[Downloader] Routing yt-dlp traffic through proxy: {proxy_url}")
+
+    # 2. Local cookies.txt Session File Injection
+    cookie_candidates = [
+      os.path.abspath("cookies.txt"),
+      os.path.abspath(os.path.join(os.path.dirname(__file__), "cookies.txt")),
+      os.path.abspath(os.path.join(os.path.dirname(__file__), "../../cookies.txt")),
+    ]
+    for c_path in cookie_candidates:
+      if os.path.exists(c_path) and os.path.getsize(c_path) > 0:
+        ydl_opts['cookiefile'] = c_path
+        print(f"[Downloader] Loaded session cookiefile: {c_path}")
+        break
+
+    try:
+      with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+    except Exception as cookie_err:
+      if 'cookiesfrombrowser' in ydl_opts:
+        print(f"[Downloader] Browser cookie extraction fallback ({cookie_err}). Retrying without browser cookies...")
+        ydl_opts_nocookies = dict(ydl_opts)
+        del ydl_opts_nocookies['cookiesfrombrowser']
+        with yt_dlp.YoutubeDL(ydl_opts_nocookies) as ydl:
+          info = ydl.extract_info(url, download=True)
+      else:
+        raise cookie_err
+
+    if not info:
+      raise ValueError("Link extraction blocked by platform firewall. Please download the .mp4 file directly and use Direct File Upload.")
+    filename = ydl.prepare_filename(info)
+    if not os.path.exists(filename) or os.path.getsize(filename) == 0:
+      files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.startswith(f"platform_{unique_id}") and os.path.getsize(os.path.join(output_dir, f)) > 0]
+      if files:
+        return os.path.abspath(files[0])
+      raise ValueError("Failed to ingest video stream: Downloaded file is empty or missing.")
+    return os.path.abspath(filename)
   except Exception as e:
     print(f"[Downloader Error] Failed to download link '{url}': {e}")
     if isinstance(e, ValueError):
       raise e
-    raise ValueError("Failed to ingest video stream: Platform firewall blocked extraction or link is private/unavailable.")
+    raise ValueError("Link extraction blocked by platform firewall. Please download the .mp4 file directly and use Direct File Upload.")

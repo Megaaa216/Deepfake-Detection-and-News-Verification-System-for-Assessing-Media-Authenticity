@@ -238,7 +238,7 @@ exports.analyzeVideoLink = asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error("Error communicating with Python AI microservice for link:", error.message || error);
     const errData = error.response?.data;
-    const msg = errData?.detail || errData?.message || error.message || "Failed to download video stream: Platform firewall blocked extraction or link is invalid.";
+    const msg = errData?.detail || errData?.message || error.message || "Link extraction blocked by platform firewall. Please download the .mp4 file directly and use Direct File Upload.";
     
     return res.status(400).json({
       success: false,
@@ -398,7 +398,7 @@ exports.verifyMedia = asyncHandler(async (req, res) => {
     } catch (error) {
       logger.error("Error communicating with Python AI microservice for verifyMedia link:", error.message || error);
       const errData = error.response?.data;
-      const msg = errData?.detail || errData?.message || error.message || "Failed to analyze video stream.";
+      const msg = errData?.detail || errData?.message || error.message || "Link extraction blocked by platform firewall. Please download the .mp4 file directly and use Direct File Upload.";
       
       return res.status(400).json({
         success: false,
