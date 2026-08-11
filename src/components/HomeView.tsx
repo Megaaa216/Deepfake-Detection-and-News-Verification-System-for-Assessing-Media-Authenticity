@@ -17,22 +17,22 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         <div className="max-w-3xl relative z-10 space-y-6">
           <div className="inline-flex items-center space-x-2 bg-blue-900/40 text-blue-300 font-mono text-[11px] uppercase tracking-wider px-3 py-1 rounded-full border border-blue-800/60">
             <Sparkles className="h-3 w-3 animate-pulse" />
-            <span>AI-POWERED DEEPFAKE DETECTION & SOCIAL MEDIA VERIFICATION</span>
+            <span>AI-POWERED DEEPFAKE VIDEO DETECTION SYSTEM</span>
           </div>
           
           <h1 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-none text-white">
-            Detect Deepfakes, AI Images, <br/>
+            Detect Video Deepfakes <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-sky-350">
-              and Suspicious News.
+              with ResNeXt50 + LSTM Pipeline.
             </span>
           </h1>
 
           <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
-            TrustLens analyzes public content from social media platforms, checks for manipulation signals, and returns a risk-based credibility assessment. The system evaluates video deepfake consistency, image manipulation and AI generation traces, and news text credibility.
+            TrustLens analyzes public video content from YouTube and Facebook, evaluates spatial facial landmark integrity and acoustic synchrony, and returns an instant deepfake risk score.
           </p>
 
           <p className="text-xs text-blue-400 font-mono tracking-wider">
-            PUBLIC CONTENT VERIFICATION • VIDEO, IMAGE, AND NEWS ANALYSIS • RISK-BASED CREDIBILITY SCORING
+            PUBLIC CONTENT VERIFICATION • RESNEXT50+LSTM MODEL • DEEPFAKE RISK SCORING
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">

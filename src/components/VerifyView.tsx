@@ -29,7 +29,7 @@ export default function VerifyView({
   const [intakeMethod, setIntakeMethod] = useState<'url' | 'upload'>('url');
 
   // Input states
-  const [inputUrl, setInputUrl] = useState('https://www.tiktok.com/@finance_trends/video/732890184');
+  const [inputUrl, setInputUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState<{ name: string; size: string } | null>(null);
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [fileDragOver, setFileDragOver] = useState(false);
@@ -781,39 +781,18 @@ export default function VerifyView({
                     <label htmlFor="url-input" className="block text-[10px] font-mono tracking-wider uppercase text-slate-400 font-bold">
                       Destination Social Media Link
                     </label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                          <Globe className="h-4 w-4" />
-                        </div>
-                        <input
-                          id="url-input"
-                          type="url"
-                          value={inputUrl}
-                          onChange={(e) => setInputUrl(e.target.value)}
-                          placeholder="https://www.youtube.com/watch?v=... or Facebook video URL"
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
-                        />
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Globe className="h-4 w-4" />
                       </div>
-                      <button
-                        type="button"
-                        disabled={isAnalyzing || !inputUrl.trim()}
-                        onClick={handleStartAnalysis}
-                        className={`px-5 py-2.5 rounded-xl text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer ${
-                          !inputUrl.trim()
-                            ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none border border-slate-400/10'
-                            : isAnalyzing
-                            ? 'bg-blue-800'
-                            : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5'
-                        }`}
-                      >
-                        {isAnalyzing ? (
-                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-3.5 w-3.5 text-blue-300" />
-                        )}
-                        <span>{isAnalyzing ? 'Analyzing...' : 'Analyze Link'}</span>
-                      </button>
+                      <input
+                        id="url-input"
+                        type="url"
+                        value={inputUrl}
+                        onChange={(e) => setInputUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or Facebook video URL"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:bg-white pl-9 pr-3 py-2.5 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none transition-all font-mono"
+                      />
                     </div>
                   </div>
 

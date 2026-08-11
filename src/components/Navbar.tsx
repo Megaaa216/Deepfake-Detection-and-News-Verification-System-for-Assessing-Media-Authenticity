@@ -34,7 +34,7 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
     navItems.push({ id: 'home', name: 'Home' });
     navItems.push({ id: 'verify', name: 'Verify Media' });
     navItems.push({ id: 'history', name: 'History' });
-    navItems.push({ id: 'reports', name: 'Reports' });
+    // navItems.push({ id: 'reports', name: 'Reports' });
     if (user.role === 'admin') {
       navItems.push({ id: 'admin', name: 'Admin Dashboard' });
     }
@@ -246,10 +246,10 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
                     <Clock className="h-3 w-3" />
                     <span>History</span>
                   </button>
-                  <button onClick={() => handleLinkClick('reports')} className="p-1 px-1.5 bg-slate-800 border border-slate-700 text-slate-300 rounded hover:text-white flex items-center justify-center space-x-1">
+                  {/* <button onClick={() => handleLinkClick('reports')} className="p-1 px-1.5 bg-slate-800 border border-slate-700 text-slate-300 rounded hover:text-white flex items-center justify-center space-x-1">
                     <FileText className="h-3 w-3" />
                     <span>Reports</span>
-                  </button>
+                  </button> */}
                   <button onClick={() => handleLinkClick('settings')} className="p-1 px-1.5 bg-slate-800 border border-slate-700 text-slate-300 rounded hover:text-white flex items-center justify-center space-x-1">
                     <Settings className="h-3 w-3" />
                     <span>Settings</span>
