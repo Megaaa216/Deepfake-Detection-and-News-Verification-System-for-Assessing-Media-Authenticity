@@ -18,6 +18,20 @@ export interface FlaggedFrame {
   image_name: string;
   verdict: 'AUTHENTIC' | 'FAKE';
   details: string;
+  score?: number;
+  confidence?: number;
+  frame_index?: number;
+  image_url?: string;
+}
+
+export interface ForensicMetrics {
+  spatial_coherence_score?: number;
+  spatial_artifact_index?: number;
+  temporal_variance?: number;
+  temporal_coherence?: number;
+  frames_processed?: number;
+  faces_detected?: number;
+  face_coverage_ratio?: number;
 }
 
 export interface VerificationResult {
@@ -32,11 +46,20 @@ export interface VerificationResult {
   reasons: VerificationReason[];
   size?: string; // Optional metadata (e.g., 4.2 MB)
   duration?: string; // Optional (e.g., 0:24 for video)
-  sourceCategory?: string; // e.g., "Independent blog", "Unverified claims network", "Mainstream news"
-  platform?: string; // e.g., "Facebook", "YouTube", "TikTok", "X", "Reddit", "Other"
-  unavailable?: boolean; // If content cannot be accessed technically or legally
-  unavailabilityReason?: string; // e.g., "Private content", "Restricted content", "Unsupported platform"
+  sourceCategory?: string;
+  platform?: string;
+  unavailable?: boolean;
+  unavailabilityReason?: string;
   flagged_frames?: FlaggedFrame[];
+  gemini_audit?: any;
+  analysis_summary?: any;
+  summary?: string;
+  recommended_action?: string;
+  forensic_metrics?: ForensicMetrics;
+  asset_type?: string;
+  confidence_score?: number;
+  thumbnail_url?: string;
+  preview_url?: string;
 }
 
 export interface Stats {

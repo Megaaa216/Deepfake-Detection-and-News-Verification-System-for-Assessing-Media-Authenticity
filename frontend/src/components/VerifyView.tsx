@@ -1070,14 +1070,20 @@ export default function VerifyView({
                                   imageSrc = frame.startsWith('http') ? frame : `http://localhost:5000/public/frames/${frame}`;
                                 }
                                 
+                                const frameTheme = scorePercent >= 50
+                                  ? { label: 'SUSPICIOUS', textClass: 'text-red-400', bgClass: 'bg-red-500/10 border-red-500/30', borderClass: 'border-red-500/60' }
+                                  : scorePercent >= 25
+                                    ? { label: 'UNCERTAIN', textClass: 'text-amber-400', bgClass: 'bg-amber-500/10 border-amber-500/30', borderClass: 'border-amber-500/50' }
+                                    : { label: 'AUTHENTIC', textClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10 border-emerald-500/30', borderClass: 'border-emerald-500/40' };
+
                                 return (
                                   <div 
                                     key={idx} 
-                                    className="flex-shrink-0 w-48 border border-slate-800/80 bg-slate-950/60 p-3 rounded-xl transition-all hover:border-slate-700"
+                                    className={`flex-shrink-0 w-48 border bg-slate-950/60 p-3 rounded-xl transition-all ${frameTheme.borderClass}`}
                                   >
                                     <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mb-2">
                                       <span>Frame #{frame_index}</span>
-                                      <span className="text-slate-650 font-bold bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
+                                      <span className={`font-bold px-1.5 py-0.5 rounded border ${frameTheme.bgClass} ${frameTheme.textClass}`}>
                                         {scorePercent.toFixed(1)}%
                                       </span>
                                     </div>
@@ -1096,14 +1102,8 @@ export default function VerifyView({
                                     </div>
                                     
                                     {/* Dynamic Color Badge Tier System */}
-                                    <div className={`mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-center py-1 rounded border ${
-                                      (scorePercent / 100) > 0.60 
-                                        ? 'text-red-400 border-red-950/60 bg-red-950/20' 
-                                        : (scorePercent / 100) >= 0.25 
-                                          ? 'text-amber-400 border-amber-950/60 bg-amber-950/20' 
-                                          : 'text-emerald-400 border-emerald-950/60 bg-emerald-950/20'
-                                    }`}>
-                                      {(scorePercent / 100) > 0.60 ? 'MANIPULATED' : (scorePercent / 100) >= 0.25 ? 'SUSPICIOUS' : 'AUTHENTIC'}
+                                    <div className={`mt-3 text-[10px] font-mono font-bold uppercase tracking-wider text-center py-1 rounded border ${frameTheme.bgClass} ${frameTheme.textClass}`}>
+                                      {frameTheme.label} ({scorePercent.toFixed(0)}%)
                                     </div>
                                   </div>
                                 );

@@ -893,53 +893,7 @@ export default function VerifyView({
                 </p>
               </div>
 
-              {/* QUICK DEMO PRESETS */}
-              <div className="space-y-2 pt-2 border-t border-slate-150 dark:border-slate-800">
-                <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
-                  Select Pre-Mounted Demo Cases:
-                </span>
-                
-                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                  {intakeMethod === 'url' ? (
-                    SOCIAL_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => selectPresetUrl(preset)}
-                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
-                          inputUrl === preset.url
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
-                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center w-full">
-                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">[{preset.platform}] Link</span>
-                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.type}</span>
-                        </div>
-                        <span className="text-[10px] truncate block text-slate-400 mt-0.5">{preset.url}</span>
-                      </button>
-                    ))
-                  ) : (
-                    FILE_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => selectFilePreset(preset)}
-                        className={`w-full text-left p-2.5 rounded-lg border transition-all text-xs flex flex-col justify-between font-mono cursor-pointer ${
-                          selectedFile?.name === preset.name
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-300'
-                            : 'border-slate-150 dark:border-slate-800/60 bg-white dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center w-full font-mono">
-                          <span className="font-bold text-[10px] text-slate-800 dark:text-slate-200">{preset.name}</span>
-                          <span className="text-[8px] bg-slate-900 px-1 rounded uppercase tracking-wider">{preset.size}</span>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
+
 
               {/* TRIGGER ANALYSIS BUTTON */}
               <button
@@ -1264,21 +1218,21 @@ export default function VerifyView({
                             
                             <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 bg-slate-950 p-2 rounded-xl border border-slate-900">
                               {analysisResult.flagged_frames.map((frame: any) => {
-                                const isFrameFake = frame.verdict === 'FAKE' || frame.verdict === 'ANOMALY';
+                                const fScore = frame.score !== undefined ? (frame.score <= 1.0 ? frame.score * 100 : frame.score) : (frame.verdict === 'FAKE' || frame.verdict === 'ANOMALY' ? 85 : 12);
+                                const frameTheme = fScore >= 50
+                                  ? { label: 'SUSPICIOUS', bgClass: 'bg-red-500', borderClass: 'border-red-500/50 bg-red-950/20 hover:border-red-500' }
+                                  : fScore >= 25
+                                    ? { label: 'UNCERTAIN', bgClass: 'bg-amber-500', borderClass: 'border-amber-500/50 bg-amber-950/20 hover:border-amber-500' }
+                                    : { label: 'AUTHENTIC', bgClass: 'bg-emerald-500', borderClass: 'border-emerald-500/50 bg-slate-950 hover:border-slate-700' };
+
                                 return (
                                   <div 
                                     key={frame.frame_id} 
-                                    className={`aspect-square rounded border relative overflow-hidden group transition-all duration-300 ${
-                                      isFrameFake 
-                                        ? 'border-rose-500/50 bg-rose-950/20 hover:border-rose-500' 
-                                        : 'border-slate-800 bg-slate-950 hover:border-slate-700'
-                                    }`}
-                                    title={`Frame ${frame.frame_id}: ${frame.verdict} - ${frame.details}`}
+                                    className={`aspect-square rounded border relative overflow-hidden group transition-all duration-300 ${frameTheme.borderClass}`}
+                                    title={`Frame ${frame.frame_id}: ${frameTheme.label} - ${frame.details || ''}`}
                                   >
                                     {/* Indicator Tag */}
-                                    <div className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full z-10 ${
-                                      isFrameFake ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'
-                                    }`} />
+                                    <div className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full z-10 ${frameTheme.bgClass} ${fScore >= 50 ? 'animate-pulse' : ''}`} />
 
                                     {imageErrors[frame.frame_id] ? (
                                       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-0.5 text-center relative">

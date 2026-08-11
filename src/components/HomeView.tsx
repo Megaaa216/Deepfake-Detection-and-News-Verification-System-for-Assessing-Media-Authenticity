@@ -1,7 +1,7 @@
-import { ShieldAlert, Globe, Radio, Cpu, Sparkles, AlertTriangle, ArrowRight, CheckCircle } from 'lucide-react';
+import { ShieldAlert, Globe, Radio, Cpu, Sparkles, AlertTriangle, ArrowRight, CheckCircle, Video, Eye, Activity } from 'lucide-react';
 
 interface HomeViewProps {
-  onNavigateToVerify: (subTab: 'image' | 'video' | 'news_link') => void;
+  onNavigateToVerify: (subTab: 'video' | 'news_link') => void;
   onNavigateToTab: (tab: string) => void;
 }
 
@@ -28,11 +28,11 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           </h1>
 
           <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
-            TrustLens analyzes public video content from YouTube and Facebook, evaluates spatial facial landmark integrity and acoustic synchrony, and returns an instant deepfake risk score.
+            TrustLens analyzes public video content from YouTube and Facebook, evaluates spatial facial landmark integrity and temporal sequence coherence, and returns an instant deepfake risk score.
           </p>
 
           <p className="text-xs text-blue-400 font-mono tracking-wider">
-            PUBLIC CONTENT VERIFICATION • RESNEXT50+LSTM MODEL • DEEPFAKE RISK SCORING
+            PUBLIC VIDEO CONTENT VERIFICATION • RESNEXT50+LSTM MODEL • DEEPFAKE RISK SCORING
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
@@ -40,8 +40,8 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
               onClick={() => onNavigateToTab('verify')}
               className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-3 rounded-lg shadow-lg hover:shadow-blue-500/20 transition-all flex items-center justify-center space-x-2 group cursor-pointer"
             >
-              <Globe className="h-4 w-4 text-blue-300" />
-              <span>Verify Social Media Link</span>
+              <Video className="h-4 w-4 text-blue-300" />
+              <span>Verify Video Link</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
             <button
@@ -57,15 +57,15 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         <div className="mt-12 pt-6 border-t border-slate-800/80 grid grid-cols-2 lg:grid-cols-4 gap-4 text-slate-400 text-xs font-mono">
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Analysis Protocol</span>
-            <span className="text-slate-200 block">TrustLens Verification Core v4.2</span>
+            <span className="text-slate-200 block">ResNeXt50 + Bidirectional LSTM</span>
           </div>
           <div className="space-y-1">
-            <span className="text-slate-500 text-[10px] uppercase block">Data Source</span>
-            <span className="text-slate-200 block">⚡ Public Social Platforms</span>
+            <span className="text-slate-500 text-[10px] uppercase block">Supported Platforms</span>
+            <span className="text-slate-200 block">⚡ YouTube & Facebook Videos</span>
           </div>
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Scope of Capability</span>
-            <span className="text-blue-400 block">Videos, Images, & News Text</span>
+            <span className="text-blue-400 block">Deepfake Video Assets Only</span>
           </div>
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] uppercase block">Assessment Confidence</span>
@@ -81,26 +81,26 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
       <div className="space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
-            Tri-Tier Verification Protocol
+            Deepfake Video Detection Protocol
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Every analysis queries multi-spectral neural classifiers, parses public social media text for suspicious language indicators, and references accredited journalistic indexes.
+            Every video evaluation queries spatial ResNeXt50 neural feature maps and temporal LSTM sequence classifiers to isolate face-swaps and visual manipulation anomalies.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Card 1: Video Analysis focus */}
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* Card 1: Spatial Face-Swap Analysis */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between ring-1 ring-blue-500/5 dark:ring-blue-400/5">
             <div className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 p-3 rounded-xl w-fit relative">
                 <Cpu className="h-6 w-6 stroke-[1.5]" />
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-mono font-bold px-1 rounded-full uppercase">Main</span>
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-mono font-bold px-1 rounded-full uppercase">Spatial</span>
               </div>
               <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
-                <span>Video Analysis</span>
+                <span>Spatial Face & Mesh Analysis</span>
               </h3>
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                Checks for face and audio inconsistencies. Analyzes lip-sync alignment frequencies, facial mesh landmark boundaries, and vocal acoustic clones across TikTok, YouTube, and other public video formats.
+                Evaluates facial crop geometry, spatial landmark boundary jitter, specular light vectors, and localized face-swap compression artifacts across video keyframes.
               </p>
             </div>
             <button
@@ -115,48 +115,25 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
             </button>
           </div>
 
-          {/* Card 2: News & Text Verification */}
+          {/* Card 2: Temporal Sequence & Acoustic Synchrony */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-3 rounded-xl w-fit">
-                <Globe className="h-6 w-6 stroke-[1.5]" />
+                <Activity className="h-6 w-6 stroke-[1.5]" />
               </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white">News & Text Analysis</h3>
+              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white">Temporal Sequence & Acoustic Sync</h3>
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                Evaluates source reliability, news credibility, and suspicious language signals. Scans social media headlines, captions, and links for sensationalism, emotional bias, and factual alignment.
+                Tracks frame-to-frame transitional stability using bidirectional LSTM cells and inspects phoneme-viseme lip-sync audio alignment across sequence keyframes.
               </p>
             </div>
             <button
               onClick={() => {
-                onNavigateToVerify('news_link');
+                onNavigateToVerify('video');
                 onNavigateToTab('verify');
               }}
               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
             >
-              <span>Validate textual claims</span>
-              <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </div>
-
-          {/* Card 3: Graphic / Image analysis */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-3 rounded-xl w-fit">
-                <ShieldAlert className="h-6 w-6 stroke-[1.5]" />
-              </div>
-              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white">Image Analysis</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                Detects manual editing traces, composite pixel anomalies, and AI generation signals. Scans specular light vectors, JPEG quantization discrepancies, and sensor noise variations.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                onNavigateToVerify('image');
-                onNavigateToTab('verify');
-              }}
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-750 dark:hover:text-blue-300 flex items-center space-x-1.5 pt-4 group transition-colors cursor-pointer text-left"
-            >
-              <span>Deconstruct images</span>
+              <span>Inspect video keyframes</span>
               <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
@@ -169,15 +146,15 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
         <div className="space-y-6">
           <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
             <span className="text-blue-600 dark:text-blue-400">01 /</span>
-            <span>Verification Workflow</span>
+            <span>Video Verification Workflow</span>
           </h3>
           <div className="space-y-4 font-mono">
             {[
-              { step: '1', title: 'Submit Evidence', desc: 'Paste a public social media link or mount local image/video files into the workspace.' },
-              { step: '2', title: 'Extract Target Layers', desc: 'The system parses public endpoints to extract available text metadata, image keyframes, or audio waves.' },
-              { step: '3', title: 'Multi-Spectral Analysis', desc: 'Target media layers are scanned for specialized manipulation traces, AI generation indicators, or credibility flags.' },
-              { step: '4', title: 'Generate Risk Report', desc: 'Produces confidence scoring metrics and a detailed reasoning log of all mapped manipulation signals.' },
-              { step: '5', title: 'Record Case File', desc: 'The verified case is logged locally into your secure session history file for future comparison.' }
+              { step: '1', title: 'Submit Video Link', desc: 'Paste a public YouTube or Facebook video URL into the analysis workspace.' },
+              { step: '2', title: 'Extract Keyframe Sequences', desc: 'The system extracts 128 keyframes and isolates cropped facial target bounding boxes.' },
+              { step: '3', title: 'ResNeXt50 + LSTM Inference', desc: 'Spatial feature backbones and bidirectional LSTM layers compute frame anomaly probabilities.' },
+              { step: '4', title: 'Generate Risk Report', desc: 'Produces overall deepfake risk score, model confidence metrics, and top 16 suspicious keyframes.' },
+              { step: '5', title: 'Record Case File', desc: 'The verified case is logged locally into your secure session history file for reference.' }
             ].map((w, idx) => (
               <div key={idx} className="flex items-start space-x-3 text-xs">
                 <span className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold h-6 w-6 rounded-full flex items-center justify-center shrink-0">
@@ -201,16 +178,16 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
           <div className="grid gap-4">
             {[
               {
-                title: 'Protect Users from Manipulated Media',
-                desc: 'Safeguard users against sophisticated deepfakes and AI-generated social assets by pinpointing specific manipulation signals.'
+                title: 'Protect Users from Deepfake Videos',
+                desc: 'Safeguard viewers against synthetic face-swap overlays, deepfake impersonations, and manipulated video clips by pinpointing neural anomaly signals.'
               },
               {
-                title: 'Support Content Verification Research',
-                desc: 'Act as an open experimental benchmark and research terminal exploring multi-modal validation metrics on public media.'
+                title: 'Support Deepfake Detection Research',
+                desc: 'Act as a research terminal exploring ResNeXt50 + LSTM hybrid model metrics on public social video streams.'
               },
               {
-                title: 'Mitigate the Spread of Misinformation',
-                desc: 'Help journalists and readers screen alarming public posts, unverified headlines, and modified graphics before sharing.'
+                title: 'Mitigate Synthetic Video Disinformation',
+                desc: 'Help analysts, researchers, and readers screen suspicious public video posts before sharing or publishing.'
               }
             ].map((p, idx) => (
               <div key={idx} className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 p-4 rounded-xl space-y-1">
@@ -230,19 +207,19 @@ export default function HomeView({ onNavigateToVerify, onNavigateToTab }: HomeVi
       {/* Trust Quote / Banner */}
       <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="space-y-1 max-w-xl text-center lg:text-left">
-          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Designed for social media media risk screening</h4>
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Designed for social media video screening</h4>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Works exclusively on public social platform URLs. Provides evidence-based indicators to safeguard public narrative integrity without assuring perfect absolute truth.
+            Works exclusively on public YouTube and Facebook video URLs. Provides evidence-based neural model indicators to evaluate video authenticity.
           </p>
         </div>
         <div className="flex items-center space-x-6 shrink-0 text-slate-400 font-mono text-xs">
           <div className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
             <CheckCircle className="h-4 w-4" />
-            <span>Factual Integrity</span>
+            <span>Face Mesh Verified</span>
           </div>
           <div className="flex items-center space-x-1 text-blue-600 dark:text-blue-400">
             <CheckCircle className="h-4 w-4" />
-            <span>Origin Confirmed</span>
+            <span>Temporal Coherence</span>
           </div>
         </div>
       </div>
