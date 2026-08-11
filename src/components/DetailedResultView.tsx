@@ -15,6 +15,7 @@ interface DetailedResultViewProps {
 }
 
 export default function DetailedResultView({ resultId, historyList, onBackToHistory }: DetailedResultViewProps) {
+  const shouldHidePreview = false;
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -389,7 +390,8 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
         <div className="lg:col-span-8 space-y-8">
           
           {/* A. Evidence Preview Section (revealing proof behind the results) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">
+          {!shouldHidePreview && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">
             <div className="space-y-1">
               <span className="text-[10px] text-blue-500 dark:text-blue-400 font-mono uppercase font-bold tracking-wider">LAB EVIDENCE VISUALIZER</span>
               <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center space-x-2">
@@ -622,6 +624,7 @@ export default function DetailedResultView({ resultId, historyList, onBackToHist
               </div>
             )}
           </div>
+          )}
 
           {/* B. Detection Signal Breakdown Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-2xl p-6 shadow-sm space-y-6">

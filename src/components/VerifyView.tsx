@@ -41,6 +41,7 @@ export default function VerifyView({
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepText, setAnalysisStepText] = useState('');
   const [result, setResult] = useState<VerificationResult | null>(null);
+  const [errorModalMsg, setErrorModalMsg] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 

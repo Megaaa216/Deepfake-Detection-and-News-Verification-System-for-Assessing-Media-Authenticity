@@ -23,7 +23,7 @@ export default function DetailedResultView({
   isFromHistory = false,
   hideEvidencePreview = false
 }: DetailedResultViewProps) {
-  const shouldHidePreview = isFromHistory || hideEvidencePreview;
+  const shouldHidePreview = false;
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
